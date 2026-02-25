@@ -29,6 +29,18 @@ const nav = [
     ),
   },
   {
+    href: '/admin/drivers',
+    label: 'Drivers',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path d="M3 13l2-5a2 2 0 0 1 1.9-1.3h10.2A2 2 0 0 1 19 8l2 5" />
+        <rect x="2" y="13" width="20" height="6" rx="2" />
+        <circle cx="7" cy="19" r="1.5" />
+        <circle cx="17" cy="19" r="1.5" />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/send-review',
     label: 'Send Review',
     icon: (
@@ -113,12 +125,6 @@ export default function AdminLayout({ children }) {
 
       <div className="app-topbar">
         <span className="app-topbar__welcome">Welcome, Admin</span>
-        <Link href="/admin/manifest" className="btn btn--primary btn--sm">
-          Upload Manifest
-        </Link>
-        <Link href="/admin/dashboard" className="btn btn--outline btn--sm">
-          View All Rides
-        </Link>
         <span className="app-topbar__spacer" />
         <div className="app-topbar__user">
           <span className="app-topbar__avatar">A</span>
