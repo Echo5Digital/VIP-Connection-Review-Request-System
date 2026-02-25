@@ -3,12 +3,13 @@
 import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
 
-const STORAGE_KEY = 'vip-drivers-upload';
+const STORAGE_KEY = 'vip-drivers-upload-v2';
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
 const NAME_KEYS = ['name', 'driver', 'drivername', 'fullname'];
 const PHONE_KEYS = ['phone', 'phonenumber', 'mobile', 'mobilenumber', 'contact', 'contactnumber'];
 const EMAIL_KEYS = ['email', 'emailaddress', 'mail'];
+const CAR_NUM_KEYS = ['car', 'carnum', 'carnumber', 'carno', 'drivernum', 'drivercode', 'vehiclenum'];
 
 function normalizeKey(value) {
   return String(value ?? '')
@@ -89,6 +90,46 @@ function csvRowsToObjects(text) {
   });
 }
 
+// Build objects from a raw matrix, auto-detecting the header row and
+// de-duplicating repeated column names (e.g. two "Car Year" columns).
+function xlsxMatrixToObjects(matrix) {
+  if (matrix.length < 2) return [];
+
+  // Find the header row: first row (within first 5) that contains a cell
+  // whose trimmed value equals "Name" (case-insensitive).
+  let headerIdx = 0;
+  for (let i = 0; i < Math.min(matrix.length, 5); i++) {
+    if (matrix[i].some((cell) => String(cell).trim().toLowerCase() === 'name')) {
+      headerIdx = i;
+      break;
+    }
+  }
+
+  // Build unique header names, appending _2, _3 … for duplicates.
+  const seen = {};
+  const headers = matrix[headerIdx].map((h) => {
+    const clean = String(h ?? '').trim();
+    if (!clean) return null;
+    if (seen[clean] !== undefined) {
+      seen[clean] += 1;
+      return `${clean}_${seen[clean]}`;
+    }
+    seen[clean] = 1;
+    return clean;
+  });
+
+  return matrix
+    .slice(headerIdx + 1)
+    .filter((cells) => cells.some((c) => String(c).trim() !== ''))
+    .map((cells) => {
+      const row = {};
+      headers.forEach((h, i) => {
+        if (h) row[h] = String(cells[i] ?? '').trim();
+      });
+      return row;
+    });
+}
+
 function hasNameColumn(rows) {
   if (!rows.length) return false;
   const keys = Object.keys(rows[0]).map(normalizeKey);
@@ -104,15 +145,31 @@ function mapDrivers(rows) {
       });
 
       const name = pickFirstValue(normalized, NAME_KEYS);
-      const phone = pickFirstValue(normalized, PHONE_KEYS);
-      const email = pickFirstValue(normalized, EMAIL_KEYS);
-
-      if (!name && !phone && !email) return null;
       if (!name) return null;
 
+      const phone = pickFirstValue(normalized, PHONE_KEYS);
+      const email = pickFirstValue(normalized, EMAIL_KEYS);
+      const carNum = pickFirstValue(normalized, CAR_NUM_KEYS);
+      // "Car Year" → caryear; duplicate "Car Year_2" → caryear2 (= make in vehicle&drivers.xlsx)
+      const carYear = normalized['caryear'] || normalized['year'] || '';
+      const carMake = normalized['caryear2'] || normalized['carmake'] || normalized['make'] || '';
+      const vehicleModel = normalized['vehiclemodel'] || normalized['model'] || '';
+      // "Sedan/ MidSUV/SUV" normalises to "sedanmidsuvsuv"
+      const vehicleType =
+        normalized['sedanmidsuvsuv'] ||
+        normalized['type'] ||
+        normalized['vehicletype'] ||
+        normalized['cartype'] ||
+        '';
+
       return {
-        id: `${idx}-${name}-${phone}-${email}`,
+        id: `${idx}-${name}-${carNum}`,
         name,
+        carNum,
+        carYear,
+        carMake,
+        vehicleModel,
+        vehicleType,
         phone,
         email,
       };
@@ -138,7 +195,10 @@ async function parseDriverFile(file, parserReady) {
     const firstSheetName = workbook.SheetNames[0];
     if (!firstSheetName) return [];
     const sheet = workbook.Sheets[firstSheetName];
-    return window.XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+
+    // Use raw array mode so we can handle offset header rows
+    const matrix = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+    return xlsxMatrixToObjects(matrix);
   }
 
   throw new Error('Only .csv and .xlsx files are allowed');
@@ -229,6 +289,10 @@ export default function DriversPage() {
     }
   }
 
+  // Determine which optional columns actually have data
+  const hasPhone = drivers.some((d) => d.phone);
+  const hasEmail = drivers.some((d) => d.email);
+
   return (
     <div>
       <Script
@@ -238,34 +302,38 @@ export default function DriversPage() {
         onError={() => setError('Could not load Excel parser. CSV uploads are still supported.')}
       />
 
-      <div className="flex-between mb-6" style={{ flexWrap: 'wrap', gap: '12px' }}>
-        <h1 className="page-title" style={{ marginBottom: 0 }}>Drivers</h1>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".csv,.xlsx"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-            style={{ fontSize: '13px', color: 'var(--gray-600)' }}
-          />
-          <button type="submit" disabled={loading} className="btn btn--primary btn--sm">
-            {loading ? 'Uploading...' : 'Upload Drivers'}
-          </button>
-          {drivers.length > 0 && (
-            <button type="button" onClick={clearDrivers} className="btn btn--outline btn--sm">
-              Clear List
+      <h1 className="page-title">Drivers</h1>
+
+      {/* Upload section */}
+      <div className="card mb-6">
+        <div className="card__header">Upload Drivers File</div>
+        <div style={{ padding: '16px' }}>
+          <p className="text-muted text-sm mb-4">
+            Upload a .csv or .xlsx file with columns like Car #, Name, Car Year, Make, Model, and Type.
+          </p>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".csv,.xlsx"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              style={{ fontSize: '13px', color: 'var(--gray-600)' }}
+            />
+            <button type="submit" disabled={loading} className="btn btn--primary btn--sm">
+              {loading ? 'Uploading...' : 'Upload Drivers'}
             </button>
-          )}
-          {error && <p className="form-error" style={{ width: '100%' }}>{error}</p>}
-        </form>
+            {drivers.length > 0 && (
+              <button type="button" onClick={clearDrivers} className="btn btn--outline btn--sm">
+                Clear List
+              </button>
+            )}
+            {error && <p className="form-error" style={{ width: '100%', marginTop: '8px' }}>{error}</p>}
+          </form>
+        </div>
       </div>
 
-      <p className="text-muted text-sm mb-4">
-        Upload a .csv or .xlsx with driver columns like Name, Phone, and Email.
-      </p>
-
       <div className="card">
-        <div className="card__header">Drivers List</div>
+        <div className="card__header">Drivers &amp; Vehicles</div>
         {drivers.length === 0 ? (
           <p className="card__empty">
             No drivers uploaded yet.
@@ -275,21 +343,31 @@ export default function DriversPage() {
             <p className="text-muted text-sm" style={{ padding: '12px 16px 0' }}>
               {drivers.length} driver(s){sourceFile ? ` from ${sourceFile}` : ''}
             </p>
-            <div className="table-wrap">
+            <div className="table-wrap" style={{ overflowX: 'auto' }}>
               <table className="data-table">
                 <thead>
                   <tr>
+                    <th>Car #</th>
                     <th>Name</th>
-                    <th>Phone</th>
-                    <th>Email</th>
+                    <th>Year</th>
+                    <th>Make</th>
+                    <th>Model</th>
+                    <th>Type</th>
+                    {hasPhone && <th>Phone</th>}
+                    {hasEmail && <th>Email</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {drivers.map((driver) => (
                     <tr key={driver.id}>
-                      <td style={{ fontWeight: 500 }}>{driver.name || '-'}</td>
-                      <td>{driver.phone || '-'}</td>
-                      <td>{driver.email || '-'}</td>
+                      <td>{driver.carNum || '—'}</td>
+                      <td style={{ fontWeight: 500 }}>{driver.name || '—'}</td>
+                      <td>{driver.carYear || '—'}</td>
+                      <td>{driver.carMake || '—'}</td>
+                      <td>{driver.vehicleModel || '—'}</td>
+                      <td>{driver.vehicleType || '—'}</td>
+                      {hasPhone && <td>{driver.phone || '—'}</td>}
+                      {hasEmail && <td>{driver.email || '—'}</td>}
                     </tr>
                   ))}
                 </tbody>

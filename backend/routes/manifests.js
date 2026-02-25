@@ -26,14 +26,17 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
     const raw = await fs.readFile(req.file.path, 'utf-8');
     const rows = parse(raw, { columns: true, skip_empty_lines: true, trim: true });
     const contacts = rows.map((row) => {
-      const phone = row.phone || row.Phone || row.PHONE || '';
-      const email = row.email || row.Email || row.EMAIL || '';
-      const name = row.name || row.Name || row.NAME || row.fullname || '';
-      const extra = { ...row };
-      delete extra.phone; delete extra.Phone; delete extra.PHONE;
-      delete extra.email; delete extra.Email; delete extra.EMAIL;
-      delete extra.name; delete extra.Name; delete extra.NAME; delete extra.fullname;
-      return { manifestId: manifest._id, name, phone, email, extra };
+      // Support manifest.csv specific columns as well as generic ones
+      const firstName = row.PassengerFirstName || row['Passenger First Name'] || '';
+      const lastName = row.PassengerLastName || row['Passenger Last Name'] || '';
+      const name = (firstName || lastName)
+        ? `${firstName} ${lastName}`.trim()
+        : (row.name || row.Name || row.NAME || row.fullname || '');
+      const phone = row.PassengerCellPhoneNumber || row['Passenger Cell Phone Number']
+        || row.phone || row.Phone || row.PHONE || '';
+      const email = row.PassengerEmailAddress || row['Passenger Email Address']
+        || row.email || row.Email || row.EMAIL || '';
+      return { manifestId: manifest._id, name, phone, email, extra: { ...row } };
     });
     await Contact.insertMany(contacts);
     await fs.unlink(req.file.path).catch(() => {});
