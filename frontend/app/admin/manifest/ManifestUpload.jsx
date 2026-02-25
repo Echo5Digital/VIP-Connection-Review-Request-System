@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-const API = process.env.NEXT_PUBLIC_API_URL || '';
+import { api } from '@/lib/api';
 
 export function ManifestUpload() {
   const router = useRouter();
@@ -24,15 +23,7 @@ export function ManifestUpload() {
       const form = new FormData();
       form.append('file', file);
       if (name.trim()) form.append('name', name.trim());
-      const res = await fetch(`${API}/api/manifests/upload`, {
-        method: 'POST',
-        credentials: 'include',
-        body: form,
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Upload failed');
-      }
+      await api.post('/api/manifests/upload', form);
       setFile(null);
       setName('');
       router.refresh();

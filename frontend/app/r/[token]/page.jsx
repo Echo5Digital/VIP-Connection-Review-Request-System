@@ -4,8 +4,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
-const API = process.env.NEXT_PUBLIC_API_URL || '';
-
 export default function RatingPage() {
   const params = useParams();
   const token = params?.token;
@@ -20,10 +18,15 @@ export default function RatingPage() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${API}/api/rating/page/${token}`, { credentials: 'include' })
-      .then((r) => r.json())
+    api.get(`/api/rating/page/${token}`)
       .then(setData)
-      .catch(() => setData({ alreadySubmitted: false, title: 'Rate your experience', subtitle: 'Your feedback helps us improve.' }))
+      .catch(() =>
+        setData({
+          alreadySubmitted: false,
+          title: 'Rate your experience',
+          subtitle: 'Your feedback helps us improve.',
+        })
+      )
       .finally(() => setLoading(false));
   }, [token]);
 
