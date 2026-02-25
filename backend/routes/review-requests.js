@@ -5,8 +5,10 @@ import ReviewRequest, { generateToken } from '../models/ReviewRequest.js';
 import { sendSms } from '../services/twilioService.js';
 import { sendEmail } from '../services/sendgridService.js';
 import { config } from '../config/index.js';
+import { requireAuth, requireRoles } from '../middleware/auth.js';
 
 const router = Router();
+router.use(requireAuth, requireRoles('admin'));
 
 router.get('/', async (req, res, next) => {
   try {

@@ -1,11 +1,11 @@
-import { api } from '@/lib/api';
+import { serverApi } from '@/lib/server-api';
 import { SendReviewForm } from './SendReviewForm';
 
 export default async function SendReviewPage({ searchParams }) {
   const { manifestId: prefilled } = await searchParams;
   let manifests = [];
   try {
-    manifests = await api.get('/api/manifests');
+    manifests = await serverApi.get('/api/manifests');
   } catch {
     // ignore
   }

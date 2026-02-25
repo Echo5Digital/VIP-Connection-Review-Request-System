@@ -1,9 +1,9 @@
-import { api } from '@/lib/api';
+import { serverApi } from '@/lib/server-api';
 
 export default async function FeedbackPage() {
   let list = [];
   try {
-    list = await api.get('/api/feedback');
+    list = await serverApi.get('/api/feedback');
   } catch {
     // ignore
   }

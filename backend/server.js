@@ -13,18 +13,44 @@ import redirectRoutes from './routes/redirects.js';
 import settingsRoutes from './routes/settings.js';
 import goRedirectRoute from './routes/go.js';
 import Admin from './models/Admin.js';
+import Customer from './models/Customer.js';
 
 await connectDb();
 
-if (process.env.SEED_ADMIN_EMAIL) {
-  const existing = await Admin.countDocuments();
-  if (existing === 0) {
+const defaultAdminEmail = (process.env.SEED_ADMIN_EMAIL || 'admin@gmail.com').toLowerCase();
+const defaultAdminPassword = process.env.SEED_ADMIN_PASSWORD || 'admin1234';
+const defaultCustomerEmail = (process.env.SEED_CUSTOMER_EMAIL || 'testcustomer@gmail.com').toLowerCase();
+const defaultCustomerPassword = process.env.SEED_CUSTOMER_PASSWORD || 'test1234';
+
+if (defaultAdminEmail && defaultAdminPassword) {
+  const existing = await Admin.findOne({ email: defaultAdminEmail }).select('+password');
+  if (!existing) {
     await Admin.create({
-      email: process.env.SEED_ADMIN_EMAIL,
-      password: process.env.SEED_ADMIN_PASSWORD || 'admin123',
+      email: defaultAdminEmail,
+      password: defaultAdminPassword,
       name: 'Admin',
     });
-    console.log('Seeded admin:', process.env.SEED_ADMIN_EMAIL);
+    console.log('Seeded admin:', defaultAdminEmail);
+  } else if (!(await existing.comparePassword(defaultAdminPassword))) {
+    existing.password = defaultAdminPassword;
+    await existing.save();
+    console.log('Updated seeded admin password for:', defaultAdminEmail);
+  }
+}
+
+if (defaultCustomerEmail && defaultCustomerPassword) {
+  const existing = await Customer.findOne({ email: defaultCustomerEmail }).select('+password');
+  if (!existing) {
+    await Customer.create({
+      email: defaultCustomerEmail,
+      password: defaultCustomerPassword,
+      name: 'Test Customer',
+    });
+    console.log('Seeded customer:', defaultCustomerEmail);
+  } else if (!(await existing.comparePassword(defaultCustomerPassword))) {
+    existing.password = defaultCustomerPassword;
+    await existing.save();
+    console.log('Updated seeded customer password for:', defaultCustomerEmail);
   }
 }
 

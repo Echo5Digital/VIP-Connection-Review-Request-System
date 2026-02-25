@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { HomeAuth } from './HomeAuth';
 
 export default function HomePage() {
-  redirect('/admin/dashboard');
+  return <HomeAuth />;
 }

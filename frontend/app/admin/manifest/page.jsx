@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { api } from '@/lib/api';
+import { serverApi } from '@/lib/server-api';
 import { ManifestUpload } from './ManifestUpload';
 
 export default async function ManifestListPage() {
   let manifests = [];
   try {
-    manifests = await api.get('/api/manifests');
+    manifests = await serverApi.get('/api/manifests');
   } catch {
     // ignore
   }

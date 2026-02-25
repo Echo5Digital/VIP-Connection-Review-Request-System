@@ -50,7 +50,13 @@ async function request(path, options = {}) {
     cache: init.cache || 'no-store',
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || res.statusText);
+  if (!res.ok) {
+    const fallbackMessage =
+      Array.isArray(data.errors) && data.errors.length
+        ? data.errors[0]?.msg
+        : null;
+    throw new Error(data.message || fallbackMessage || res.statusText);
+  }
   return data;
 }
 

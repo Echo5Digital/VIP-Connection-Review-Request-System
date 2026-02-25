@@ -1,7 +1,9 @@
 import { Router } from 'express';
+import { requireAuth, requireRoles } from '../middleware/auth.js';
 import PrivateFeedback from '../models/PrivateFeedback.js';
 
 const router = Router();
+router.use(requireAuth, requireRoles('admin'));
 
 router.get('/', async (req, res, next) => {
   try {

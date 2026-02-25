@@ -1,10 +1,10 @@
-import { api } from '@/lib/api';
+import { serverApi } from '@/lib/server-api';
 import { RatingSettingsForm } from './RatingSettingsForm';
 
 export default async function RatingPageAdmin() {
   let settings = {};
   try {
-    settings = await api.get('/api/settings');
+    settings = await serverApi.get('/api/settings');
   } catch {
     // ignore
   }

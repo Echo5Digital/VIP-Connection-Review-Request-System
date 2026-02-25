@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { api } from '@/lib/api';
+import { serverApi } from '@/lib/server-api';
 
 /* ── Status badge helper ── */
 function statusBadge(status) {
@@ -26,8 +26,8 @@ export default async function DashboardPage() {
   let reviewRequests = [];
   try {
     [manifests, reviewRequests] = await Promise.all([
-      api.get('/api/manifests'),
-      api.get('/api/review-requests'),
+      serverApi.get('/api/manifests'),
+      serverApi.get('/api/review-requests'),
     ]);
   } catch {
     // ignore

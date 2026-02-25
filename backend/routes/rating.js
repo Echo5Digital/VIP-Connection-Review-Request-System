@@ -4,6 +4,7 @@ import ReviewRequest from '../models/ReviewRequest.js';
 import Rating from '../models/Rating.js';
 import PrivateFeedback from '../models/PrivateFeedback.js';
 import { getSettings } from '../models/Settings.js';
+import { requireAuth, requireRoles } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -29,10 +30,20 @@ router.get('/page/:token', async (req, res, next) => {
 
 router.post(
   '/submit',
-  body('token').notEmpty(),
-  body('rating').isInt({ min: 1, max: 5 }),
-  body('publicComment').optional().isString(),
-  body('privateFeedback').optional().isString(),
+  body('token').trim().notEmpty().withMessage('Token is required'),
+  body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
+  body('publicComment')
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Public comment cannot exceed 1000 characters'),
+  body('privateFeedback')
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Private feedback cannot exceed 1000 characters'),
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
@@ -45,6 +56,7 @@ router.post(
 
       await Rating.create({
         reviewRequestId: request._id,
+        source: 'request',
         value: Number(rating),
         publicComment: publicComment || '',
       });
@@ -56,6 +68,48 @@ router.post(
       }
       const settings = await getSettings('ratingPage') || {};
       res.json({ thankYouMessage: settings.thankYouMessage || 'Thank you for your feedback!' });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.post(
+  '/customer-submit',
+  requireAuth,
+  requireRoles('customer'),
+  body('driverRating').isInt({ min: 1, max: 5 }).withMessage('Driver rating must be between 1 and 5'),
+  body('vehicleRating').isInt({ min: 1, max: 5 }).withMessage('Vehicle rating must be between 1 and 5'),
+  body('publicComment')
+    .optional()
+    .isString()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Comment cannot exceed 1000 characters'),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+      const existing = await Rating.findOne({ customerId: req.user._id, source: 'customer' });
+      if (existing) {
+        return res.status(400).json({ message: 'You have already submitted your rating' });
+      }
+
+      const driverRating = Number(req.body.driverRating);
+      const vehicleRating = Number(req.body.vehicleRating);
+      const averageRating = Number(((driverRating + vehicleRating) / 2).toFixed(1));
+
+      await Rating.create({
+        customerId: req.user._id,
+        source: 'customer',
+        value: averageRating,
+        driverRating,
+        vehicleRating,
+        publicComment: req.body.publicComment?.trim() || '',
+      });
+
+      res.status(201).json({ message: 'Rating submitted successfully' });
     } catch (err) {
       next(err);
     }

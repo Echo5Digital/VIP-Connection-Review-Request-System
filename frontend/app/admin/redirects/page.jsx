@@ -1,10 +1,10 @@
-import { api } from '@/lib/api';
+import { serverApi } from '@/lib/server-api';
 
 export default async function RedirectsPage({ searchParams }) {
   const params = await searchParams;
   let events = [];
   try {
-    events = await api.get('/api/redirects', { params });
+    events = await serverApi.get('/api/redirects', { params });
   } catch {
     // ignore
   }

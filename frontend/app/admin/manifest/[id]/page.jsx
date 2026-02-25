@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { api } from '@/lib/api';
+import { serverApi } from '@/lib/server-api';
 
 export default async function ManifestDetailPage({ params }) {
   const { id } = await params;
   let data = null;
   try {
-    data = await api.get(`/api/manifests/${id}`);
+    data = await serverApi.get(`/api/manifests/${id}`);
   } catch {
     notFound();
   }

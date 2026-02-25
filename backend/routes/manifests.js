@@ -2,10 +2,12 @@ import { Router } from 'express';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs/promises';
 import { upload } from '../middleware/upload.js';
+import { requireAuth, requireRoles } from '../middleware/auth.js';
 import Manifest from '../models/Manifest.js';
 import Contact from '../models/Contact.js';
 
 const router = Router();
+router.use(requireAuth, requireRoles('admin'));
 
 router.get('/', async (req, res, next) => {
   try {
