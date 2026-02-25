@@ -1,0 +1,29 @@
+# Dependencies
+node_modules
+api/node_modules
+.pnp
+.pnp.js
+
+# Build / Next
+.next
+out
+build
+dist
+
+# Env
+.env
+.env.local
+.env*.local
+api/.env
+
+# Uploads
+api/uploads/*
+!api/uploads/.gitkeep
+
+# Debug / IDE
+.DS_Store
+*.log
+npm-debug.log*
+
+# TypeScript
+next-env.d.ts
