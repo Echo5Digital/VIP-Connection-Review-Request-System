@@ -124,12 +124,7 @@ export default function AdminLayout({ children }) {
       </aside>
 
       <div className="app-topbar">
-        <span className="app-topbar__welcome">Welcome, Admin</span>
         <span className="app-topbar__spacer" />
-        <div className="app-topbar__user">
-          <span className="app-topbar__avatar">A</span>
-          Admin
-        </div>
         <button type="button" className="btn btn--primary btn--sm" onClick={handleLogout} disabled={isLoggingOut}>
           {isLoggingOut ? 'Logging out...' : 'Logout'}
         </button>
