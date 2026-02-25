@@ -177,7 +177,7 @@ function mapDrivers(rows) {
     .filter(Boolean);
 }
 
-async function parseDriverFile(file, parserReady) {
+async function parseDriverFile(file) {
   const extension = file.name.split('.').pop()?.toLowerCase();
 
   if (extension === 'csv') {
@@ -186,7 +186,7 @@ async function parseDriverFile(file, parserReady) {
   }
 
   if (extension === 'xlsx') {
-    if (!parserReady || typeof window === 'undefined' || !window.XLSX) {
+    if (typeof window === 'undefined' || !window.XLSX) {
       throw new Error('Excel parser is still loading. Try again in a moment.');
     }
 
@@ -211,7 +211,6 @@ export default function DriversPage() {
   const [sourceFile, setSourceFile] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [parserReady, setParserReady] = useState(false);
 
   useEffect(() => {
     try {
@@ -258,7 +257,7 @@ export default function DriversPage() {
     setLoading(true);
 
     try {
-      const rows = await parseDriverFile(file, parserReady);
+      const rows = await parseDriverFile(file);
       if (!rows.length) {
         throw new Error('The file has no data rows');
       }
@@ -298,7 +297,6 @@ export default function DriversPage() {
       <Script
         src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
         strategy="afterInteractive"
-        onLoad={() => setParserReady(true)}
         onError={() => setError('Could not load Excel parser. CSV uploads are still supported.')}
       />
 
