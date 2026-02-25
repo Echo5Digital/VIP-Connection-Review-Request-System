@@ -49,7 +49,7 @@ export function HomeAuth() {
       <section className="home-auth__intro">
         <p className="home-auth__eyebrow">VIP Connection</p>
         <h1>Review Request System</h1>
-        <p>Admins manage manifests and requests. Customers can log in and submit a rating.</p>
+        <p>A Controlled Feedback Platform to Increase Public Reviews, Capture Private Concerns, and Monitor Driver & Vehicle Performance</p>
         <div className="home-auth__credentials">
           <strong>Default Admin Login</strong>
           <span>Email: admin@gmail.com</span>
