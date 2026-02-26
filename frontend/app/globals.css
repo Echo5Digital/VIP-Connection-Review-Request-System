@@ -110,8 +110,24 @@ button {
   display: flex;
   align-items: center;
   padding: 0 24px;
-  z-index: 100;
+  z-index: 1000;
   box-shadow: 0 2px 8px rgba(58, 107, 219, .25);
+}
+
+.app-header__menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  padding: 8px;
+  margin-left: -8px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.app-header__menu-btn svg {
+  width: 24px;
+  height: 24px;
 }
 
 .app-header__brand {
@@ -143,8 +159,21 @@ button {
   padding: 16px 0;
   display: flex;
   flex-direction: column;
-  z-index: 90;
+  z-index: 900;
   overflow-y: auto;
+  transition: transform .3s ease;
+}
+
+.app-sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 850;
 }
 
 .app-sidebar__nav {
@@ -199,6 +228,7 @@ button {
   margin-left: var(--sidebar-w);
   padding: var(--content-pad);
   min-height: calc(100vh - var(--header-h));
+  transition: margin-left .3s ease;
 }
 
 /* ---------- Page Title ---------- */
@@ -907,4 +937,98 @@ table.data-table tbody tr:hover {
 .dash-card__stat--red {
   background: var(--red-bg);
   color: var(--red-fg);
+}
+
+/* ---------- Responsive Breakpoints ---------- */
+
+@media (max-width: 768px) {
+  :root {
+    --content-pad: 16px;
+  }
+
+  .app-header {
+    padding: 0 16px;
+  }
+
+  .app-header__menu-btn {
+    display: flex;
+  }
+
+  .app-header__brand {
+    font-size: 16px;
+  }
+
+  .app-header__brand em {
+    font-size: 18px;
+  }
+
+  .app-sidebar {
+    transform: translateX(-100%);
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .app-sidebar--open {
+    transform: translateX(0);
+  }
+
+  .app-sidebar--open+.app-sidebar-overlay {
+    display: block;
+  }
+
+  .app-main {
+    margin-left: 0;
+  }
+
+  .dash-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .stat-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .text-headline {
+    font-size: 24px;
+  }
+
+  .text-subhead {
+    font-size: 14px;
+  }
+
+  .card__header {
+    padding: 12px 16px;
+  }
+
+  .card__body {
+    padding: 16px;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .filter-bar__search {
+    max-width: none;
+  }
+
+  .table-wrap {
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header__brand span {
+    display: none;
+    /* Hide 'Connection Review Request System' on very small screens */
+  }
 }

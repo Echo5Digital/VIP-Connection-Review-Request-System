@@ -10,14 +10,14 @@ export default async function FeedbackPage() {
 
   return (
     <div>
-      <h1 className="page-title">Private Feedback</h1>
+      <h1 className="page-title">Feedback</h1>
       <p className="text-muted text-sm mb-4">
-        Feedback submitted as &quot;private&quot; on the rating page. Only visible here.
+        Displays a complete list of all feedback submitted, including items marked as private.
       </p>
 
       <div className="card">
         {list.length === 0 ? (
-          <p className="card__empty">No private feedback yet.</p>
+          <p className="card__empty">No feedback yet.</p>
         ) : (
           <div className="table-wrap">
             <table className="data-table">

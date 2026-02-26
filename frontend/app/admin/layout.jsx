@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 
 const nav = [
@@ -88,6 +88,14 @@ export default function AdminLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Close sidebar on path change (mobile)
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [pathname]);
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -102,8 +110,13 @@ export default function AdminLayout({ children }) {
   return (
     <>
       <header className="app-header">
+        <button type="button" className="app-header__menu-btn" onClick={toggleSidebar} aria-label="Toggle Menu">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
         <div className="app-header__brand">
-          <em>VIP</em> Connection Review Request System
+          <em>VIP</em> <span>Connection Review Request System</span>
         </div>
         <div style={{ flex: 1 }} />
         <button type="button" className="btn btn--inverse btn--sm" onClick={handleLogout} disabled={isLoggingOut}>
@@ -111,7 +124,7 @@ export default function AdminLayout({ children }) {
         </button>
       </header>
 
-      <aside className="app-sidebar">
+      <aside className={`app-sidebar${isSidebarOpen ? ' app-sidebar--open' : ''}`}>
         <nav className="app-sidebar__nav">
           {nav.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
@@ -128,6 +141,8 @@ export default function AdminLayout({ children }) {
           })}
         </nav>
       </aside>
+
+      {isSidebarOpen && <div className="app-sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />}
 
       <main className="app-main">{children}</main>
     </>

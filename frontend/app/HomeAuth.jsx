@@ -54,9 +54,9 @@ export function HomeAuth() {
           <strong>Default Admin Login</strong>
           <span>Email: admin@gmail.com</span>
           <span>Password: admin123</span>
-          <strong style={{ marginTop: '8px' }}>Test Client Login</strong>
+          {/* <strong style={{ marginTop: '8px' }}>Test Client Login</strong>
           <span>Email: testclient@gmail.com</span>
-          <span>Password: test1234</span>
+          <span>Password: test1234</span>     */}
         </div>
       </section>
 
