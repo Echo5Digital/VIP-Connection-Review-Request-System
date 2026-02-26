@@ -4,7 +4,7 @@ import { body, validationResult } from 'express-validator';
 import { config } from '../config/index.js';
 import { requireAuth, requireRoles } from '../middleware/auth.js';
 import Admin from '../models/Admin.js';
-import Customer from '../models/Customer.js';
+import Client from '../models/Client.js';
 
 const router = Router();
 const authCookieOptions = {
@@ -102,9 +102,9 @@ router.post(
       }
 
       const { email, password } = req.body;
-      const [admin, customer] = await Promise.all([
+      const [admin, client] = await Promise.all([
         Admin.findOne({ email }).select('+password'),
-        Customer.findOne({ email }).select('+password'),
+        Client.findOne({ email }).select('+password'),
       ]);
 
       let user = null;
@@ -113,9 +113,12 @@ router.post(
       if (admin && (await admin.comparePassword(password))) {
         user = admin;
         role = 'admin';
-      } else if (customer && (await customer.comparePassword(password))) {
-        user = customer;
-        role = 'customer';
+      } else if (client && (await client.comparePassword(password))) {
+        if (client.active === false) {
+          return res.status(403).json({ message: 'Account is deactivated' });
+        }
+        user = client;
+        role = 'client';
       }
 
       if (!user || !role) {

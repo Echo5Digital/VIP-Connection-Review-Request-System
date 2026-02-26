@@ -19,6 +19,18 @@ const nav = [
     ),
   },
   {
+    href: '/admin/clients',
+    label: 'Clients',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/manifest',
     label: 'Manifests',
     icon: (
@@ -37,16 +49,6 @@ const nav = [
         <rect x="2" y="13" width="20" height="6" rx="2" />
         <circle cx="7" cy="19" r="1.5" />
         <circle cx="17" cy="19" r="1.5" />
-      </svg>
-    ),
-  },
-  {
-    href: '/admin/send-review',
-    label: 'Send Review',
-    icon: (
-      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <path d="M22 2L11 13" />
-        <path d="M22 2L15 22L11 13L2 9L22 2Z" />
       </svg>
     ),
   },
@@ -103,6 +105,10 @@ export default function AdminLayout({ children }) {
         <div className="app-header__brand">
           <em>VIP</em> Connection Review Request System
         </div>
+        <div style={{ flex: 1 }} />
+        <button type="button" className="btn btn--inverse btn--sm" onClick={handleLogout} disabled={isLoggingOut}>
+          {isLoggingOut ? 'Logging out...' : 'Logout'}
+        </button>
       </header>
 
       <aside className="app-sidebar">
@@ -122,13 +128,6 @@ export default function AdminLayout({ children }) {
           })}
         </nav>
       </aside>
-
-      <div className="app-topbar">
-        <span className="app-topbar__spacer" />
-        <button type="button" className="btn btn--primary btn--sm" onClick={handleLogout} disabled={isLoggingOut}>
-          {isLoggingOut ? 'Logging out...' : 'Logout'}
-        </button>
-      </div>
 
       <main className="app-main">{children}</main>
     </>

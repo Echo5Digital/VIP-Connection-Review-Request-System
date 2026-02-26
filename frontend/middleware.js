@@ -12,7 +12,7 @@ function getRoleFromToken(token) {
       .padEnd(Math.ceil(parts[1].length / 4) * 4, '=');
     const decoded = JSON.parse(atob(payload));
 
-    if (decoded.role === 'admin' || decoded.role === 'customer') {
+    if (decoded.role === 'admin' || decoded.role === 'client') {
       return decoded.role;
     }
 
@@ -34,28 +34,28 @@ export function middleware(request) {
     if (role === 'admin') {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url));
     }
-    if (role === 'customer') {
-      return NextResponse.redirect(new URL('/customer/review', request.url));
+    if (role === 'client') {
+      return NextResponse.redirect(new URL('/client/dashboard', request.url));
     }
     return NextResponse.next();
   }
 
   if (pathname === '/admin' || pathname === '/admin/') {
-    const target = role === 'admin' ? '/admin/dashboard' : role === 'customer' ? '/customer/review' : '/';
+    const target = role === 'admin' ? '/admin/dashboard' : role === 'client' ? '/client/dashboard' : '/';
     return NextResponse.redirect(new URL(target, request.url));
   }
 
   if (pathname.startsWith('/admin/') && role !== 'admin') {
-    const target = role === 'customer' ? '/customer/review' : '/';
+    const target = role === 'client' ? '/client/dashboard' : '/';
     return NextResponse.redirect(new URL(target, request.url));
   }
 
-  if (pathname === '/customer' || pathname === '/customer/') {
-    const target = role === 'customer' ? '/customer/review' : role === 'admin' ? '/admin/dashboard' : '/';
+  if (pathname === '/client' || pathname === '/client/') {
+    const target = role === 'client' ? '/client/dashboard' : role === 'admin' ? '/admin/dashboard' : '/';
     return NextResponse.redirect(new URL(target, request.url));
   }
 
-  if (pathname.startsWith('/customer/') && role !== 'customer') {
+  if (pathname.startsWith('/client/') && role !== 'client') {
     const target = role === 'admin' ? '/admin/dashboard' : '/';
     return NextResponse.redirect(new URL(target, request.url));
   }
@@ -63,4 +63,4 @@ export function middleware(request) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ['/', '/admin/:path*', '/customer/:path*'] };
+export const config = { matcher: ['/', '/admin/:path*', '/client/:path*'] };

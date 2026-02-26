@@ -1,11 +1,11 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config/index.js';
 import Admin from '../models/Admin.js';
-import Customer from '../models/Customer.js';
+import Client from '../models/Client.js';
 
 const roleModelMap = {
   admin: Admin,
-  customer: Customer,
+  client: Client,
 };
 
 export async function requireAuth(req, res, next) {
@@ -15,7 +15,7 @@ export async function requireAuth(req, res, next) {
   }
   try {
     const decoded = jwt.verify(token, config.jwtSecret);
-    const role = decoded.role === 'customer' ? 'customer' : 'admin';
+    const role = decoded.role === 'client' ? 'client' : 'admin';
     const UserModel = roleModelMap[role];
     const user = await UserModel.findById(decoded.userId).select('-password');
     if (!user) return res.status(401).json({ message: 'Invalid token' });

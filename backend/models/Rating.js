@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 
 const ratingSchema = new mongoose.Schema({
   reviewRequestId: { type: mongoose.Schema.Types.ObjectId, ref: 'ReviewRequest', default: null },
-  customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
-  source: { type: String, enum: ['request', 'customer'], required: true, default: 'request' },
+  clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', default: null },
+  source: { type: String, enum: ['request', 'client'], required: true, default: 'request' },
   value: { type: Number, min: 1, max: 5 },
   driverRating: { type: Number, min: 1, max: 5 },
   vehicleRating: { type: Number, min: 1, max: 5 },

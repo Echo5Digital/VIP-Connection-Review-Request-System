@@ -38,7 +38,7 @@ export default async function ManifestDetailPage({ params }) {
               <tr>
                 <th>Pickup Date/Time</th>
                 <th>Res #</th>
-                <th>Customer</th>
+                <th>Client</th>
                 <th>Passenger</th>
                 <th>Cell Phone</th>
                 <th>Email</th>

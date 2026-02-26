@@ -75,9 +75,9 @@ router.post(
 );
 
 router.post(
-  '/customer-submit',
+  '/client-submit',
   requireAuth,
-  requireRoles('customer'),
+  requireRoles('client'),
   body('driverRating').isInt({ min: 1, max: 5 }).withMessage('Driver rating must be between 1 and 5'),
   body('vehicleRating').isInt({ min: 1, max: 5 }).withMessage('Vehicle rating must be between 1 and 5'),
   body('publicComment')
@@ -91,7 +91,7 @@ router.post(
       const errors = validationResult(req);
       if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-      const existing = await Rating.findOne({ customerId: req.user._id, source: 'customer' });
+      const existing = await Rating.findOne({ clientId: req.user._id, source: 'client' });
       if (existing) {
         return res.status(400).json({ message: 'You have already submitted your rating' });
       }
@@ -101,8 +101,8 @@ router.post(
       const averageRating = Number(((driverRating + vehicleRating) / 2).toFixed(1));
 
       await Rating.create({
-        customerId: req.user._id,
-        source: 'customer',
+        clientId: req.user._id,
+        source: 'client',
         value: averageRating,
         driverRating,
         vehicleRating,

@@ -1,26 +1,47 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import mongoose from 'mongoose';
 import { connectDb } from './config/db.js';
 import { config } from './config/index.js';
 
 import authRoutes from './routes/auth.js';
 import manifestRoutes from './routes/manifests.js';
-import reviewRequestRoutes from './routes/review-requests.js';
 import ratingRoutes from './routes/rating.js';
 import feedbackRoutes from './routes/feedback.js';
 import redirectRoutes from './routes/redirects.js';
 import settingsRoutes from './routes/settings.js';
+import clientRoutes from './routes/client.js';
 import goRedirectRoute from './routes/go.js';
 import Admin from './models/Admin.js';
-import Customer from './models/Customer.js';
+import Client from './models/Client.js';
 
 await connectDb();
 
+// Run migrations
+try {
+  const db = mongoose.connection.db;
+  if (db) {
+    const collections = await db.listCollections().toArray();
+    const hasCustomers = collections.some((c) => c.name === 'customers');
+    if (hasCustomers) {
+      await db.collection('customers').rename('clients');
+      console.log('Migrated customers collection to clients');
+    }
+
+    await db.collection('ratings').updateMany(
+      { source: 'customer' },
+      { $set: { source: 'client' }, $rename: { customerId: 'clientId' } }
+    );
+  }
+} catch (err) {
+  console.error('Migration error:', err);
+}
+
 const defaultAdminEmail = (process.env.SEED_ADMIN_EMAIL || 'admin@gmail.com').toLowerCase();
 const defaultAdminPassword = process.env.SEED_ADMIN_PASSWORD || 'admin1234';
-const defaultCustomerEmail = (process.env.SEED_CUSTOMER_EMAIL || 'testcustomer@gmail.com').toLowerCase();
-const defaultCustomerPassword = process.env.SEED_CUSTOMER_PASSWORD || 'test1234';
+const defaultClientEmail = (process.env.SEED_CLIENT_EMAIL || 'testclient@gmail.com').toLowerCase();
+const defaultClientPassword = process.env.SEED_CLIENT_PASSWORD || 'test1234';
 
 if (defaultAdminEmail && defaultAdminPassword) {
   const existing = await Admin.findOne({ email: defaultAdminEmail }).select('+password');
@@ -38,19 +59,20 @@ if (defaultAdminEmail && defaultAdminPassword) {
   }
 }
 
-if (defaultCustomerEmail && defaultCustomerPassword) {
-  const existing = await Customer.findOne({ email: defaultCustomerEmail }).select('+password');
+if (defaultClientEmail && defaultClientPassword) {
+  const existing = await Client.findOne({ email: defaultClientEmail }).select('+password');
   if (!existing) {
-    await Customer.create({
-      email: defaultCustomerEmail,
-      password: defaultCustomerPassword,
-      name: 'Test Customer',
+    await Client.create({
+      email: defaultClientEmail,
+      password: defaultClientPassword,
+      name: 'Test Client',
+      active: true,
     });
-    console.log('Seeded customer:', defaultCustomerEmail);
-  } else if (!(await existing.comparePassword(defaultCustomerPassword))) {
-    existing.password = defaultCustomerPassword;
+    console.log('Seeded client:', defaultClientEmail);
+  } else if (!(await existing.comparePassword(defaultClientPassword))) {
+    existing.password = defaultClientPassword;
     await existing.save();
-    console.log('Updated seeded customer password for:', defaultCustomerEmail);
+    console.log('Updated seeded client password for:', defaultClientEmail);
   }
 }
 
@@ -61,11 +83,11 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/manifests', manifestRoutes);
-app.use('/api/review-requests', reviewRequestRoutes);
 app.use('/api/rating', ratingRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/redirects', redirectRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/clients', clientRoutes);
 app.get('/go/:redirectId', goRedirectRoute);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));

@@ -3,25 +3,19 @@ import { serverApi } from '@/lib/server-api';
 
 export default async function DashboardPage() {
   let manifests = [];
-  let reviewRequests = [];
   try {
-    [manifests, reviewRequests] = await Promise.all([
-      serverApi.get('/api/manifests'),
-      serverApi.get('/api/review-requests'),
-    ]);
+    manifests = await serverApi.get('/api/manifests');
   } catch {
     // ignore
   }
 
-  const sentCount = reviewRequests.length;
-  const failedCount = reviewRequests.filter(r => r.status === 'failed').length;
   const manifestsCount = manifests.length;
 
   return (
     <div className="dash-container">
       <div className="dash-header">
-        <h1 className="text-headline">Overview</h1>
-        <p className="text-subhead">Manage your review requests, drivers, and feedback.</p>
+        <h1 className="text-headline">System Dashboard</h1>
+        <p className="text-subhead">Stay on top of daily manifests, driver coordination, and enhance review workflow efficiently.</p>
       </div>
 
       <div className="dash-grid">
@@ -52,32 +46,24 @@ export default async function DashboardPage() {
           </div>
         </Link>
 
-        {/* Send Review Block */}
-        <Link href="/admin/send-review" className="dash-card">
+        {/* Clients Block */}
+        <Link href="/admin/clients" className="dash-card">
           <div className="dash-card__header">
             <div className="dash-card__icon-wrap">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path d="M22 2L11 13" />
-                <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
             </div>
-            <h2 className="dash-card__title">Send Review Requests</h2>
+            <h2 className="dash-card__title">Clients</h2>
           </div>
           <div className="dash-card__body">
-            <p className="text-body">Manually orchestrate and resend review requests to clients via SMS and Email channels.</p>
-            <div className="dash-card__stat-group">
-              <span className="dash-card__stat">
-                {sentCount} Total Sent
-              </span>
-              {failedCount > 0 && (
-                <span className="dash-card__stat dash-card__stat--red">
-                  {failedCount} Failed
-                </span>
-              )}
-            </div>
+            <p className="text-body">Manage portal access for your clients. Add new accounts or disable existing credentials.</p>
           </div>
           <div className="dash-card__footer">
-            Send Requests
+            Manage Clients
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>

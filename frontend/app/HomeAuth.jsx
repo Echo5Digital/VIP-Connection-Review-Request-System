@@ -14,7 +14,7 @@ export function HomeAuth() {
   const [loading, setLoading] = useState(false);
 
   function getRedirectPath(role) {
-    return role === 'customer' ? '/customer/review' : '/admin/dashboard';
+    return role === 'client' ? '/client/dashboard' : '/admin/dashboard';
   }
 
   async function handleSubmit(event) {
@@ -54,8 +54,8 @@ export function HomeAuth() {
           <strong>Default Admin Login</strong>
           <span>Email: admin@gmail.com</span>
           <span>Password: admin123</span>
-          <strong style={{ marginTop: '8px' }}>Test Customer Login</strong>
-          <span>Email: testcustomer@gmail.com</span>
+          <strong style={{ marginTop: '8px' }}>Test Client Login</strong>
+          <span>Email: testclient@gmail.com</span>
           <span>Password: test1234</span>
         </div>
       </section>
