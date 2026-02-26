@@ -9,6 +9,7 @@ export function RatingSettingsForm({ initial }) {
   const [title, setTitle] = useState(initial.title ?? 'How was your experience?');
   const [subtitle, setSubtitle] = useState(initial.subtitle ?? 'Your feedback helps us improve.');
   const [thankYouMessage, setThankYouMessage] = useState(initial.thankYouMessage ?? 'Thank you for your feedback!');
+  const [googleReviewUrl, setGoogleReviewUrl] = useState(initial.googleReviewUrl ?? 'https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -17,7 +18,9 @@ export function RatingSettingsForm({ initial }) {
     setError('');
     setLoading(true);
     try {
-      await api.patch('/api/settings', { ratingPage: { title, subtitle, thankYouMessage } });
+      await api.patch('/api/settings', {
+        ratingPage: { title, subtitle, thankYouMessage, googleReviewUrl }
+      });
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
@@ -52,6 +55,16 @@ export function RatingSettingsForm({ initial }) {
           value={thankYouMessage}
           onChange={(e) => setThankYouMessage(e.target.value)}
           className="form-input"
+        />
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Google Review URL</label>
+        <input
+          value={googleReviewUrl}
+          onChange={(e) => setGoogleReviewUrl(e.target.value)}
+          className="form-input"
+          placeholder="https://search.google.com/local/writereview?placeid=..."
         />
       </div>
 

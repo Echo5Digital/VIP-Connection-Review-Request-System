@@ -22,6 +22,7 @@ router.get('/page/:token', async (req, res, next) => {
       alreadySubmitted: false,
       title: settings.title || 'How was your experience?',
       subtitle: settings.subtitle || 'Your feedback helps us improve.',
+      googleReviewUrl: settings.googleReviewUrl || "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID",
     });
   } catch (err) {
     next(err);
@@ -31,7 +32,8 @@ router.get('/page/:token', async (req, res, next) => {
 router.post(
   '/submit',
   body('token').trim().notEmpty().withMessage('Token is required'),
-  body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
+  body('driverRating').isInt({ min: 1, max: 5 }).withMessage('Driver rating must be between 1 and 5'),
+  body('vehicleRating').isInt({ min: 1, max: 5 }).withMessage('Vehicle rating must be between 1 and 5'),
   body('publicComment')
     .optional()
     .isString()
@@ -48,16 +50,22 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-      const { token, rating, publicComment, privateFeedback } = req.body;
+      const { token, driverRating, vehicleRating, publicComment, privateFeedback } = req.body;
       const request = await ReviewRequest.findOne({ token });
       if (!request) return res.status(404).json({ message: 'Invalid or expired link' });
       const existing = await Rating.findOne({ reviewRequestId: request._id });
       if (existing) return res.status(400).json({ message: 'Already submitted' });
 
+      const dRating = Number(driverRating);
+      const vRating = Number(vehicleRating);
+      const averageRating = Number(((dRating + vRating) / 2).toFixed(1));
+
       await Rating.create({
         reviewRequestId: request._id,
         source: 'request',
-        value: Number(rating),
+        value: averageRating,
+        driverRating: dRating,
+        vehicleRating: vRating,
         publicComment: publicComment || '',
       });
       if (privateFeedback && String(privateFeedback).trim()) {

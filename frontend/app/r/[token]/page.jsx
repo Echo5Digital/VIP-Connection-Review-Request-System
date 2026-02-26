@@ -3,17 +3,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import { EmojiRatingGroup } from '@/components/EmojiRatingGroup';
 
 export default function RatingPage() {
   const params = useParams();
   const token = params?.token;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [rating, setRating] = useState(0);
+  const [driverRating, setDriverRating] = useState(0);
+  const [vehicleRating, setVehicleRating] = useState(0);
   const [publicComment, setPublicComment] = useState('');
-  const [privateFeedback, setPrivateFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [thankYou, setThankYou] = useState(null);
+  const [thankYou, setThankYou] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -23,71 +24,158 @@ export default function RatingPage() {
       .catch(() =>
         setData({
           alreadySubmitted: false,
-          title: 'Rate your experience',
-          subtitle: 'Your feedback helps us improve.',
+          title: 'Rate Our Service',
+          subtitle: 'Thank you for using VIP Connection. On a scale of 1 to 5, how would you rate your satisfaction with the Driver and Vehicle?',
+          googleReviewUrl: 'https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID',
+          thankYouMessage: 'Thank you for your feedback!',
+
+
         })
       )
       .finally(() => setLoading(false));
   }, [token]);
 
   const submit = useCallback(async () => {
-    if (!token || rating < 1 || rating > 5) return;
+    if (!token || driverRating < 1 || vehicleRating < 1) return;
     setSubmitting(true);
     setError('');
     try {
-      const res = await api.post('/api/rating/submit', {
+      await api.post('/api/rating/submit', {
         token,
-        rating,
+        driverRating,
+        vehicleRating,
         publicComment: publicComment.trim() || undefined,
-        privateFeedback: privateFeedback.trim() || undefined,
       });
-      setThankYou(res.thankYouMessage);
+      setThankYou(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Submission failed');
     } finally {
       setSubmitting(false);
     }
-  }, [token, rating, publicComment, privateFeedback]);
-
-  /* Centered page wrapper */
-  const wrapStyle = {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '24px',
-    background: 'var(--gray-100)',
-  };
+  }, [token, driverRating, vehicleRating, publicComment]);
 
   if (loading) {
     return (
-      <main style={wrapStyle}>
+      <main className="wrap">
         <p className="text-muted">Loading…</p>
+        <style jsx>{`
+          .wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: var(--gray-100);
+          }
+        `}</style>
       </main>
     );
   }
 
   if (data?.alreadySubmitted) {
     return (
-      <main style={wrapStyle}>
-        <div className="card" style={{ textAlign: 'center', maxWidth: '420px', width: '100%' }}>
-          <div className="card__body" style={{ padding: '40px 24px' }}>
-            <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px', color: 'var(--gray-800)' }}>Thank you</h1>
-            <p className="text-muted">You have already submitted your rating ({data.rating} stars).</p>
+      <main className="wrap">
+        <div className="card rating-card">
+          <div className="card__body">
+            <h1 className="rating-card__title">Thank you</h1>
+            <p className="text-muted">
+              You have already submitted your rating.
+            </p>
           </div>
         </div>
+        <style jsx>{`
+          .wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: var(--gray-100);
+          }
+          .rating-card {
+            text-align: center;
+            max-width: 480px;
+            width: 100%;
+          }
+          .rating-card__title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--gray-800);
+          }
+        `}</style>
       </main>
     );
   }
 
   if (thankYou) {
     return (
-      <main style={wrapStyle}>
-        <div className="card" style={{ textAlign: 'center', maxWidth: '420px', width: '100%' }}>
-          <div className="card__body" style={{ padding: '40px 24px' }}>
-            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--gray-800)' }}>{thankYou}</h1>
+      <main className="wrap">
+        <div className="card thanks-card">
+          <div className="card__body">
+            <h1 className="thanks-card__title">Thank You For Your Rating!</h1>
+            <p className="thanks-card__text">
+              Thank you for your fantastic review! We put a lot of effort into making using VIP Connection as seamless as possible, so we are thrilled to hear that you are enjoying our service.
+            </p>
+            <p className="thanks-card__text">
+              If you have time, we would greatly appreciate it if you could share your experience with us on Google. Leaving a review would be a tremendous help to us.
+            </p>
+            <div className="thanks-card__actions">
+              <button type="button" className="btn btn--outline" onClick={() => setThankYou(false)}>Not now</button>
+              <a
+                href={data?.googleReviewUrl || "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn--success"
+              >
+                Yes
+              </a>
+            </div>
           </div>
+          <footer className="thanks-card__footer">
+            © {new Date().getFullYear()} VIP Connection Review System
+          </footer>
         </div>
+        <style jsx>{`
+          .wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: var(--gray-100);
+          }
+          .thanks-card {
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+          }
+          .thanks-card__title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--blue-600);
+            margin-bottom: 24px;
+          }
+          .thanks-card__text {
+            font-size: 15px;
+            color: var(--gray-700);
+            margin-bottom: 16px;
+            line-height: 1.6;
+          }
+          .thanks-card__actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 24px;
+            margin-bottom: 24px;
+          }
+          .thanks-card__footer {
+            padding: 16px;
+            font-size: 13px;
+            color: var(--gray-500);
+            border-top: 1px solid var(--gray-200);
+          }
+        `}</style>
       </main>
     );
   }
@@ -96,77 +184,86 @@ export default function RatingPage() {
   const subtitle = data?.subtitle || 'Your feedback helps us improve.';
 
   return (
-    <main style={wrapStyle}>
-      <div className="card" style={{ width: '100%', maxWidth: '420px' }}>
-        <div className="card__body" style={{ padding: '28px 24px' }}>
-          <h1 style={{ marginBottom: '6px', fontSize: '20px', fontWeight: 700, color: 'var(--gray-800)' }}>{title}</h1>
-          <p className="text-muted text-sm" style={{ marginBottom: '20px' }}>{subtitle}</p>
+    <main className="wrap">
+      <div className="card rating-card">
+        <div className="card__body">
+          <header className="rating-card__header">
+            <h1 className="rating-card__title">{title}</h1>
+            <p className="rating-card__subtitle">{subtitle}</p>
+          </header>
 
-          {/* Star rating */}
-          <div style={{ marginBottom: '20px' }}>
-            <p className="form-label" style={{ marginBottom: '8px' }}>Rating (1–5)</p>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setRating(n)}
-                  style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: 'var(--radius-md)',
-                    border: `2px solid ${rating === n ? 'var(--blue-500)' : 'var(--gray-300)'}`,
-                    background: rating === n ? 'var(--blue-500)' : '#fff',
-                    color: rating === n ? '#fff' : 'var(--gray-700)',
-                    fontWeight: 600,
-                    fontSize: '15px',
-                    cursor: 'pointer',
-                    transition: 'all .15s',
-                  }}
-                >
-                  {n}
-                </button>
-              ))}
+          <form onSubmit={(e) => { e.preventDefault(); submit(); }}>
+            <EmojiRatingGroup
+              title="Driver Rating"
+              selected={driverRating}
+              onChange={setDriverRating}
+            />
+
+            <EmojiRatingGroup
+              title="Vehicle Rating"
+              selected={vehicleRating}
+              onChange={setVehicleRating}
+            />
+
+            <div className="form-group" style={{ marginBottom: '24px' }}>
+              <label className="form-label" style={{ textAlign: 'center', display: 'block', fontSize: '16px', fontWeight: 700, marginBottom: '8px' }}>Comments:</label>
+              <textarea
+                value={publicComment}
+                onChange={(e) => setPublicComment(e.target.value)}
+                rows={4}
+                placeholder="Please provide any additional feedback..."
+                className="form-textarea"
+                style={{ resize: 'none' }}
+              />
             </div>
-          </div>
 
-          {/* Public comment */}
-          <div className="form-group" style={{ marginBottom: '12px' }}>
-            <label className="form-label">Public comment (optional)</label>
-            <textarea
-              value={publicComment}
-              onChange={(e) => setPublicComment(e.target.value)}
-              rows={2}
-              placeholder="Share publicly..."
-              className="form-textarea"
-            />
-          </div>
+            {error && <p className="form-error" style={{ marginBottom: '16px', textAlign: 'center' }}>{error}</p>}
 
-          {/* Private feedback */}
-          <div className="form-group" style={{ marginBottom: '16px' }}>
-            <label className="form-label">Private feedback (optional)</label>
-            <textarea
-              value={privateFeedback}
-              onChange={(e) => setPrivateFeedback(e.target.value)}
-              rows={2}
-              placeholder="Only we will see this..."
-              className="form-textarea"
-            />
-          </div>
-
-          {error && <p className="form-error" style={{ marginBottom: '8px' }}>{error}</p>}
-
-          <button
-            type="button"
-            onClick={submit}
-            disabled={submitting || rating < 1}
-            className="btn btn--primary"
-            style={{ width: '100%', padding: '10px' }}
-          >
-            {submitting ? 'Submitting…' : 'Submit'}
-          </button>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <button
+                type="submit"
+                disabled={submitting || driverRating < 1 || vehicleRating < 1}
+                className="btn btn--success"
+                style={{ padding: '12px 32px', fontSize: '16px' }}
+              >
+                {submitting ? 'Submitting…' : 'Submit Rating'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
+
+      <style jsx>{`
+        .wrap {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 32px 20px;
+          background: var(--gray-100);
+        }
+        .rating-card {
+          width: 100%;
+          max-width: 600px;
+          box-shadow: var(--shadow-lg);
+          border-radius: var(--radius-xl);
+          border: none;
+        }
+        .rating-card__header {
+          text-align: center;
+          margin-bottom: 32px;
+        }
+        .rating-card__title {
+          font-size: 24px;
+          font-weight: 800;
+          color: var(--gray-900);
+          margin-bottom: 8px;
+        }
+        .rating-card__subtitle {
+          font-size: 15px;
+          color: var(--gray-500);
+        }
+      `}</style>
     </main>
   );
 }
