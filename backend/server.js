@@ -12,6 +12,7 @@ import feedbackRoutes from './routes/feedback.js';
 import redirectRoutes from './routes/redirects.js';
 import settingsRoutes from './routes/settings.js';
 import clientRoutes from './routes/client.js';
+import driverRoutes from './routes/drivers.js';
 import goRedirectRoute from './routes/go.js';
 import Admin from './models/Admin.js';
 import Client from './models/Client.js';
@@ -79,7 +80,7 @@ if (defaultClientEmail && defaultClientPassword) {
 const app = express();
 app.use(cors({ origin: config.nextAppUrl, credentials: true }));
 app.use(cookieParser());
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/manifests', manifestRoutes);
@@ -88,6 +89,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/redirects', redirectRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/clients', clientRoutes);
+app.use('/api/drivers', driverRoutes);
 app.get('/go/:redirectId', goRedirectRoute);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));

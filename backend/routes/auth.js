@@ -146,4 +146,61 @@ router.get('/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
 
+router.post(
+  '/change-password',
+  requireAuth,
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('newPassword')
+    .isLength({ min: 8, max: 72 })
+    .withMessage('Password must be between 8 and 72 characters')
+    .matches(/[a-z]/)
+    .withMessage('Password must include at least one lowercase letter')
+    .matches(/[A-Z]/)
+    .withMessage('Password must include at least one uppercase letter')
+    .matches(/\d/)
+    .withMessage('Password must include at least one number'),
+  body('confirmPassword').custom((value, { req }) => {
+    if (value !== req.body.newPassword) {
+      throw new Error('Password confirmation does not match new password');
+    }
+    return true;
+  }),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ message: getValidationMessage(errors) });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+      const UserModel = roleModelMap[req.user.role];
+      if (!UserModel) {
+        return res.status(404).json({ message: 'User model not found' });
+      }
+
+      const user = await UserModel.findById(req.user._id).select('+password');
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const isMatch = await user.comparePassword(currentPassword);
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Incorrect current password' });
+      }
+
+      user.password = newPassword;
+      await user.save();
+
+      res.json({ message: 'Password updated successfully' });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+const roleModelMap = {
+  admin: Admin,
+  client: Client,
+};
+
 export default router;

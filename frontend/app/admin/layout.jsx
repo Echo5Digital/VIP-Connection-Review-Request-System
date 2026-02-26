@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
 
 const nav = [
@@ -89,13 +89,30 @@ export default function AdminLayout({ children }) {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-  // Close sidebar on path change (mobile)
+  // Close sidebar and dropdown on path change
   useEffect(() => {
     setIsSidebarOpen(false);
+    setIsDropdownOpen(false);
   }, [pathname]);
 
+  // Handle click outside dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isDropdownOpen]);
+
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -119,9 +136,41 @@ export default function AdminLayout({ children }) {
           <em>VIP</em> <span>Connection Review Request System</span>
         </div>
         <div style={{ flex: 1 }} />
-        <button type="button" className="btn btn--inverse btn--sm" onClick={handleLogout} disabled={isLoggingOut}>
-          {isLoggingOut ? 'Logging out...' : 'Logout'}
-        </button>
+
+        <div className="admin-dropdown" ref={dropdownRef}>
+          <button type="button" className="admin-dropdown__trigger" onClick={toggleDropdown}>
+            <span>Admin</span>
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+
+          {isDropdownOpen && (
+            <div className="admin-dropdown__menu">
+              <Link href="/admin/profile" className="admin-dropdown__item">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Profile Settings
+              </Link>
+              <div className="admin-dropdown__divider" />
+              <button
+                type="button"
+                className="admin-dropdown__item admin-dropdown__item--danger"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                {isLoggingOut ? 'Logging out...' : 'Logout'}
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       <aside className={`app-sidebar${isSidebarOpen ? ' app-sidebar--open' : ''}`}>
