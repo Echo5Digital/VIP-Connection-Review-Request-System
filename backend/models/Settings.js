@@ -11,6 +11,11 @@ const DEFAULTS = {
     subtitle: 'Your feedback helps us improve.',
     thankYouMessage: 'Thank you for your feedback!',
   },
+  platformUrls: {
+    google: '',
+    yelp: '',
+    tripAdvisor: '',
+  },
 };
 
 export async function getSettings(key) {

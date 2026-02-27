@@ -15,6 +15,9 @@ export default function ManifestEntriesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const limit = 20;
 
+  // Track per-row send state: { [contactId]: { sending: 'email'|'sms'|null, sent: 'email'|'sms'|null, error: string|null } }
+  const [rowStatus, setRowStatus] = useState({});
+
   useEffect(() => {
     fetchEntries();
   }, [currentPage, searchTerm, startDate, endDate]);
@@ -22,15 +25,14 @@ export default function ManifestEntriesPage() {
   async function fetchEntries() {
     try {
       setLoading(true);
-      const isFilteringByDate = startDate || endDate;
       const params = new URLSearchParams({
         page: currentPage,
-        limit: limit, // Use standard limit even when filtering
+        limit: limit,
         search: searchTerm,
         sortBy: 'pickupDate',
         order: 'asc'
       });
-      
+
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
 
@@ -68,12 +70,23 @@ export default function ManifestEntriesPage() {
   }
 
   function handleUploadSuccess() {
-    // Reset filters and fetch fresh data
     setSearchTerm('');
     setStartDate('');
     setEndDate('');
     setCurrentPage(1);
     fetchEntries();
+  }
+
+  async function handleSendReview(entry, channel) {
+    const id = entry._id;
+    setRowStatus(prev => ({ ...prev, [id]: { sending: channel, sent: null, error: null } }));
+    try {
+      await api.post('/api/review-requests/send', { contactId: id, channel });
+      setRowStatus(prev => ({ ...prev, [id]: { sending: null, sent: channel, error: null } }));
+    } catch (err) {
+      const msg = err?.message || 'Failed to send. Please try again.';
+      setRowStatus(prev => ({ ...prev, [id]: { sending: null, sent: null, error: msg } }));
+    }
   }
 
   // Calculate dynamic columns from the current page of entries
@@ -200,35 +213,97 @@ export default function ManifestEntriesPage() {
                     {col}
                   </th>
                 ))}
+                <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2e8f0', minWidth: '180px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={2 + extraColumns.length} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>Loading entries...</td>
+                  <td colSpan={3 + extraColumns.length} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>Loading entries...</td>
                 </tr>
               ) : entries.length === 0 ? (
                 <tr>
-                  <td colSpan={2 + extraColumns.length} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
+                  <td colSpan={3 + extraColumns.length} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
                     No entries found. Upload a manifest or adjust filters.
                   </td>
                 </tr>
               ) : (
-                entries.map((entry) => (
-                  <tr key={entry._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px' }}>
-                      {entry.manifestId?.name || 'Unknown'}
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <div style={{ fontWeight: '500' }}>{entry.name || 'Unknown'}</div>
-                    </td>
-                    {extraColumns.map(col => (
-                      <td key={col} style={{ padding: '12px 16px' }}>
-                        {entry.extra?.[col] || ''}
+                entries.map((entry) => {
+                  const status = rowStatus[entry._id] || {};
+                  const isSending = !!status.sending;
+                  return (
+                    <tr key={entry._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                      <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px' }}>
+                        {entry.manifestId?.name || 'Unknown'}
                       </td>
-                    ))}
-                  </tr>
-                ))
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ fontWeight: '500' }}>{entry.name || 'Unknown'}</div>
+                      </td>
+                      {extraColumns.map(col => (
+                        <td key={col} style={{ padding: '12px 16px' }}>
+                          {entry.extra?.[col] || ''}
+                        </td>
+                      ))}
+                      <td style={{ padding: '12px 16px' }}>
+                        {status.error && (
+                          <div style={{ color: '#dc2626', fontSize: '12px', marginBottom: '6px', maxWidth: '180px', whiteSpace: 'normal' }}>
+                            {status.error}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <button
+                            onClick={() => handleSendReview(entry, 'email')}
+                            disabled={isSending || !entry.email}
+                            title={!entry.email ? 'No email on file' : 'Send review request via email'}
+                            style={{
+                              padding: '5px 10px',
+                              fontSize: '12px',
+                              borderRadius: '4px',
+                              border: '1px solid #bfdbfe',
+                              background: status.sent === 'email' ? '#dcfce7' : '#eff6ff',
+                              color: status.sent === 'email' ? '#16a34a' : (!entry.email ? '#94a3b8' : '#1d4ed8'),
+                              cursor: isSending || !entry.email ? 'not-allowed' : 'pointer',
+                              opacity: !entry.email ? 0.5 : 1,
+                              whiteSpace: 'nowrap',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                          >
+                            {status.sending === 'email' ? (
+                              <span style={{ display: 'inline-block', width: '10px', height: '10px', border: '2px solid #1d4ed8', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                            ) : null}
+                            {status.sent === 'email' ? '✓ Sent' : '📧 Email'}
+                          </button>
+                          <button
+                            onClick={() => handleSendReview(entry, 'sms')}
+                            disabled={isSending || !entry.phone}
+                            title={!entry.phone ? 'No phone on file' : 'Send review request via SMS'}
+                            style={{
+                              padding: '5px 10px',
+                              fontSize: '12px',
+                              borderRadius: '4px',
+                              border: '1px solid #bbf7d0',
+                              background: status.sent === 'sms' ? '#dcfce7' : '#f0fdf4',
+                              color: status.sent === 'sms' ? '#16a34a' : (!entry.phone ? '#94a3b8' : '#15803d'),
+                              cursor: isSending || !entry.phone ? 'not-allowed' : 'pointer',
+                              opacity: !entry.phone ? 0.5 : 1,
+                              whiteSpace: 'nowrap',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                          >
+                            {status.sending === 'sms' ? (
+                              <span style={{ display: 'inline-block', width: '10px', height: '10px', border: '2px solid #15803d', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                            ) : null}
+                            {status.sent === 'sms' ? '✓ Sent' : '📱 SMS'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -271,6 +346,10 @@ export default function ManifestEntriesPage() {
           </div>
         )}
       </div>
+
+      <style jsx global>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }

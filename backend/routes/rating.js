@@ -11,7 +11,7 @@ const router = Router();
 router.get('/page/:token', async (req, res, next) => {
   try {
     const request = await ReviewRequest.findOne({ token: req.params.token })
-      .populate('contactId', 'name');
+      .populate('contactId', 'name email phone');
     if (!request) return res.status(404).json({ message: 'Invalid or expired link' });
     const existing = await Rating.findOne({ reviewRequestId: request._id });
     if (existing) {
@@ -22,7 +22,10 @@ router.get('/page/:token', async (req, res, next) => {
       alreadySubmitted: false,
       title: settings.title || 'How was your experience?',
       subtitle: settings.subtitle || 'Your feedback helps us improve.',
-      googleReviewUrl: settings.googleReviewUrl || "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID",
+      googleReviewUrl: settings.googleReviewUrl || '',
+      contactName: request.contactId?.name || '',
+      contactEmail: request.contactId?.email || '',
+      contactPhone: request.contactId?.phone || '',
     });
   } catch (err) {
     next(err);
@@ -74,8 +77,8 @@ router.post(
           content: String(privateFeedback).trim(),
         });
       }
-      const settings = await getSettings('ratingPage') || {};
-      res.json({ thankYouMessage: settings.thankYouMessage || 'Thank you for your feedback!' });
+      const isPublic = dRating === 5 && vRating === 5;
+      res.json({ redirect: isPublic ? 'public' : 'private', token });
     } catch (err) {
       next(err);
     }

@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { EmojiRatingGroup } from '@/components/EmojiRatingGroup';
 
 export default function RatingPage() {
   const params = useParams();
+  const router = useRouter();
   const token = params?.token;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,7 +15,6 @@ export default function RatingPage() {
   const [vehicleRating, setVehicleRating] = useState(0);
   const [publicComment, setPublicComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [thankYou, setThankYou] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -26,10 +26,6 @@ export default function RatingPage() {
           alreadySubmitted: false,
           title: 'Rate Our Service',
           subtitle: 'Thank you for using VIP Connection. On a scale of 1 to 5, how would you rate your satisfaction with the Driver and Vehicle?',
-          googleReviewUrl: 'https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID',
-          thankYouMessage: 'Thank you for your feedback!',
-
-
         })
       )
       .finally(() => setLoading(false));
@@ -40,19 +36,24 @@ export default function RatingPage() {
     setSubmitting(true);
     setError('');
     try {
-      await api.post('/api/rating/submit', {
+      const result = await api.post('/api/rating/submit', {
         token,
         driverRating,
         vehicleRating,
         publicComment: publicComment.trim() || undefined,
       });
-      setThankYou(true);
+      // Route based on ratings
+      if (result.redirect === 'public') {
+        router.push(`/review/public?token=${token}`);
+      } else {
+        router.push(`/review/private?token=${token}&dr=${driverRating}&vr=${vehicleRating}`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Submission failed');
     } finally {
       setSubmitting(false);
     }
-  }, [token, driverRating, vehicleRating, publicComment]);
+  }, [token, driverRating, vehicleRating, publicComment, router]);
 
   if (loading) {
     return (
@@ -102,78 +103,6 @@ export default function RatingPage() {
             font-weight: 700;
             margin-bottom: 8px;
             color: var(--gray-800);
-          }
-        `}</style>
-      </main>
-    );
-  }
-
-  if (thankYou) {
-    return (
-      <main className="wrap">
-        <div className="card thanks-card">
-          <div className="card__body">
-            <h1 className="thanks-card__title">Thank You For Your Rating!</h1>
-            <p className="thanks-card__text">
-              Thank you for your fantastic review! We put a lot of effort into making using VIP Connection as seamless as possible, so we are thrilled to hear that you are enjoying our service.
-            </p>
-            <p className="thanks-card__text">
-              If you have time, we would greatly appreciate it if you could share your experience with us on Google. Leaving a review would be a tremendous help to us.
-            </p>
-            <div className="thanks-card__actions">
-              <button type="button" className="btn btn--outline" onClick={() => setThankYou(false)}>Not now</button>
-              <a
-                href={data?.googleReviewUrl || "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn--success"
-              >
-                Yes
-              </a>
-            </div>
-          </div>
-          <footer className="thanks-card__footer">
-            © {new Date().getFullYear()} VIP Connection Review System
-          </footer>
-        </div>
-        <style jsx>{`
-          .wrap {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            background: var(--gray-100);
-          }
-          .thanks-card {
-            text-align: center;
-            max-width: 800px;
-            width: 100%;
-          }
-          .thanks-card__title {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--blue-600);
-            margin-bottom: 24px;
-          }
-          .thanks-card__text {
-            font-size: 15px;
-            color: var(--gray-700);
-            margin-bottom: 16px;
-            line-height: 1.6;
-          }
-          .thanks-card__actions {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 24px;
-            margin-bottom: 24px;
-          }
-          .thanks-card__footer {
-            padding: 16px;
-            font-size: 13px;
-            color: var(--gray-500);
-            border-top: 1px solid var(--gray-200);
           }
         `}</style>
       </main>

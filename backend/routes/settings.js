@@ -25,4 +25,25 @@ router.patch('/', async (req, res, next) => {
   }
 });
 
+// Platform review URLs settings (Google, Yelp, TripAdvisor)
+router.get('/platforms', async (req, res, next) => {
+  try {
+    const platformUrls = await getSettings('platformUrls');
+    res.json({ platformUrls: platformUrls || { google: '', yelp: '', tripAdvisor: '' } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/platforms', requireRoles('admin'), async (req, res, next) => {
+  try {
+    const { platformUrls } = req.body;
+    if (platformUrls) await setSettings('platformUrls', platformUrls);
+    const updated = await getSettings('platformUrls');
+    res.json({ platformUrls: updated || {} });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

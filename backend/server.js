@@ -14,6 +14,7 @@ import settingsRoutes from './routes/settings.js';
 import clientRoutes from './routes/client.js';
 import driverRoutes from './routes/drivers.js';
 import goRedirectRoute from './routes/go.js';
+import reviewRequestsRoutes from './routes/review-requests.js';
 import Admin from './models/Admin.js';
 import Client from './models/Client.js';
 
@@ -90,6 +91,7 @@ app.use('/api/redirects', redirectRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/drivers', driverRoutes);
+app.use('/api/review-requests', reviewRequestsRoutes);
 app.get('/go/:redirectId', goRedirectRoute);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
