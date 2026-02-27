@@ -79,7 +79,24 @@ if (defaultClientEmail && defaultClientPassword) {
 }
 
 const app = express();
-app.use(cors({ origin: config.nextAppUrl, credentials: true }));
+
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || config.nextAppUrl)
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(cookieParser());
 app.use(express.json({ limit: '5mb' }));
 

@@ -20,8 +20,12 @@ api/.env
 api/uploads/*
 !api/uploads/.gitkeep
 
+# Claude AI
+.claude/
+
 # Debug / IDE
 .DS_Store
+Thumbs.db
 *.log
 npm-debug.log*
 
