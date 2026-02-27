@@ -47,28 +47,24 @@ export function HomeAuth() {
   return (
     <div className="home-auth">
       <section className="home-auth__intro">
-        <p className="home-auth__eyebrow">VIP Connection</p>
-        <h1>Review Request System</h1>
-        <p>A Controlled Feedback Platform to Increase Public Reviews, Capture Private Concerns, and Monitor Driver & Vehicle Performance</p>
-        <div className="home-auth__credentials">
-          <strong>Default Admin Login</strong>
-          <span>Email: admin@gmail.com</span>
-          <span>Password: admin123</span>
-          {/* <strong style={{ marginTop: '8px' }}>Test Client Login</strong>
-          <span>Email: testclient@gmail.com</span>
-          <span>Password: test1234</span>     */}
+        <div className="home-auth__logo">
+          <em>VIP</em> CONNECTION
         </div>
+        <h1>Welcome Back!</h1>
+        <p className="home-auth__intro-desc">
+          A Controlled Feedback Platform to Increase Public Reviews, Capture Private Concerns, and Monitor Driver & Vehicle Performance
+        </p>
       </section>
 
-      <section className="home-auth__panel card">
+      <section className="home-auth__panel">
         <h2>Login</h2>
-
         <form className="home-auth__form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Email</label>
             <input
               type="email"
               className="form-input"
+              placeholder="Enter your email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               autoComplete="email"
@@ -81,6 +77,7 @@ export function HomeAuth() {
             <input
               type="password"
               className="form-input"
+              placeholder="********"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
@@ -90,10 +87,14 @@ export function HomeAuth() {
 
           {error && <p className="form-error">{error}</p>}
 
-          <button type="submit" className="btn btn--primary" disabled={loading}>
+          <button type="submit" className="btn home-auth__btn" disabled={loading}>
             {loading ? 'Please wait...' : 'Login'}
           </button>
         </form>
+
+        <div className="home-auth__footer">
+          Don't have an account? <a href="#">Register for free</a>
+        </div>
       </section>
     </div>
   );

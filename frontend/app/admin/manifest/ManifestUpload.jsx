@@ -14,7 +14,7 @@ export function ManifestUpload() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!file) {
-      setError('Choose a CSV file');
+      setError('Choose a CSV or Excel file');
       return;
     }
     setError('');
@@ -35,25 +35,51 @@ export function ManifestUpload() {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-      <input
-        type="text"
-        placeholder="Manifest name (optional)"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="form-input"
-        style={{ width: '180px' }}
-      />
-      <input
-        type="file"
-        accept=".csv,.txt"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
-        style={{ fontSize: '13px', color: 'var(--gray-600)' }}
-      />
-      <button type="submit" disabled={loading} className="btn btn--primary btn--sm">
-        {loading ? 'Uploading…' : 'Upload CSV'}
-      </button>
-      {error && <p className="form-error" style={{ width: '100%' }}>{error}</p>}
-    </form>
+    <div className="card mb-6">
+      <div className="card__header">Upload Manifest File</div>
+      <div style={{ padding: '24px' }}>
+        <p className="text-muted text-sm mb-6">
+          Upload a .csv or .xlsx file. All columns and rows will be captured.
+        </p>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="form-group" style={{ flex: '0 0 250px' }}>
+            <input
+              type="text"
+              placeholder="Manifest name (optional)"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="form-input"
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <input
+              type="file"
+              id="manifest-file"
+              accept=".csv,.xlsx,.xls"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+            />
+            <label
+              htmlFor="manifest-file"
+              className="btn btn--outline"
+              style={{ display: 'inline-block', cursor: 'pointer', borderRadius: '4px', background: '#f8f9fb' }}
+            >
+              Choose File
+            </label>
+          </div>
+          <span style={{ fontSize: '13px', color: 'var(--gray-500)', margin: '0 12px' }}>
+            {file ? file.name : 'No file chosen'}
+          </span>
+
+          <button type="submit" disabled={loading} className="btn btn--primary" style={{ borderRadius: '4px' }}>
+            {loading ? 'Uploading...' : 'Upload File'}
+          </button>
+
+          {error && <p className="form-error" style={{ width: '100%', marginTop: '8px' }}>{error}</p>}
+        </form>
+      </div>
+    </div>
   );
 }
