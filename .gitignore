@@ -1,4 +1,5 @@
-node_modules/
+# Claude AI
+.claude/
 
 # Env files
 .env
@@ -7,11 +8,9 @@ node_modules/
 .env.production
 .env.development
 
-# Uploads
-uploads/*
-!uploads/.gitkeep
+# Dependencies
+node_modules/
 
 # OS
 .DS_Store
 Thumbs.db
-
