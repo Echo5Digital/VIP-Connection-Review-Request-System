@@ -5,9 +5,15 @@ const contactSchema = new mongoose.Schema({
   name: { type: String, default: '' },
   phone: { type: String, default: '' },
   email: { type: String, default: '' },
+  pickupDate: { type: Date },
+  pickupTime: { type: String, default: '' },
+  pickupAddress: { type: String, default: '' },
+  dropoffAddress: { type: String, default: '' },
+  status: { type: String, default: 'Pending' },
   extra: { type: mongoose.Schema.Types.Mixed, default: {} },
 }, { timestamps: true });
 
 contactSchema.index({ manifestId: 1 });
+contactSchema.index({ pickupDate: 1 });
 
 export default mongoose.model('Contact', contactSchema);

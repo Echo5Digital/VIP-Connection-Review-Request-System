@@ -3,7 +3,7 @@ import { requireAuth, requireRoles } from '../middleware/auth.js';
 import RedirectEvent from '../models/RedirectEvent.js';
 
 const router = Router();
-router.use(requireAuth, requireRoles('admin'));
+router.use(requireAuth, requireRoles('admin', 'client'));
 
 router.get('/', async (req, res, next) => {
   try {

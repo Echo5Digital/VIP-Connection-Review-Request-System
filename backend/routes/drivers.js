@@ -6,8 +6,8 @@ import * as XLSX from 'xlsx';
 
 const router = Router();
 
-// All driver routes require admin role
-router.use(requireAuth, requireRoles('admin'));
+// All driver routes require admin or client role
+router.use(requireAuth, requireRoles('admin', 'client'));
 
 // GET all drivers (with pagination, search and filters)
 router.get('/', async (req, res, next) => {

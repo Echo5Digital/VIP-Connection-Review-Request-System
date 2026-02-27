@@ -77,7 +77,7 @@ export default function ManifestDetailPage() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <Link
-          href="/admin/manifest"
+          href="/client/manifest"
           className="btn btn--outline btn--sm"
           style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px' }}
         >

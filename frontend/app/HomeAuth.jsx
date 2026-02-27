@@ -92,9 +92,6 @@ export function HomeAuth() {
           </button>
         </form>
 
-        <div className="home-auth__footer">
-          Don't have an account? <a href="#">Register for free</a>
-        </div>
       </section>
     </div>
   );
