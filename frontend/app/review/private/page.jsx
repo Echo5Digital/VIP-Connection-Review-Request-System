@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
 const EMOJIS = ['', '😡', '😔', '😐', '😊', '😍'];
 const LABELS = ['', 'Poor', 'Below Average', 'Average', 'Above Average', 'Exceptional'];
 
-export default function PrivateFeedbackPage() {
+function PrivateFeedbackContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const driverRating = parseInt(searchParams.get('dr')) || 0;
@@ -265,3 +265,11 @@ const cardStyle = {
   maxWidth: '520px',
   width: '100%',
 };
+
+export default function PrivateFeedbackPage() {
+  return (
+    <Suspense>
+      <PrivateFeedbackContent />
+    </Suspense>
+  );
+}

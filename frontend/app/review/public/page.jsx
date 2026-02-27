@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
@@ -46,7 +46,7 @@ const PLATFORMS = [
   },
 ];
 
-export default function PublicReviewPage() {
+function PublicReviewContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const [platformUrls, setPlatformUrls] = useState({ google: '', yelp: '', tripAdvisor: '' });
@@ -190,5 +190,13 @@ export default function PublicReviewPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function PublicReviewPage() {
+  return (
+    <Suspense>
+      <PublicReviewContent />
+    </Suspense>
   );
 }
