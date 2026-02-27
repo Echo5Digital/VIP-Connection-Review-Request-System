@@ -181,9 +181,13 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
       const passengerName = (firstName || lastName)
         ? `${firstName} ${lastName}`.trim()
         : (row.name || row.Name || row.NAME || row.fullname || '');
+      
       const phone = row.PassengerCellPhoneNumber || row['Passenger Cell Phone Number']
+        || row.ContactPhoneNumber || row['Contact Phone Number']
         || row.phone || row.Phone || row.PHONE || '';
+        
       const email = row.PassengerEmailAddress || row['Passenger Email Address']
+        || row.ContactEmailAddress || row['Contact Email Address']
         || row.email || row.Email || row.EMAIL || '';
 
       // Extract additional fields
