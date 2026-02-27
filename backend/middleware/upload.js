@@ -14,7 +14,7 @@ export const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if (['.csv', '.txt'].includes(ext)) return cb(null, true);
-    cb(new Error('Only CSV or TXT files allowed'));
+    if (['.csv', '.txt', '.xlsx', '.xls'].includes(ext)) return cb(null, true);
+    cb(new Error('Only CSV, Excel (.xlsx/.xls), or TXT files allowed'));
   },
 });
