@@ -29,7 +29,7 @@ router.get('/', async (req, res, next) => {
 
         // Vehicle type filter
         if (type) {
-            query.vehicleType = type;
+            query.vehicleType = { $regex: `^${type}$`, $options: 'i' };
         }
 
         const total = await Driver.countDocuments(query);
@@ -55,7 +55,7 @@ router.post(
     '/',
     body('vipCarNum').notEmpty().withMessage('VIP Car # is required'),
     body('name').notEmpty().withMessage('Driver Name is required'),
-    body('vehicleType').optional().isIn(['Sedan', 'SUV', 'Luxury', '']),
+    body('vehicleType').optional(),
     async (req, res, next) => {
         try {
             const errors = validationResult(req);
@@ -89,7 +89,7 @@ router.put(
     '/:id',
     body('vipCarNum').optional().notEmpty().withMessage('VIP Car # is required'),
     body('name').optional().notEmpty().withMessage('Driver Name is required'),
-    body('vehicleType').optional().isIn(['Sedan', 'SUV', 'Luxury', '']),
+    body('vehicleType').optional(),
     async (req, res, next) => {
         try {
             const errors = validationResult(req);
@@ -168,7 +168,7 @@ router.post('/upload', async (req, res, next) => {
                 carMake: carMake || '',
                 carModel: carModel || '',
                 carYear: carYear || '',
-                vehicleType: ['Sedan', 'SUV', 'Luxury'].includes(vehicleType) ? vehicleType : ''
+                vehicleType: vehicleType || ''
             });
             // Also add to local set to handle duplicates within the same upload file
             existingVips.add(vCarNum);

@@ -8,7 +8,6 @@ const driverSchema = new mongoose.Schema({
     carYear: { type: String, trim: true },
     vehicleType: {
         type: String,
-        enum: ['Sedan', 'SUV', 'Luxury', ''],
         default: ''
     }
 }, { timestamps: true });

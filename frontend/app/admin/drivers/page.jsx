@@ -161,7 +161,7 @@ function mapDriversForUpload(rows) {
         carYear,
         carMake,
         carModel,
-        vehicleType: ['Sedan', 'SUV', 'Luxury'].includes(vehicleType) ? vehicleType : ''
+        vehicleType: vehicleType
       };
     })
     .filter(Boolean);
@@ -509,9 +509,13 @@ export default function DriversPage() {
                   }}
                 >
                   <option value="">All Vehicle Types</option>
+                  <option value="Luxury SUV">Luxury SUV</option>
                   <option value="Sedan">Sedan</option>
-                  <option value="SUV">SUV</option>
-                  <option value="Luxury">Luxury</option>
+                  <option value="SUV*7">SUV*7</option>
+                  <option value="Premium Luxury">Premium Luxury</option>
+                  <option value="Electric Sedan">Electric Sedan</option>
+                  <option value="Luxury Sedan">Luxury Sedan</option>
+                  <option value="Van">Van</option>
                 </select>
                 <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b' }}>
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
@@ -783,9 +787,13 @@ export default function DriversPage() {
                     onChange={e => setFormData({ ...formData, vehicleType: e.target.value })}
                   >
                     <option value="">Select Type</option>
+                    <option value="Luxury SUV">Luxury SUV</option>
                     <option value="Sedan">Sedan</option>
-                    <option value="SUV">SUV</option>
-                    <option value="Luxury">Luxury</option>
+                    <option value="SUV*7">SUV*7</option>
+                    <option value="Premium Luxury">Premium Luxury</option>
+                    <option value="Electric Sedan">Electric Sedan</option>
+                    <option value="Luxury Sedan">Luxury Sedan</option>
+                    <option value="Van">Van</option>
                   </select>
                 </div>
               </div>
