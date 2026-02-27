@@ -5,6 +5,7 @@ import { upload } from '../middleware/upload.js';
 import { requireAuth, requireRoles } from '../middleware/auth.js';
 import Manifest from '../models/Manifest.js';
 import Contact from '../models/Contact.js';
+import ReviewRequest from '../models/ReviewRequest.js';
 import * as XLSX from 'xlsx';
 
 const router = Router();
@@ -81,6 +82,67 @@ router.get('/entries', async (req, res, next) => {
         pages: Math.ceil(total / parseInt(limit))
       }
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /entries - Create a single contact entry manually
+router.post('/entries', async (req, res, next) => {
+  try {
+    const { manifestId, name, phone, email, pickupDate, pickupTime, pickupAddress, dropoffAddress, status, extra } = req.body;
+    if (!manifestId) return res.status(400).json({ message: 'manifestId is required' });
+    const manifest = await Manifest.findById(manifestId);
+    if (!manifest) return res.status(404).json({ message: 'Manifest not found' });
+    const contact = await Contact.create({
+      manifestId,
+      name: name || '',
+      phone: phone || '',
+      email: email || '',
+      pickupDate: pickupDate ? new Date(pickupDate) : null,
+      pickupTime: pickupTime || '',
+      pickupAddress: pickupAddress || '',
+      dropoffAddress: dropoffAddress || '',
+      status: status || 'Pending',
+      extra: extra || {},
+    });
+    const populated = await contact.populate('manifestId', 'name');
+    res.status(201).json({ contact: populated });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /entries/:id - Update a contact entry
+router.patch('/entries/:id', async (req, res, next) => {
+  try {
+    const { name, phone, email, pickupDate, pickupTime, pickupAddress, dropoffAddress, status, extra } = req.body;
+    const contact = await Contact.findById(req.params.id);
+    if (!contact) return res.status(404).json({ message: 'Contact not found' });
+    if (name !== undefined) contact.name = name;
+    if (phone !== undefined) contact.phone = phone;
+    if (email !== undefined) contact.email = email;
+    if (pickupDate !== undefined) contact.pickupDate = pickupDate ? new Date(pickupDate) : null;
+    if (pickupTime !== undefined) contact.pickupTime = pickupTime;
+    if (pickupAddress !== undefined) contact.pickupAddress = pickupAddress;
+    if (dropoffAddress !== undefined) contact.dropoffAddress = dropoffAddress;
+    if (status !== undefined) contact.status = status;
+    if (extra !== undefined) contact.extra = extra;
+    await contact.save();
+    const populated = await contact.populate('manifestId', 'name');
+    res.json({ contact: populated });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /entries/:id - Delete a single contact entry (cascades to ReviewRequests)
+router.delete('/entries/:id', async (req, res, next) => {
+  try {
+    const contact = await Contact.findByIdAndDelete(req.params.id);
+    if (!contact) return res.status(404).json({ message: 'Contact not found' });
+    await ReviewRequest.deleteMany({ contactId: contact._id });
+    res.json({ ok: true });
   } catch (err) {
     next(err);
   }
