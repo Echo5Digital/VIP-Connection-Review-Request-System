@@ -1,16 +1,2 @@
 # Claude AI
 .claude/
-
-# Env files
-.env
-.env.local
-.env*.local
-.env.production
-.env.development
-
-# Dependencies
-node_modules/
-
-# OS
-.DS_Store
-Thumbs.db
