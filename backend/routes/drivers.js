@@ -16,6 +16,7 @@ router.get('/', async (req, res, next) => {
         const limit = parseInt(req.query.limit) || 20;
         const search = req.query.search || '';
         const type = req.query.type || '';
+        const isActive = req.query.isActive; // Optional filter
 
         const query = {};
 
@@ -30,6 +31,11 @@ router.get('/', async (req, res, next) => {
         // Vehicle type filter
         if (type) {
             query.vehicleType = { $regex: `^${type}$`, $options: 'i' };
+        }
+
+        // Active status filter
+        if (isActive !== undefined) {
+            query.isActive = isActive === 'true';
         }
 
         const total = await Driver.countDocuments(query);
@@ -90,6 +96,7 @@ router.put(
     body('vipCarNum').optional().notEmpty().withMessage('VIP Car # is required'),
     body('name').optional().notEmpty().withMessage('Driver Name is required'),
     body('vehicleType').optional(),
+    body('isActive').optional().isBoolean(),
     async (req, res, next) => {
         try {
             const errors = validationResult(req);
@@ -98,7 +105,7 @@ router.put(
             const driver = await Driver.findById(req.params.id);
             if (!driver) return res.status(404).json({ message: 'Driver not found' });
 
-            const { vipCarNum, name, carMake, carModel, carYear, vehicleType } = req.body;
+            const { vipCarNum, name, carMake, carModel, carYear, vehicleType, isActive } = req.body;
 
             if (vipCarNum && vipCarNum !== driver.vipCarNum) {
                 const existing = await Driver.findOne({ vipCarNum });
@@ -113,6 +120,12 @@ router.put(
             if (carModel !== undefined) driver.carModel = carModel;
             if (carYear !== undefined) driver.carYear = carYear;
             if (vehicleType !== undefined) driver.vehicleType = vehicleType;
+            if (isActive !== undefined) {
+                if (req.user.role !== 'admin') {
+                    return res.status(403).json({ message: 'Only admin can change driver status' });
+                }
+                driver.isActive = isActive;
+            }
 
             await driver.save();
             res.json(driver);

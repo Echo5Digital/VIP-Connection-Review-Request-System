@@ -130,16 +130,45 @@ export default function ManifestEntriesPage() {
   function openCreateModal() {
     setForm({
       manifestId: manifests[0]?._id || '',
-      name: '', phone: '', email: '',
-      pickupDate: '', pickupTime: '',
-      pickupAddress: '', dropoffAddress: '',
-      status: 'Pending', extra: {},
+      name: '', 
+      phone: '', 
+      email: '',
+      pickupDate: '', 
+      pickupTime: '',
+      pickupAddress: '', 
+      dropoffAddress: '',
+      status: 'Pending', 
+      
+      // Additional standard fields
+      passengerFirstName: '',
+      passengerLastName: '',
+      resNumber: '',
+      customerCode: '',
+      customerName: '',
+      pickupPricingZone: '',
+      dropoffPricingZone: '',
+      dispatchDriverCode: '',
+      dispatchDriverName: '',
+      dispatchVehicleCode: '',
+      dispatchDriverPhoneNumber: '',
+      dispatchVehicleTypeCode: '',
+      onLocationDateTime: '',
+      passengerOnBoardDateTime: '',
+      segmentStatusCode: '',
+      segmentTotal: '',
+      contactFirstName: '',
+      contactLastName: '',
+      contactEmailAddress: '',
+      contactPhoneNumber: '',
+
+      extra: {},
     });
     setModalError('');
     setModal({ open: true, mode: 'create', entry: null });
   }
 
   function openEditModal(entry) {
+    const ex = entry.extra || {};
     setForm({
       name: entry.name || '',
       phone: entry.phone || '',
@@ -149,7 +178,13 @@ export default function ManifestEntriesPage() {
       pickupAddress: entry.pickupAddress || '',
       dropoffAddress: entry.dropoffAddress || '',
       status: entry.status || 'Pending',
-      extra: { ...(entry.extra || {}) },
+      
+      // Map extra fields to top-level form state for editing convenience, 
+      // or keep them in 'extra' if we want to save them back to 'extra'.
+      // The requirement is to include all fields displayed as columns.
+      // We'll edit them in the 'extra' object directly or separate fields if they are standard.
+      // Since the backend stores most of these in 'extra', we will edit them in 'extra'.
+      extra: { ...ex },
     });
     setModalError('');
     setModal({ open: true, mode: 'edit', entry });
@@ -207,8 +242,36 @@ export default function ManifestEntriesPage() {
     }
   }
 
+  function handleDownload() {
+    const params = new URLSearchParams({
+      search: searchTerm,
+      sortBy: 'pickupDate',
+      order: 'asc'
+    });
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    window.location.href = `/api-backend/manifests/entries/export?${params.toString()}`;
+  }
+
   // Column derivation — new order
-  const allExtraColumns = Array.from(new Set(entries.flatMap(e => Object.keys(e.extra || {})))).sort();
+  const PREFERRED_ORDER = [
+    'PickupDateTime', 'ResNumber', 'CustomerCode', 'CustomerName', 
+    'PassengerCellPhoneNumber', 'PassengerEmailAddress', 'PassengerFirstName', 'PassengerLastName',
+    'PickupAddress', 'PickupPricingZone', 'DropoffPricingZone', 'DropoffAddress', 
+    'DispatchDriverCode', 'DispatchDriverName', 'DispatchVehicleCode', 'DispatchDriverPhoneNumber',
+    'DispatchVehicleTypeCode', 'OnLocationDateTime', 'PassengerOnBoardDateTime',
+    'SegmentStatusCode', 'SegmentTotal', 
+    'ContactEmailAddress', 'ContactFirstName', 'ContactLastName', 'ContactPhoneNumber'
+  ];
+
+  const allExtraColumns = Array.from(new Set(entries.flatMap(e => Object.keys(e.extra || {})))).sort((a, b) => {
+    const aIdx = PREFERRED_ORDER.indexOf(a);
+    const bIdx = PREFERRED_ORDER.indexOf(b);
+    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+    if (aIdx !== -1) return -1;
+    if (bIdx !== -1) return 1;
+    return a.localeCompare(b);
+  });
   const hasSegmentStatus = allExtraColumns.includes('SegmentStatusCode');
   const remainingExtras = allExtraColumns.filter(c => c !== 'SegmentStatusCode');
   // Actions(1) + [SegmentStatusCode?] + Name(1) + remainingExtras + Source(1)
@@ -225,16 +288,28 @@ export default function ManifestEntriesPage() {
       <div className="card" style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <div className="card__header" style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', fontWeight: '600', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>All Manifest Entries</span>
-          <button
-            onClick={openCreateModal}
-            style={{
-              padding: '7px 16px', fontSize: '13px', fontWeight: '500',
-              borderRadius: '6px', border: 'none',
-              background: '#2563eb', color: '#fff', cursor: 'pointer',
-            }}
-          >
-            + Add Entry
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={handleDownload}
+              style={{
+                padding: '7px 16px', fontSize: '13px', fontWeight: '500',
+                borderRadius: '6px', border: '1px solid #cbd5e1',
+                background: '#fff', color: '#374151', cursor: 'pointer',
+              }}
+            >
+              Download Excel
+            </button>
+            <button
+              onClick={openCreateModal}
+              style={{
+                padding: '7px 16px', fontSize: '13px', fontWeight: '500',
+                borderRadius: '6px', border: 'none',
+                background: '#2563eb', color: '#fff', cursor: 'pointer',
+              }}
+            >
+              + Add Entry
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -511,16 +586,34 @@ export default function ManifestEntriesPage() {
               </div>
 
               <div style={FORM_ROW_STYLE}>
-                <FormField label="Passenger Name">
+                <FormField label="Passenger First Name">
+                  <input type="text" value={form.extra.PassengerFirstName || ''} onChange={e => setExtraField('PassengerFirstName', e.target.value)} style={FIELD_STYLE} placeholder="First Name" />
+                </FormField>
+                <FormField label="Passenger Last Name">
+                  <input type="text" value={form.extra.PassengerLastName || ''} onChange={e => setExtraField('PassengerLastName', e.target.value)} style={FIELD_STYLE} placeholder="Last Name" />
+                </FormField>
+              </div>
+
+              <div style={FORM_ROW_STYLE}>
+                <FormField label="Passenger Phone (Cell)">
+                  <input type="text" value={form.extra.PassengerCellPhoneNumber || ''} onChange={e => setExtraField('PassengerCellPhoneNumber', e.target.value)} style={FIELD_STYLE} placeholder="Cell Phone" />
+                </FormField>
+                <FormField label="Passenger Email">
+                  <input type="email" value={form.extra.PassengerEmailAddress || ''} onChange={e => setExtraField('PassengerEmailAddress', e.target.value)} style={FIELD_STYLE} placeholder="Email Address" />
+                </FormField>
+              </div>
+
+              <div style={FORM_ROW_STYLE}>
+                <FormField label="Passenger Name (Full)">
                   <input type="text" value={form.name || ''} onChange={e => setField('name', e.target.value)} style={FIELD_STYLE} placeholder="Full name" />
                 </FormField>
-                <FormField label="Phone">
+                <FormField label="Mapped Phone">
                   <input type="text" value={form.phone || ''} onChange={e => setField('phone', e.target.value)} style={FIELD_STYLE} placeholder="+1 555 000 0000" />
                 </FormField>
               </div>
 
               <div style={FORM_ROW_STYLE}>
-                <FormField label="Email">
+                <FormField label="Mapped Email">
                   <input type="email" value={form.email || ''} onChange={e => setField('email', e.target.value)} style={FIELD_STYLE} placeholder="email@example.com" />
                 </FormField>
                 <FormField label="Status">
@@ -537,15 +630,99 @@ export default function ManifestEntriesPage() {
                 </FormField>
               </div>
 
-              <div style={{ marginBottom: '14px' }}>
+              <div style={FORM_ROW_STYLE}>
                 <FormField label="Pickup Address">
-                  <input type="text" value={form.pickupAddress || ''} onChange={e => setField('pickupAddress', e.target.value)} style={FIELD_STYLE} placeholder="123 Main St" />
+                  <input type="text" value={form.pickupAddress || ''} onChange={e => setField('pickupAddress', e.target.value)} style={FIELD_STYLE} placeholder="Pickup Address" />
+                </FormField>
+                <FormField label="Dropoff Address">
+                  <input type="text" value={form.dropoffAddress || ''} onChange={e => setField('dropoffAddress', e.target.value)} style={FIELD_STYLE} placeholder="Dropoff Address" />
                 </FormField>
               </div>
 
+              <div style={FORM_ROW_STYLE}>
+                <FormField label="Pickup Pricing Zone">
+                  <input type="text" value={form.extra.PickupPricingZone || ''} onChange={e => setExtraField('PickupPricingZone', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+                <FormField label="Dropoff Pricing Zone">
+                  <input type="text" value={form.extra.DropoffPricingZone || ''} onChange={e => setExtraField('DropoffPricingZone', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+              </div>
+
+              <div style={FORM_ROW_STYLE}>
+                <FormField label="Res Number">
+                  <input type="text" value={form.extra.ResNumber || ''} onChange={e => setExtraField('ResNumber', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+                <FormField label="Customer Code">
+                  <input type="text" value={form.extra.CustomerCode || ''} onChange={e => setExtraField('CustomerCode', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+              </div>
+
+              <div style={FORM_ROW_STYLE}>
+                <FormField label="Customer Name">
+                  <input type="text" value={form.extra.CustomerName || ''} onChange={e => setExtraField('CustomerName', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+                <FormField label="On Location Date/Time">
+                  <input type="text" value={form.extra.OnLocationDateTime || ''} onChange={e => setExtraField('OnLocationDateTime', e.target.value)} style={FIELD_STYLE} placeholder="YYYY-MM-DD HH:mm:ss" />
+                </FormField>
+              </div>
+
+              <div style={FORM_ROW_STYLE}>
+                <FormField label="Passenger On Board Date/Time">
+                  <input type="text" value={form.extra.PassengerOnBoardDateTime || ''} onChange={e => setExtraField('PassengerOnBoardDateTime', e.target.value)} style={FIELD_STYLE} placeholder="YYYY-MM-DD HH:mm:ss" />
+                </FormField>
+                 <FormField label="Segment Status Code">
+                  <input type="text" value={form.extra.SegmentStatusCode || ''} onChange={e => setExtraField('SegmentStatusCode', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+              </div>
+              
+              <div style={FORM_ROW_STYLE}>
+                 <FormField label="Segment Total">
+                  <input type="text" value={form.extra.SegmentTotal || ''} onChange={e => setExtraField('SegmentTotal', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+              </div>
+
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827', margin: '16px 0 8px', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>
+                Dispatch Info
+              </div>
+              <div style={FORM_ROW_STYLE}>
+                <FormField label="Dispatch Driver Code">
+                  <input type="text" value={form.extra.DispatchDriverCode || ''} onChange={e => setExtraField('DispatchDriverCode', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+                <FormField label="Dispatch Driver Name">
+                  <input type="text" value={form.extra.DispatchDriverName || ''} onChange={e => setExtraField('DispatchDriverName', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+              </div>
+              <div style={FORM_ROW_STYLE}>
+                <FormField label="Dispatch Vehicle Code">
+                  <input type="text" value={form.extra.DispatchVehicleCode || ''} onChange={e => setExtraField('DispatchVehicleCode', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+                <FormField label="Dispatch Driver Phone">
+                  <input type="text" value={form.extra.DispatchDriverPhoneNumber || ''} onChange={e => setExtraField('DispatchDriverPhoneNumber', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+              </div>
               <div style={{ marginBottom: '14px' }}>
-                <FormField label="Dropoff Address">
-                  <input type="text" value={form.dropoffAddress || ''} onChange={e => setField('dropoffAddress', e.target.value)} style={FIELD_STYLE} placeholder="456 Oak Ave" />
+                <FormField label="Dispatch Vehicle Type Code">
+                  <input type="text" value={form.extra.DispatchVehicleTypeCode || ''} onChange={e => setExtraField('DispatchVehicleTypeCode', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+              </div>
+
+              <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827', margin: '16px 0 8px', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>
+                Contact Info
+              </div>
+              <div style={FORM_ROW_STYLE}>
+                <FormField label="Contact First Name">
+                  <input type="text" value={form.extra.ContactFirstName || ''} onChange={e => setExtraField('ContactFirstName', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+                <FormField label="Contact Last Name">
+                  <input type="text" value={form.extra.ContactLastName || ''} onChange={e => setExtraField('ContactLastName', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+              </div>
+              <div style={FORM_ROW_STYLE}>
+                <FormField label="Contact Email">
+                  <input type="email" value={form.extra.ContactEmailAddress || ''} onChange={e => setExtraField('ContactEmailAddress', e.target.value)} style={FIELD_STYLE} />
+                </FormField>
+                <FormField label="Contact Phone">
+                  <input type="text" value={form.extra.ContactPhoneNumber || ''} onChange={e => setExtraField('ContactPhoneNumber', e.target.value)} style={FIELD_STYLE} />
                 </FormField>
               </div>
 

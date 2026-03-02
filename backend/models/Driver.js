@@ -9,6 +9,10 @@ const driverSchema = new mongoose.Schema({
     vehicleType: {
         type: String,
         default: ''
+    },
+    isActive: {
+        type: Boolean,
+        default: true
     }
 }, { timestamps: true });
 

@@ -87,6 +87,106 @@ router.get('/entries', async (req, res, next) => {
   }
 });
 
+// GET /entries/export - Export manifest entries to Excel
+router.get('/entries/export', async (req, res, next) => {
+  try {
+    const { search, startDate, endDate, sortBy = 'pickupDate', order = 'asc' } = req.query;
+    const query = {};
+
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      query.$or = [
+        { name: searchRegex },
+        { phone: searchRegex },
+        { email: searchRegex },
+        { pickupAddress: searchRegex },
+        { dropoffAddress: searchRegex }
+      ];
+    }
+
+    if (startDate || endDate) {
+      query.pickupDate = {};
+      // Set startDate to beginning of day in UTC
+      if (startDate) {
+        // Parse YYYY-MM-DD
+        const [y, m, d] = startDate.split('-').map(Number);
+        const start = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+        query.pickupDate.$gte = start;
+      }
+      // Set endDate to end of day in UTC
+      if (endDate) {
+        const [y, m, d] = endDate.split('-').map(Number);
+        const end = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999));
+        query.pickupDate.$lte = end;
+      }
+    }
+
+    const sortOptions = {};
+    if (sortBy) {
+        sortOptions[sortBy] = order === 'desc' ? -1 : 1;
+    }
+    sortOptions.createdAt = -1;
+
+    const contacts = await Contact.find(query).sort(sortOptions).populate('manifestId', 'name');
+
+    // Define column order preferences
+    const PREFERRED_ORDER = [
+      'PickupDateTime', 'ResNumber', 'CustomerCode', 'CustomerName', 
+      'PassengerCellPhoneNumber', 'PassengerEmailAddress', 'PassengerFirstName', 'PassengerLastName',
+      'PickupAddress', 'PickupPricingZone', 'DropoffPricingZone', 'DropoffAddress', 
+      'DispatchDriverCode', 'DispatchDriverName', 'DispatchVehicleCode', 'DispatchDriverPhoneNumber',
+      'DispatchVehicleTypeCode', 'OnLocationDateTime', 'PassengerOnBoardDateTime',
+      'SegmentStatusCode', 'SegmentTotal', 
+      'ContactEmailAddress', 'ContactFirstName', 'ContactLastName', 'ContactPhoneNumber'
+    ];
+
+    const data = contacts.map(c => {
+      const row = {
+        'Manifest Source': c.manifestId?.name || '',
+        'Passenger Name': c.name,
+        'Passenger Phone': c.phone,
+        'Passenger Email': c.email,
+        'Pickup Date': c.pickupDate ? new Date(c.pickupDate).toISOString().split('T')[0] : '',
+        'Pickup Time': c.pickupTime,
+        'Pickup Address': c.pickupAddress,
+        'Dropoff Address': c.dropoffAddress,
+        'Status': c.status,
+      };
+
+      // Add extra fields
+      if (c.extra) {
+        // Sort extra keys based on preferred order
+        const extraKeys = Object.keys(c.extra).sort((a, b) => {
+          const aIdx = PREFERRED_ORDER.indexOf(a);
+          const bIdx = PREFERRED_ORDER.indexOf(b);
+          if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+          if (aIdx !== -1) return -1;
+          if (bIdx !== -1) return 1;
+          return a.localeCompare(b);
+        });
+
+        extraKeys.forEach(key => {
+          row[key] = c.extra[key];
+        });
+      }
+      
+      return row;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Manifest Entries');
+
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=manifest_entries_export.xlsx');
+    res.send(buffer);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /entries - Create a single contact entry manually
 router.post('/entries', async (req, res, next) => {
   try {

@@ -224,6 +224,21 @@ export default function DriversPage() {
     vehicleType: ''
   });
 
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  async function fetchUser() {
+    try {
+      const data = await api.get('/api/auth/me');
+      setUser(data.user);
+    } catch (err) {
+      console.error('Failed to fetch user', err);
+    }
+  }
+
   useEffect(() => {
     fetchDrivers();
   }, [currentPage, searchTerm, filterType]);
@@ -360,6 +375,26 @@ export default function DriversPage() {
     } catch (err) {
       setError(err.message);
     }
+  }
+
+  async function toggleStatus(driver) {
+    try {
+      // Optimistic update
+      const currentStatus = driver.isActive !== false;
+      const newStatus = !currentStatus;
+      setDrivers(prev => prev.map(d => d._id === driver._id ? { ...d, isActive: newStatus } : d));
+
+      await api.put(`/api/drivers/${driver._id}`, { isActive: newStatus });
+    } catch (err) {
+      setError(err.message);
+      fetchDrivers(); // Revert on error
+    }
+  }
+
+  function handleDriverSelect(driver) {
+    setSearchTerm(driver.name);
+    setCurrentPage(1);
+    // This will trigger the useEffect to fetch drivers with the new search term
   }
 
   async function handleDelete(id) {
@@ -580,13 +615,19 @@ export default function DriversPage() {
                     <th>Make</th>
                     <th>Model</th>
                     <th>Type</th>
+                    <th>Status</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredDrivers.map((driver) => (
-                    <tr key={driver._id} className={selectedIds.has(driver._id) ? 'row-selected' : ''}>
-                      <td>
+                    <tr 
+                      key={driver._id} 
+                      className={selectedIds.has(driver._id) ? 'row-selected' : ''}
+                      onClick={() => handleDriverSelect(driver)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={selectedIds.has(driver._id)}
@@ -600,8 +641,38 @@ export default function DriversPage() {
                       <td>{driver.carMake || '—'}</td>
                       <td>{driver.carModel || '—'}</td>
                       <td>{driver.vehicleType || '—'}</td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => user?.role === 'admin' && toggleStatus(driver)}
+                          disabled={user?.role !== 'admin'}
+                          title={user?.role !== 'admin' ? 'Only admin can change status' : ''}
+                          style={{
+                            background: driver.isActive !== false ? '#dcfce7' : '#fee2e2',
+                            color: driver.isActive !== false ? '#166534' : '#991b1b',
+                            border: 'none',
+                            padding: '4px 12px',
+                            borderRadius: '9999px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            cursor: user?.role === 'admin' ? 'pointer' : 'not-allowed',
+                            opacity: user?.role === 'admin' ? 1 : 0.6,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          <span style={{
+                            width: '6px',
+                            height: '6px',
+                            borderRadius: '50%',
+                            backgroundColor: driver.isActive !== false ? '#16a34a' : '#dc2626'
+                          }}></span>
+                          {driver.isActive !== false ? 'Active' : 'Inactive'}
+                        </button>
+                      </td>
+                      <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                           <button
                             onClick={() => openEditModal(driver)}
                             className="btn btn--sm"

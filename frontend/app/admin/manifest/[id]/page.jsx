@@ -10,13 +10,13 @@ function fmt(val) {
 }
 
 const REQUIRED_COLUMNS = [
-  'PickupDateTime', 'ResNumber', 'CustomerCode', 'CustomerName', 'PassengerLastName',
-  'PassengerFirstName', 'PassengerCellPhoneNumber', 'PassengerEmailAddress', 'PickupAddress',
-  'PickupPricingZone', 'DropoffPricingZone', 'DropoffAddress', 'DispatchDriverCode',
-  'DispatchDriverName', 'DispatchVehicleCode', 'DispatchDriverPhoneNumber',
+  'PickupDateTime', 'ResNumber', 'CustomerCode', 'CustomerName', 
+  'PassengerCellPhoneNumber', 'PassengerEmailAddress', 'PassengerFirstName', 'PassengerLastName',
+  'PickupAddress', 'PickupPricingZone', 'DropoffPricingZone', 'DropoffAddress', 
+  'DispatchDriverCode', 'DispatchDriverName', 'DispatchVehicleCode', 'DispatchDriverPhoneNumber',
   'DispatchVehicleTypeCode', 'OnLocationDateTime', 'PassengerOnBoardDateTime',
-  'SegmentStatusCode', 'SegmentTotal', 'ContactFirstName', 'ContactLastName',
-  'ContactEmailAddress', 'ContactPhoneNumber'
+  'SegmentStatusCode', 'SegmentTotal', 
+  'ContactEmailAddress', 'ContactFirstName', 'ContactLastName', 'ContactPhoneNumber'
 ];
 
 export default function ManifestDetailPage() {
