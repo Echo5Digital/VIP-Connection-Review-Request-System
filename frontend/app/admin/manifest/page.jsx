@@ -34,9 +34,6 @@ export default function ManifestEntriesPage() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterMode, setFilterMode] = useState('range');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 20;
@@ -54,7 +51,7 @@ export default function ManifestEntriesPage() {
 
   useEffect(() => {
     fetchEntries();
-  }, [currentPage, searchTerm, startDate, endDate]);
+  }, [currentPage, searchTerm]);
 
   useEffect(() => {
     api.get('/api/manifests')
@@ -72,8 +69,6 @@ export default function ManifestEntriesPage() {
         sortBy: 'pickupDate',
         order: 'desc'
       });
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
       const data = await api.get(`/api/manifests/entries?${params.toString()}`);
       setEntries(data.contacts || []);
       setTotalPages(data.pagination.pages || 1);
@@ -89,30 +84,14 @@ export default function ManifestEntriesPage() {
     setCurrentPage(1);
   }
 
-  function handleDateChange(type, value) {
-    if (filterMode === 'single') {
-      setStartDate(value);
-      setEndDate(value);
-    } else {
-      if (type === 'start') setStartDate(value);
-      else setEndDate(value);
-    }
-    setCurrentPage(1);
-  }
-
-  function toggleFilterMode(mode) {
-    setFilterMode(mode);
-    setStartDate('');
-    setEndDate('');
-    setCurrentPage(1);
-  }
-
   function handleUploadSuccess() {
     setSearchTerm('');
-    setStartDate('');
-    setEndDate('');
     setCurrentPage(1);
     fetchEntries();
+  }
+
+  function getEntryPrimaryKey(entry) {
+    return entry?.extra?.ResNumber || entry?.resNumber || entry?._id;
   }
 
   async function handleSendReview(entry, channel) {
@@ -120,14 +99,14 @@ export default function ManifestEntriesPage() {
       setAlertModal({ open: true, message: 'SMS service is currently unavailable.' });
       return;
     }
-    const id = entry._id;
-    setRowStatus(prev => ({ ...prev, [id]: { sending: channel, sent: null, error: null } }));
+    const key = getEntryPrimaryKey(entry);
+    setRowStatus(prev => ({ ...prev, [key]: { sending: channel, sent: null, error: null } }));
     try {
-      await api.post('/api/review-requests/send', { contactId: id, channel });
-      setRowStatus(prev => ({ ...prev, [id]: { sending: null, sent: channel, error: null } }));
+      await api.post('/api/review-requests/send', { contactId: entry._id, channel });
+      setRowStatus(prev => ({ ...prev, [key]: { sending: null, sent: channel, error: null } }));
     } catch (err) {
       const msg = err?.message || 'Failed to send. Please try again.';
-      setRowStatus(prev => ({ ...prev, [id]: { sending: null, sent: null, error: msg } }));
+      setRowStatus(prev => ({ ...prev, [key]: { sending: null, sent: null, error: msg } }));
     }
   }
 
@@ -253,8 +232,6 @@ export default function ManifestEntriesPage() {
       sortBy: 'pickupDate',
       order: 'asc'
     });
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
     window.location.href = `/api-backend/manifests/entries/export?${params.toString()}`;
   }
 
@@ -318,8 +295,8 @@ export default function ManifestEntriesPage() {
         </div>
 
         {/* Filters */}
-        <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ position: 'relative', flex: '1 1 300px', minWidth: '250px' }}>
+        <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '560px' }}>
             <input
               type="text"
               className="form-control"
@@ -334,51 +311,6 @@ export default function ManifestEntriesPage() {
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
             </span>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: '4px', background: '#e2e8f0', padding: '4px', borderRadius: '6px', height: '40px', alignItems: 'center' }}>
-              <button
-                onClick={() => toggleFilterMode('single')}
-                style={{ padding: '0 12px', height: '32px', fontSize: '13px', borderRadius: '4px', border: 'none', background: filterMode === 'single' ? '#fff' : 'transparent', color: filterMode === 'single' ? '#0f172a' : '#64748b', boxShadow: filterMode === 'single' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', cursor: 'pointer', fontWeight: 500 }}
-              >Single Date</button>
-              <button
-                onClick={() => toggleFilterMode('range')}
-                style={{ padding: '0 12px', height: '32px', fontSize: '13px', borderRadius: '4px', border: 'none', background: filterMode === 'range' ? '#fff' : 'transparent', color: filterMode === 'range' ? '#0f172a' : '#64748b', boxShadow: filterMode === 'range' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', cursor: 'pointer', fontWeight: 500 }}
-              >Date Range</button>
-            </div>
-
-            {filterMode === 'single' ? (
-              <div style={{ display: 'flex', alignItems: 'center', height: '40px' }}>
-                <input 
-                  type="date" 
-                  value={startDate} 
-                  onChange={(e) => handleDateChange('start', e.target.value)} 
-                  style={{ height: '40px', borderRadius: '6px', border: '1px solid #cbd5e1', padding: '0 12px', fontSize: '14px', minWidth: '150px' }} 
-                />
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '0 8px 0 12px', height: '40px' }}>
-                  <span style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', fontWeight: 500 }}>From</span>
-                  <input 
-                    type="date" 
-                    value={startDate} 
-                    onChange={(e) => handleDateChange('start', e.target.value)} 
-                    style={{ border: 'none', height: '100%', outline: 'none', fontSize: '14px', background: 'transparent' }} 
-                  />
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '0 8px 0 12px', height: '40px' }}>
-                  <span style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', fontWeight: 500 }}>To</span>
-                  <input 
-                    type="date" 
-                    value={endDate} 
-                    onChange={(e) => handleDateChange('end', e.target.value)} 
-                    style={{ border: 'none', height: '100%', outline: 'none', fontSize: '14px', background: 'transparent' }} 
-                  />
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -411,11 +343,12 @@ export default function ManifestEntriesPage() {
                 </tr>
               ) : (
                 entries.map((entry) => {
-                  const status = rowStatus[entry._id] || {};
+                  const entryKey = getEntryPrimaryKey(entry);
+                  const status = rowStatus[entryKey] || {};
                   const isSending = !!status.sending;
                   const isDeleting = deleteConfirmId === entry._id && modalLoading;
                   return (
-                    <tr key={entry._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                    <tr key={entryKey} style={{ borderBottom: '1px solid #e2e8f0' }}>
                       {/* Actions column — first */}
                       <td style={{ padding: '10px 16px' }}>
                         {status.error && (

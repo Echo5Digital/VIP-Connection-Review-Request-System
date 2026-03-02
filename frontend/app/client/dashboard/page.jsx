@@ -2,13 +2,15 @@ import Link from 'next/link';
 import { serverApi } from '@/lib/server-api';
 
 export default async function ClientDashboardPage() {
-    let itemsCount = 0;
-    try {
-        const data = await serverApi.get('/api/manifests/entries?limit=1');
-        itemsCount = data?.pagination?.total || 0;
-    } catch {
-        // ignore
-    }
+    const [manifestFilesData, driversData, feedbackData] = await Promise.all([
+        serverApi.get('/api/manifests/count').catch(() => ({ total: 0 })),
+        serverApi.get('/api/drivers').catch(() => ({ total: 0 })),
+        serverApi.get('/api/feedback').catch(() => ({ pagination: { total: 0 } })),
+    ]);
+
+    const filesCount = manifestFilesData?.total || 0;
+    const driversCount = driversData?.total || 0;
+    const feedbackCount = feedbackData?.pagination?.total || 0;
 
     return (
         <div className="dash-container">
@@ -33,7 +35,7 @@ export default async function ClientDashboardPage() {
                         <p className="text-body">Upload and manage your daily ride manifests in CSV format to trigger automated texts.</p>
                         <div className="dash-card__stat-group">
                             <span className="dash-card__stat dash-card__stat--blue">
-                                {itemsCount} {itemsCount === 1 ? 'Item' : 'Items'}
+                                {filesCount} {filesCount === 1 ? 'File' : 'Files'}
                             </span>
                         </div>
                     </div>
@@ -60,6 +62,11 @@ export default async function ClientDashboardPage() {
                     </div>
                     <div className="dash-card__body">
                         <p className="text-body">View your active driver roster. Map aliases from your manifest CSVs to the actual drivers.</p>
+                        <div className="dash-card__stat-group">
+                            <span className="dash-card__stat dash-card__stat--blue">
+                                {driversCount} {driversCount === 1 ? 'Driver' : 'Drivers'}
+                            </span>
+                        </div>
                     </div>
                     <div className="dash-card__footer">
                         Manage Drivers
@@ -80,7 +87,12 @@ export default async function ClientDashboardPage() {
                         <h2 className="dash-card__title">Internal Feedback</h2>
                     </div>
                     <div className="dash-card__body">
-                        <p className="text-body">Review and manage internal negative feedback submitted directly.</p>
+                        <p className="text-body">Review and manage internal negative feedback submitted directly by clients.</p>
+                        <div className="dash-card__stat-group">
+                            <span className="dash-card__stat dash-card__stat--blue">
+                                {feedbackCount} {feedbackCount === 1 ? 'Item' : 'Items'}
+                            </span>
+                        </div>
                     </div>
                     <div className="dash-card__footer">
                         View Feedback

@@ -2,14 +2,14 @@ import Link from 'next/link';
 import { serverApi } from '@/lib/server-api';
 
 export default async function DashboardPage() {
-  const [manifestsEntriesData, clientsData, driversData, feedbackData] = await Promise.all([
-    serverApi.get('/api/manifests/entries?limit=1').catch(() => ({ pagination: { total: 0 } })),
+  const [manifestFilesData, clientsData, driversData, feedbackData] = await Promise.all([
+    serverApi.get('/api/manifests/count').catch(() => ({ total: 0 })),
     serverApi.get('/api/clients').catch(() => []),
     serverApi.get('/api/drivers').catch(() => ({ total: 0 })),
     serverApi.get('/api/feedback').catch(() => ({ pagination: { total: 0 } })),
   ]);
 
-  const itemsCount = manifestsEntriesData?.pagination?.total || 0;
+  const filesCount = manifestFilesData?.total || 0;
   const clientsCount = Array.isArray(clientsData) ? clientsData.length : 0;
   const driversCount = driversData?.total || 0;
   const feedbackCount = feedbackData?.pagination?.total || 0;
@@ -37,7 +37,7 @@ export default async function DashboardPage() {
             <p className="text-body">Upload and manage your daily ride manifests in CSV format to trigger automated texts.</p>
             <div className="dash-card__stat-group">
               <span className="dash-card__stat dash-card__stat--blue">
-                {itemsCount} {itemsCount === 1 ? 'Item' : 'Items'}
+                {filesCount} {filesCount === 1 ? 'File' : 'Files'}
               </span>
             </div>
           </div>
