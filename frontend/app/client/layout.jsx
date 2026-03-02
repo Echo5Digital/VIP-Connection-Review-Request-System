@@ -20,7 +20,7 @@ const nav = [
     },
     {
         href: '/client/manifest',
-        label: 'Manifests',
+        label: 'Review Request',
         icon: (
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />

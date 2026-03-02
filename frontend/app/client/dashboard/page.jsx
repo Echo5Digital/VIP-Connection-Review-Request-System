@@ -2,14 +2,13 @@ import Link from 'next/link';
 import { serverApi } from '@/lib/server-api';
 
 export default async function ClientDashboardPage() {
-    let manifests = [];
+    let itemsCount = 0;
     try {
-        manifests = await serverApi.get('/api/manifests');
+        const data = await serverApi.get('/api/manifests/entries?limit=1');
+        itemsCount = data?.pagination?.total || 0;
     } catch {
         // ignore
     }
-
-    const manifestsCount = manifests.length;
 
     return (
         <div className="dash-container">
@@ -24,22 +23,22 @@ export default async function ClientDashboardPage() {
                     <div className="dash-card__header">
                         <div className="dash-card__icon-wrap">
                             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1-2-2h2" />
                                 <rect x="8" y="2" width="8" height="4" rx="1" />
                             </svg>
                         </div>
-                        <h2 className="dash-card__title">Manifests</h2>
+                        <h2 className="dash-card__title">Review Request</h2>
                     </div>
                     <div className="dash-card__body">
                         <p className="text-body">Upload and manage your daily ride manifests in CSV format to trigger automated texts.</p>
                         <div className="dash-card__stat-group">
                             <span className="dash-card__stat dash-card__stat--blue">
-                                {manifestsCount} {manifestsCount === 1 ? 'Manifest' : 'Manifests'}
+                                {itemsCount} {itemsCount === 1 ? 'Item' : 'Items'}
                             </span>
                         </div>
                     </div>
                     <div className="dash-card__footer">
-                        Manage Manifests
+                        Manage Review Requests
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>

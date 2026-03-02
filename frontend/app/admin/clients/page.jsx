@@ -249,6 +249,7 @@ export default function ClientsPage() {
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
+                                            className="no-hover-anim"
                                             style={{
                                                 position: 'absolute',
                                                 right: '12px',

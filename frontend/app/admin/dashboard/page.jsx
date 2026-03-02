@@ -2,14 +2,17 @@ import Link from 'next/link';
 import { serverApi } from '@/lib/server-api';
 
 export default async function DashboardPage() {
-  let manifests = [];
-  try {
-    manifests = await serverApi.get('/api/manifests');
-  } catch {
-    // ignore
-  }
+  const [manifestsEntriesData, clientsData, driversData, feedbackData] = await Promise.all([
+    serverApi.get('/api/manifests/entries?limit=1').catch(() => ({ pagination: { total: 0 } })),
+    serverApi.get('/api/clients').catch(() => []),
+    serverApi.get('/api/drivers').catch(() => ({ total: 0 })),
+    serverApi.get('/api/feedback').catch(() => ({ pagination: { total: 0 } })),
+  ]);
 
-  const manifestsCount = manifests.length;
+  const itemsCount = manifestsEntriesData?.pagination?.total || 0;
+  const clientsCount = Array.isArray(clientsData) ? clientsData.length : 0;
+  const driversCount = driversData?.total || 0;
+  const feedbackCount = feedbackData?.pagination?.total || 0;
 
   return (
     <div className="dash-container">
@@ -28,18 +31,18 @@ export default async function DashboardPage() {
                 <rect x="8" y="2" width="8" height="4" rx="1" />
               </svg>
             </div>
-            <h2 className="dash-card__title">Manifests</h2>
+            <h2 className="dash-card__title">Review Request</h2>
           </div>
           <div className="dash-card__body">
             <p className="text-body">Upload and manage your daily ride manifests in CSV format to trigger automated texts.</p>
             <div className="dash-card__stat-group">
               <span className="dash-card__stat dash-card__stat--blue">
-                {manifestsCount} {manifestsCount === 1 ? 'Manifest' : 'Manifests'}
+                {itemsCount} {itemsCount === 1 ? 'Item' : 'Items'}
               </span>
             </div>
           </div>
           <div className="dash-card__footer">
-            Manage Manifests
+            Manage Review Requests
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
@@ -61,6 +64,11 @@ export default async function DashboardPage() {
           </div>
           <div className="dash-card__body">
             <p className="text-body">Manage portal access for your clients. Add new accounts or disable existing credentials.</p>
+            <div className="dash-card__stat-group">
+              <span className="dash-card__stat dash-card__stat--blue">
+                {clientsCount} {clientsCount === 1 ? 'Client' : 'Clients'}
+              </span>
+            </div>
           </div>
           <div className="dash-card__footer">
             Manage Clients
@@ -85,6 +93,11 @@ export default async function DashboardPage() {
           </div>
           <div className="dash-card__body">
             <p className="text-body">View your active driver roster. Map aliases from your manifest CSVs to the actual drivers.</p>
+            <div className="dash-card__stat-group">
+              <span className="dash-card__stat dash-card__stat--blue">
+                {driversCount} {driversCount === 1 ? 'Driver' : 'Drivers'}
+              </span>
+            </div>
           </div>
           <div className="dash-card__footer">
             Manage Drivers
@@ -106,8 +119,14 @@ export default async function DashboardPage() {
           </div>
           <div className="dash-card__body">
             <p className="text-body">Review and manage internal negative feedback submitted directly by clients.</p>
+            <div className="dash-card__stat-group">
+              <span className="dash-card__stat dash-card__stat--blue">
+                {feedbackCount} {feedbackCount === 1 ? 'Item' : 'Items'}
+              </span>
+            </div>
           </div>
           <div className="dash-card__footer">
+
             View Feedback
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
