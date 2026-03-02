@@ -6,7 +6,7 @@ import ReviewRequest, { generateToken } from '../models/ReviewRequest.js';
 import Rating from '../models/Rating.js';
 import PrivateFeedback from '../models/PrivateFeedback.js';
 import PublicReviewClick from '../models/PublicReviewClick.js';
-import { sendEmail } from '../services/sendgridService.js';
+import { sendEmail } from '../services/emailService.js';
 import { sendSms } from '../services/twilioService.js';
 import { config } from '../config/index.js';
 

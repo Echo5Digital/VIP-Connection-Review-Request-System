@@ -13,9 +13,10 @@ export const config = {
     authToken: process.env.TWILIO_AUTH_TOKEN,
     phoneNumber: process.env.TWILIO_PHONE_NUMBER,
   },
-  sendgrid: {
-    apiKey: process.env.SENDGRID_API_KEY,
-    fromEmail: process.env.SENDGRID_FROM_EMAIL || 'noreply@example.com',
-    fromName: process.env.SENDGRID_FROM_NAME || 'Review Request',
+  gmail: {
+    user: process.env.GMAIL_USER,
+    appPassword: process.env.GMAIL_APP_PASSWORD,
+    fromEmail: process.env.GMAIL_FROM_EMAIL || process.env.GMAIL_USER,
+    fromName: process.env.GMAIL_FROM_NAME || 'Review Request',
   },
 };
