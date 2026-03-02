@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
 const STAR_EMOJIS = ['', '😡', '😔', '😐', '😊', '😍'];
@@ -16,6 +17,7 @@ function RatingBadge({ value }) {
 }
 
 export default function FeedbackPage() {
+  const searchParams = useSearchParams();
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all' | 'negative'
@@ -26,6 +28,14 @@ export default function FeedbackPage() {
   useEffect(() => {
     fetchFeedback();
   }, [filter, currentPage]);
+
+  useEffect(() => {
+    const queryFilter = searchParams.get('filter');
+    if (queryFilter === 'negative' || queryFilter === 'all') {
+      setFilter(queryFilter);
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
 
   async function fetchFeedback() {
     try {

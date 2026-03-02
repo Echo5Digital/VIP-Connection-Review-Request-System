@@ -40,41 +40,33 @@ try {
   console.error('Migration error:', err);
 }
 
-const defaultAdminEmail = (process.env.SEED_ADMIN_EMAIL || 'admin@gmail.com').toLowerCase();
-const defaultAdminPassword = process.env.SEED_ADMIN_PASSWORD || 'admin1234';
-const defaultClientEmail = (process.env.SEED_CLIENT_EMAIL || 'testclient@gmail.com').toLowerCase();
-const defaultClientPassword = process.env.SEED_CLIENT_PASSWORD || 'test1234';
+const seedAdminEmail = process.env.SEED_ADMIN_EMAIL?.toLowerCase().trim();
+const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD;
+const seedClientEmail = process.env.SEED_CLIENT_EMAIL?.toLowerCase().trim();
+const seedClientPassword = process.env.SEED_CLIENT_PASSWORD;
 
-if (defaultAdminEmail && defaultAdminPassword) {
-  const existing = await Admin.findOne({ email: defaultAdminEmail }).select('+password');
+if (seedAdminEmail && seedAdminPassword) {
+  const existing = await Admin.findOne({ email: seedAdminEmail }).select('+password');
   if (!existing) {
     await Admin.create({
-      email: defaultAdminEmail,
-      password: defaultAdminPassword,
+      email: seedAdminEmail,
+      password: seedAdminPassword,
       name: 'Admin',
     });
-    console.log('Seeded admin:', defaultAdminEmail);
-  } else if (!(await existing.comparePassword(defaultAdminPassword))) {
-    existing.password = defaultAdminPassword;
-    await existing.save();
-    console.log('Updated seeded admin password for:', defaultAdminEmail);
+    console.log('Seeded admin:', seedAdminEmail);
   }
 }
 
-if (defaultClientEmail && defaultClientPassword) {
-  const existing = await Client.findOne({ email: defaultClientEmail }).select('+password');
+if (seedClientEmail && seedClientPassword) {
+  const existing = await Client.findOne({ email: seedClientEmail }).select('+password');
   if (!existing) {
     await Client.create({
-      email: defaultClientEmail,
-      password: defaultClientPassword,
+      email: seedClientEmail,
+      password: seedClientPassword,
       name: 'Test Client',
       active: true,
     });
-    console.log('Seeded client:', defaultClientEmail);
-  } else if (!(await existing.comparePassword(defaultClientPassword))) {
-    existing.password = defaultClientPassword;
-    await existing.save();
-    console.log('Updated seeded client password for:', defaultClientEmail);
+    console.log('Seeded client:', seedClientEmail);
   }
 }
 

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
@@ -235,7 +235,7 @@ export default function ManifestEntriesPage() {
     window.location.href = `/api-backend/manifests/entries/export?${params.toString()}`;
   }
 
-  // Column derivation — new order
+  // Column derivation â€” new order
   const PREFERRED_ORDER = [
     'PickupDateTime', 'ResNumber', 'CustomerCode', 'CustomerName', 
     'PassengerCellPhoneNumber', 'PassengerEmailAddress', 'PassengerFirstName', 'PassengerLastName',
@@ -349,83 +349,55 @@ export default function ManifestEntriesPage() {
                   const isDeleting = deleteConfirmId === entry._id && modalLoading;
                   return (
                     <tr key={entryKey} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                      {/* Actions column — first */}
-                      <td style={{ padding: '10px 16px' }}>
+                      {/* Actions column â€” first */}
+                      <td className="admin-review-actions-cell">
                         {status.error && (
-                          <div style={{ color: '#dc2626', fontSize: '12px', marginBottom: '6px', maxWidth: '200px', whiteSpace: 'normal' }}>
+                          <div className="admin-review-actions-error">
                             {status.error}
                           </div>
                         )}
-                        <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div className="admin-review-actions-grid">
                           {/* Email */}
                           <button
                             onClick={() => handleSendReview(entry, 'email')}
                             disabled={isSending || (!entry.email && !entry.extra?.PassengerEmailAddress)}
                             title={(!entry.email && !entry.extra?.PassengerEmailAddress) ? 'No email on file' : 'Send review request via email'}
-                            style={{
-                              padding: '5px 10px', fontSize: '12px', borderRadius: '4px',
-                              border: '1px solid #bfdbfe',
-                              background: status.sent === 'email' ? '#dcfce7' : '#eff6ff',
-                              color: status.sent === 'email' ? '#16a34a' : ((!entry.email && !entry.extra?.PassengerEmailAddress) ? '#94a3b8' : '#1d4ed8'),
-                              cursor: isSending || (!entry.email && !entry.extra?.PassengerEmailAddress) ? 'not-allowed' : 'pointer',
-                              opacity: (!entry.email && !entry.extra?.PassengerEmailAddress) ? 0.5 : 1,
-                              whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px',
-                            }}
+                            className={`admin-review-action-btn admin-review-action-btn--primary${status.sent === 'email' ? ' admin-review-action-btn--sent' : ''}`}
                           >
                             {status.sending === 'email' ? (
-                              <span style={{ display: 'inline-block', width: '10px', height: '10px', border: '2px solid #1d4ed8', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                              <span className="admin-review-action-spinner" />
                             ) : null}
-                            {status.sent === 'email' ? '✓ Sent' : '📧 Email'}
+                            {status.sent === 'email' ? 'Sent' : 'Email'}
                           </button>
                           {/* SMS */}
                           <button
                             onClick={() => handleSendReview(entry, 'sms')}
                             disabled={isSending || (!entry.phone && !entry.extra?.PassengerCellPhoneNumber && !entry.extra?.PassngerCellPhoneNumber)}
                             title={(!entry.phone && !entry.extra?.PassengerCellPhoneNumber && !entry.extra?.PassngerCellPhoneNumber) ? 'No phone on file' : 'Send review request via SMS'}
-                            style={{
-                              padding: '5px 10px', fontSize: '12px', borderRadius: '4px',
-                              border: '1px solid #bbf7d0',
-                              background: status.sent === 'sms' ? '#dcfce7' : '#f0fdf4',
-                              color: status.sent === 'sms' ? '#16a34a' : ((!entry.phone && !entry.extra?.PassengerCellPhoneNumber && !entry.extra?.PassngerCellPhoneNumber) ? '#94a3b8' : '#15803d'),
-                              cursor: isSending || (!entry.phone && !entry.extra?.PassengerCellPhoneNumber && !entry.extra?.PassngerCellPhoneNumber) ? 'not-allowed' : 'pointer',
-                              opacity: (!entry.phone && !entry.extra?.PassengerCellPhoneNumber && !entry.extra?.PassngerCellPhoneNumber) ? 0.5 : 1,
-                              whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px',
-                            }}
+                            className={`admin-review-action-btn admin-review-action-btn--primary${status.sent === 'sms' ? ' admin-review-action-btn--sent' : ''}`}
                           >
                             {status.sending === 'sms' ? (
-                              <span style={{ display: 'inline-block', width: '10px', height: '10px', border: '2px solid #15803d', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                              <span className="admin-review-action-spinner" />
                             ) : null}
-                            {status.sent === 'sms' ? '✓ Sent' : '📱 SMS'}
+                            {status.sent === 'sms' ? 'Sent' : 'SMS'}
                           </button>
                           {/* Edit */}
                           <button
                             onClick={() => openEditModal(entry)}
                             disabled={isSending}
                             title="Edit entry"
-                            style={{
-                              padding: '5px 10px', fontSize: '12px', borderRadius: '4px',
-                              border: '1px solid #cbd5e1', background: '#f8fafc', color: '#374151',
-                              cursor: isSending ? 'not-allowed' : 'pointer',
-                              opacity: isSending ? 0.5 : 1,
-                              whiteSpace: 'nowrap',
-                            }}
+                            className="admin-review-action-btn"
                           >
-                            ✏️ Edit
+                            Edit
                           </button>
                           {/* Delete */}
                           <button
                             onClick={() => { setDeleteConfirmId(entry._id); setModalError(''); }}
                             disabled={isSending || isDeleting}
                             title="Delete entry"
-                            style={{
-                              padding: '5px 10px', fontSize: '12px', borderRadius: '4px',
-                              border: '1px solid #fecaca', background: '#fff5f5', color: '#dc2626',
-                              cursor: isSending || isDeleting ? 'not-allowed' : 'pointer',
-                              opacity: isSending ? 0.5 : 1,
-                              whiteSpace: 'nowrap',
-                            }}
+                            className="admin-review-action-btn admin-review-action-btn--danger"
                           >
-                            🗑️ Delete
+                            Delete
                           </button>
                         </div>
                       </td>
@@ -441,7 +413,7 @@ export default function ManifestEntriesPage() {
                       {remainingExtras.map(col => (
                         <td key={col} style={{ padding: '12px 16px' }}>{entry.extra?.[col] || ''}</td>
                       ))}
-                      {/* Source (Manifest) — last */}
+                      {/* Source (Manifest) â€” last */}
                       <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px' }}>
                         {entry.manifestId?.name || 'Unknown'}
                       </td>
@@ -552,7 +524,7 @@ export default function ManifestEntriesPage() {
                     style={{ ...FIELD_STYLE }}
                     required
                   >
-                    <option value="">— Select manifest —</option>
+                    <option value="">â€” Select manifest â€”</option>
                     {manifests.map(m => (
                       <option key={m._id} value={m._id}>{m.name}</option>
                     ))}
@@ -760,3 +732,4 @@ export default function ManifestEntriesPage() {
     </div>
   );
 }
+
