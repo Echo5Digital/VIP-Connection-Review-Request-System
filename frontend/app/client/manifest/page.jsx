@@ -408,15 +408,15 @@ export default function ManifestEntriesPage() {
                           {/* Email */}
                           <button
                             onClick={() => handleSendReview(entry, 'email')}
-                            disabled={isSending || !entry.email}
-                            title={!entry.email ? 'No email on file' : 'Send review request via email'}
+                            disabled={isSending || (!entry.email && !entry.extra?.PassengerEmailAddress)}
+                            title={(!entry.email && !entry.extra?.PassengerEmailAddress) ? 'No email on file' : 'Send review request via email'}
                             style={{
                               padding: '5px 10px', fontSize: '12px', borderRadius: '4px',
                               border: '1px solid #bfdbfe',
                               background: status.sent === 'email' ? '#dcfce7' : '#eff6ff',
-                              color: status.sent === 'email' ? '#16a34a' : (!entry.email ? '#94a3b8' : '#1d4ed8'),
-                              cursor: isSending || !entry.email ? 'not-allowed' : 'pointer',
-                              opacity: !entry.email ? 0.5 : 1,
+                              color: status.sent === 'email' ? '#16a34a' : ((!entry.email && !entry.extra?.PassengerEmailAddress) ? '#94a3b8' : '#1d4ed8'),
+                              cursor: isSending || (!entry.email && !entry.extra?.PassengerEmailAddress) ? 'not-allowed' : 'pointer',
+                              opacity: (!entry.email && !entry.extra?.PassengerEmailAddress) ? 0.5 : 1,
                               whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px',
                             }}
                           >
@@ -428,15 +428,15 @@ export default function ManifestEntriesPage() {
                           {/* SMS */}
                           <button
                             onClick={() => handleSendReview(entry, 'sms')}
-                            disabled={isSending || !entry.phone}
-                            title={!entry.phone ? 'No phone on file' : 'Send review request via SMS'}
+                            disabled={isSending || (!entry.phone && !entry.extra?.PassengerCellPhoneNumber && !entry.extra?.PassngerCellPhoneNumber)}
+                            title={(!entry.phone && !entry.extra?.PassengerCellPhoneNumber && !entry.extra?.PassngerCellPhoneNumber) ? 'No phone on file' : 'Send review request via SMS'}
                             style={{
                               padding: '5px 10px', fontSize: '12px', borderRadius: '4px',
                               border: '1px solid #bbf7d0',
                               background: status.sent === 'sms' ? '#dcfce7' : '#f0fdf4',
-                              color: status.sent === 'sms' ? '#16a34a' : (!entry.phone ? '#94a3b8' : '#15803d'),
-                              cursor: isSending || !entry.phone ? 'not-allowed' : 'pointer',
-                              opacity: !entry.phone ? 0.5 : 1,
+                              color: status.sent === 'sms' ? '#16a34a' : ((!entry.phone && !entry.extra?.PassengerCellPhoneNumber && !entry.extra?.PassngerCellPhoneNumber) ? '#94a3b8' : '#15803d'),
+                              cursor: isSending || (!entry.phone && !entry.extra?.PassengerCellPhoneNumber && !entry.extra?.PassngerCellPhoneNumber) ? 'not-allowed' : 'pointer',
+                              opacity: (!entry.phone && !entry.extra?.PassengerCellPhoneNumber && !entry.extra?.PassngerCellPhoneNumber) ? 0.5 : 1,
                               whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px',
                             }}
                           >

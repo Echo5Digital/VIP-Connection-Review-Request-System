@@ -29,10 +29,14 @@ router.post(
       const contact = await Contact.findById(contactId).populate('manifestId', 'name');
       if (!contact) return res.status(404).json({ message: 'Contact not found' });
 
-      if (channel === 'email' && !contact.email) {
+      // Determine target email and phone, prioritizing extra fields
+      const targetEmail = contact.extra?.PassengerEmailAddress || contact.email;
+      const targetPhone = contact.extra?.PassengerCellPhoneNumber || contact.extra?.PassngerCellPhoneNumber || contact.phone;
+
+      if (channel === 'email' && !targetEmail) {
         return res.status(400).json({ message: 'This contact does not have an email address.' });
       }
-      if (channel === 'sms' && !contact.phone) {
+      if (channel === 'sms' && !targetPhone) {
         return res.status(400).json({ message: 'This contact does not have a phone number.' });
       }
 
@@ -46,7 +50,7 @@ router.post(
       });
 
       const link = `${config.nextAppUrl}/r/${token}`;
-      const passengerName = contact.name || 'Valued Customer';
+      const passengerName = contact.extra?.PassengerFirstName || contact.name || 'Valued Customer';
 
       if (channel === 'email') {
         const subject = 'Rate Your VIP Connection Experience';
@@ -66,14 +70,14 @@ router.post(
             <p style="color: #94a3b8; font-size: 12px;">© ${new Date().getFullYear()} VIP Connection Review System</p>
           </div>
         `;
-        await sendEmail(contact.email, subject, html);
-        return res.json({ success: true, channel: 'email', sentTo: contact.email });
+        await sendEmail(targetEmail, subject, html);
+        return res.json({ success: true, channel: 'email', sentTo: targetEmail });
       }
 
       if (channel === 'sms') {
         const body = `Hi ${passengerName}, thank you for riding with VIP Connection! Please take a moment to rate your experience: ${link}`;
-        await sendSms(contact.phone, body);
-        return res.json({ success: true, channel: 'sms', sentTo: contact.phone });
+        await sendSms(targetPhone, body);
+        return res.json({ success: true, channel: 'sms', sentTo: targetPhone });
       }
     } catch (err) {
       next(err);
