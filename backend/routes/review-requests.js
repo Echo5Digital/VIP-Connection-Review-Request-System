@@ -26,6 +26,11 @@ router.post(
       if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
       const { contactId, channel } = req.body;
+
+      if (channel === 'sms') {
+        return res.status(503).json({ message: 'SMS service is currently disabled.' });
+      }
+
       const contact = await Contact.findById(contactId).populate('manifestId', 'name');
       if (!contact) return res.status(404).json({ message: 'Contact not found' });
 

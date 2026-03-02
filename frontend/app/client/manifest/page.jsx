@@ -50,6 +50,7 @@ export default function ManifestEntriesPage() {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState('');
+  const [alertModal, setAlertModal] = useState({ open: false, message: '' });
 
   useEffect(() => {
     fetchEntries();
@@ -69,7 +70,7 @@ export default function ManifestEntriesPage() {
         limit: limit,
         search: searchTerm,
         sortBy: 'pickupDate',
-        order: 'asc'
+        order: 'desc'
       });
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
@@ -115,6 +116,10 @@ export default function ManifestEntriesPage() {
   }
 
   async function handleSendReview(entry, channel) {
+    if (channel === 'sms') {
+      setAlertModal({ open: true, message: 'SMS service is currently unavailable.' });
+      return;
+    }
     const id = entry._id;
     setRowStatus(prev => ({ ...prev, [id]: { sending: channel, sent: null, error: null } }));
     try {
@@ -314,11 +319,11 @@ export default function ManifestEntriesPage() {
 
         {/* Filters */}
         <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ position: 'relative', flex: '1 1 300px' }}>
+          <div style={{ position: 'relative', flex: '1 1 300px', minWidth: '250px' }}>
             <input
               type="text"
               className="form-control"
-              placeholder="Search by name, phone, email, address..."
+              placeholder="Search by name, phone, email, res#, code, etc..."
               value={searchTerm}
               onChange={handleSearch}
               style={{ paddingLeft: '36px', height: '40px', borderRadius: '6px', border: '1px solid #cbd5e1', width: '100%' }}
@@ -331,32 +336,46 @@ export default function ManifestEntriesPage() {
             </span>
           </div>
 
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '4px', background: '#e2e8f0', padding: '2px', borderRadius: '6px' }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '4px', background: '#e2e8f0', padding: '4px', borderRadius: '6px', height: '40px', alignItems: 'center' }}>
               <button
                 onClick={() => toggleFilterMode('single')}
-                style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '4px', border: 'none', background: filterMode === 'single' ? '#fff' : 'transparent', color: filterMode === 'single' ? '#0f172a' : '#64748b', boxShadow: filterMode === 'single' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', cursor: 'pointer' }}
+                style={{ padding: '0 12px', height: '32px', fontSize: '13px', borderRadius: '4px', border: 'none', background: filterMode === 'single' ? '#fff' : 'transparent', color: filterMode === 'single' ? '#0f172a' : '#64748b', boxShadow: filterMode === 'single' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', cursor: 'pointer', fontWeight: 500 }}
               >Single Date</button>
               <button
                 onClick={() => toggleFilterMode('range')}
-                style={{ padding: '4px 8px', fontSize: '12px', borderRadius: '4px', border: 'none', background: filterMode === 'range' ? '#fff' : 'transparent', color: filterMode === 'range' ? '#0f172a' : '#64748b', boxShadow: filterMode === 'range' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', cursor: 'pointer' }}
+                style={{ padding: '0 12px', height: '32px', fontSize: '13px', borderRadius: '4px', border: 'none', background: filterMode === 'range' ? '#fff' : 'transparent', color: filterMode === 'range' ? '#0f172a' : '#64748b', boxShadow: filterMode === 'range' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', cursor: 'pointer', fontWeight: 500 }}
               >Date Range</button>
             </div>
 
             {filterMode === 'single' ? (
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Date</label>
-                <input type="date" value={startDate} onChange={(e) => handleDateChange('start', e.target.value)} style={{ height: '36px', borderRadius: '6px', border: '1px solid #cbd5e1', padding: '0 8px' }} />
+              <div style={{ display: 'flex', alignItems: 'center', height: '40px' }}>
+                <input 
+                  type="date" 
+                  value={startDate} 
+                  onChange={(e) => handleDateChange('start', e.target.value)} 
+                  style={{ height: '40px', borderRadius: '6px', border: '1px solid #cbd5e1', padding: '0 12px', fontSize: '14px', minWidth: '150px' }} 
+                />
               </div>
             ) : (
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <label style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>From</label>
-                  <input type="date" value={startDate} onChange={(e) => handleDateChange('start', e.target.value)} style={{ height: '36px', borderRadius: '6px', border: '1px solid #cbd5e1', padding: '0 8px' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '0 8px 0 12px', height: '40px' }}>
+                  <span style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', fontWeight: 500 }}>From</span>
+                  <input 
+                    type="date" 
+                    value={startDate} 
+                    onChange={(e) => handleDateChange('start', e.target.value)} 
+                    style={{ border: 'none', height: '100%', outline: 'none', fontSize: '14px', background: 'transparent' }} 
+                  />
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <label style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>To</label>
-                  <input type="date" value={endDate} onChange={(e) => handleDateChange('end', e.target.value)} style={{ height: '36px', borderRadius: '6px', border: '1px solid #cbd5e1', padding: '0 8px' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '0 8px 0 12px', height: '40px' }}>
+                  <span style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap', fontWeight: 500 }}>To</span>
+                  <input 
+                    type="date" 
+                    value={endDate} 
+                    onChange={(e) => handleDateChange('end', e.target.value)} 
+                    style={{ border: 'none', height: '100%', outline: 'none', fontSize: '14px', background: 'transparent' }} 
+                  />
                 </div>
               </div>
             )}
@@ -550,6 +569,33 @@ export default function ManifestEntriesPage() {
                 {modalLoading ? 'Deleting...' : 'Delete'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alert Modal */}
+      {alertModal.open && (
+        <div style={OVERLAY_STYLE} onClick={() => setAlertModal({ open: false, message: '' })}>
+          <div style={{ ...MODAL_STYLE, maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+             <div style={{ marginBottom: '16px', color: '#f59e0b', display: 'flex', justifyContent: 'center' }}>
+               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" width="48" height="48">
+                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+               </svg>
+             </div>
+             <h2 style={{ margin: '0 0 12px', fontSize: '18px', fontWeight: '600', color: '#111827' }}>Notice</h2>
+             <p style={{ margin: '0 0 24px', color: '#4b5563', fontSize: '15px' }}>
+               {alertModal.message}
+             </p>
+             <button
+               onClick={() => setAlertModal({ open: false, message: '' })}
+               style={{
+                 padding: '10px 24px', borderRadius: '6px', border: 'none',
+                 background: '#2563eb', color: '#fff', cursor: 'pointer',
+                 fontSize: '14px', fontWeight: '500'
+               }}
+             >
+               OK
+             </button>
           </div>
         </div>
       )}

@@ -28,13 +28,34 @@ router.get('/entries', async (req, res, next) => {
 
     if (search) {
       const searchRegex = new RegExp(search, 'i');
-      query.$or = [
+      const orQuery = [
         { name: searchRegex },
         { phone: searchRegex },
         { email: searchRegex },
         { pickupAddress: searchRegex },
-        { dropoffAddress: searchRegex }
+        { dropoffAddress: searchRegex },
       ];
+
+      // Get all unique columns from all manifests to dynamically search 'extra' fields
+      const allManifests = await Manifest.find({}, 'columns');
+      const allColumns = new Set();
+      allManifests.forEach(m => {
+        if (Array.isArray(m.columns)) {
+          m.columns.forEach(c => allColumns.add(c));
+        }
+      });
+
+      // Add each column to the search query
+      allColumns.forEach(col => {
+        // Prevent duplicate or invalid keys
+        if (col && typeof col === 'string') {
+          // Use bracket notation logic for MongoDB path? No, Mongo uses dot notation.
+          // Ensure key is safe? keys with dots might be tricky but usually columns are simple strings.
+          orQuery.push({ [`extra.${col}`]: searchRegex });
+        }
+      });
+
+      query.$or = orQuery;
     }
 
     if (startDate || endDate) {
@@ -57,6 +78,10 @@ router.get('/entries', async (req, res, next) => {
     const sortOptions = {};
     if (sortBy) {
         sortOptions[sortBy] = order === 'desc' ? -1 : 1;
+        // If sorting by pickupDate, also sort by pickupTime as secondary
+        if (sortBy === 'pickupDate') {
+          sortOptions['pickupTime'] = order === 'desc' ? -1 : 1;
+        }
     }
     
     // Secondary sort by createdAt to ensure stable pagination
@@ -95,13 +120,30 @@ router.get('/entries/export', async (req, res, next) => {
 
     if (search) {
       const searchRegex = new RegExp(search, 'i');
-      query.$or = [
+      const orQuery = [
         { name: searchRegex },
         { phone: searchRegex },
         { email: searchRegex },
         { pickupAddress: searchRegex },
-        { dropoffAddress: searchRegex }
+        { dropoffAddress: searchRegex },
       ];
+
+      // Get all unique columns from all manifests
+      const allManifests = await Manifest.find({}, 'columns');
+      const allColumns = new Set();
+      allManifests.forEach(m => {
+        if (Array.isArray(m.columns)) {
+          m.columns.forEach(c => allColumns.add(c));
+        }
+      });
+
+      allColumns.forEach(col => {
+        if (col && typeof col === 'string') {
+          orQuery.push({ [`extra.${col}`]: searchRegex });
+        }
+      });
+
+      query.$or = orQuery;
     }
 
     if (startDate || endDate) {
@@ -124,6 +166,10 @@ router.get('/entries/export', async (req, res, next) => {
     const sortOptions = {};
     if (sortBy) {
         sortOptions[sortBy] = order === 'desc' ? -1 : 1;
+        // If sorting by pickupDate, also sort by pickupTime as secondary
+        if (sortBy === 'pickupDate') {
+          sortOptions['pickupTime'] = order === 'desc' ? -1 : 1;
+        }
     }
     sortOptions.createdAt = -1;
 
@@ -310,6 +356,39 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
 
       if (timeStr) {
           pickupTime = String(timeStr).trim();
+      }
+
+      // If pickupDate is valid but has 00:00:00 time, and we have a time string, try to merge it
+      if (pickupDate && pickupTime) {
+        // Check if pickupDate is midnight (in UTC or local? new Date(dateStr) depends on input)
+        // We'll check if hours/minutes are 0.
+        // Actually, safer to just parse timeStr and set it if valid, overwriting whatever time was there?
+        // No, if PickupDateTime had time, we prefer that.
+        // Only if PickupDateTime was date-only.
+        
+        // Simple heuristic: if pickupDate is exactly midnight UTC or Local (depending on how it was parsed)
+        // Let's just try to parse pickupTime and if successful, set it.
+        const hours = pickupDate.getHours();
+        const minutes = pickupDate.getMinutes();
+        
+        if (hours === 0 && minutes === 0) {
+           // Try to parse HH:mm or H:mm or hh:mm A
+           // Matches: 14:30, 2:30, 2:30 PM, 02:30 PM
+           const timeMatch = pickupTime.match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+           if (timeMatch) {
+             let [_, h, m, meridiem] = timeMatch;
+             let hNum = parseInt(h, 10);
+             const mNum = parseInt(m, 10);
+             
+             if (meridiem) {
+               if (meridiem.toUpperCase() === 'PM' && hNum < 12) hNum += 12;
+               if (meridiem.toUpperCase() === 'AM' && hNum === 12) hNum = 0;
+             }
+             
+             // Set time
+             pickupDate.setHours(hNum, mNum, 0, 0);
+           }
+        }
       }
 
       const pickupAddress = row.PickupAddress || row['Pickup Address'] || row.From || row.FROM || '';
