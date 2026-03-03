@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
 import { ManifestUpload } from '@/app/admin/manifest/ManifestUpload';
+import { formatPickupDateTime, formatPickupDateTimeFromParts } from '@/lib/pickupDateTime';
 
 const OVERLAY_STYLE = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
@@ -182,13 +183,16 @@ export default function ManifestEntriesView({ role = 'admin' }) {
       return;
     }
     const key = getEntryPrimaryKey(entry);
-    setRowStatus(prev => ({ ...prev, [key]: { sending: channel, sent: null, error: null } }));
+    setRowStatus(prev => ({ ...prev, [key]: { sending: channel, sent: null, error: null, info: null } }));
     try {
-      await api.post('/api/review-requests/send', { contactId: entry._id, channel });
-      setRowStatus(prev => ({ ...prev, [key]: { sending: null, sent: channel, error: null } }));
+      const result = await api.post('/api/review-requests/send', { contactId: entry._id, channel });
+      const sentTo = result?.sentTo ? String(result.sentTo).trim() : '';
+      const messageId = result?.messageId ? ` (id: ${result.messageId})` : '';
+      const info = sentTo ? `Queued to ${sentTo}${messageId}` : null;
+      setRowStatus(prev => ({ ...prev, [key]: { sending: null, sent: channel, error: null, info } }));
     } catch (err) {
       const msg = err?.message || 'Failed to send. Please try again.';
-      setRowStatus(prev => ({ ...prev, [key]: { sending: null, sent: null, error: msg } }));
+      setRowStatus(prev => ({ ...prev, [key]: { sending: null, sent: null, error: msg, info: null } }));
     }
   }
 
@@ -606,6 +610,11 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                             {status.error}
                           </div>
                         )}
+                        {status.info && (
+                          <div style={{ marginBottom: '6px', color: '#166534', fontSize: '12px' }}>
+                            {status.info}
+                          </div>
+                        )}
                         <div className="admin-review-actions-grid">
                           {/* Email */}
                           <button
@@ -617,7 +626,7 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                             {status.sending === 'email' ? (
                               <span className="admin-review-action-spinner" />
                             ) : null}
-                            {status.sent === 'email' ? 'Sent' : 'Email'}
+                            {status.sent === 'email' ? 'Queued' : 'Email'}
                           </button>
                           {/* SMS */}
                           <button
@@ -629,7 +638,7 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                             {status.sending === 'sms' ? (
                               <span className="admin-review-action-spinner" />
                             ) : null}
-                            {status.sent === 'sms' ? 'Sent' : 'SMS'}
+                            {status.sent === 'sms' ? 'Queued' : 'SMS'}
                           </button>
                           {canManageEntries && (
                             <>
@@ -664,9 +673,17 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                         <div style={{ fontWeight: '500' }}>{entry.name || 'Unknown'}</div>
                       </td>
                       {/* Remaining extra columns */}
-                      {remainingExtras.map(col => (
-                        <td key={col} style={{ padding: '12px 16px' }}>{entry.extra?.[col] || ''}</td>
-                      ))}
+                      {remainingExtras.map(col => {
+                        const isPickupDateTime = col === 'PickupDateTime' || col === 'Pickup Date Time';
+                        const rawValue = entry.extra?.[col];
+                        const value = isPickupDateTime
+                          ? (formatPickupDateTimeFromParts(entry.pickupDate, entry.pickupTime) || formatPickupDateTime(rawValue))
+                          : (rawValue || '');
+
+                        return (
+                          <td key={col} style={{ padding: '12px 16px' }}>{value}</td>
+                        );
+                      })}
                       {/* Source (Manifest) — last */}
                       <td style={{ padding: '12px 16px', color: '#577162', fontSize: '13px' }}>
                         {entry.manifestId?.name || 'Unknown'}

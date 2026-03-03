@@ -2,9 +2,9 @@ import nodemailer from 'nodemailer';
 import { config } from '../config/index.js';
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
+  host: config.smtp.host,
   port: config.smtp.port,
-  secure: Number(config.smtp.port) === 465,
+  secure: config.smtp.secure,
   auth: {
     user: config.smtp.user,
     pass: config.smtp.pass,
@@ -13,14 +13,14 @@ const transporter = nodemailer.createTransport({
 
 export async function sendEmail(to, subject, html, text) {
   if (!config.smtp.user || !config.smtp.pass) {
-    console.warn('SMTP not configured, skipping email to', to);
-    return { success: true };
+    throw new Error('SMTP is not configured. Set SMTP_USER and SMTP_PASS.');
   }
 
   try {
-    const from =
-      config.smtp.from ||
-      `"${config.gmail.fromName}" <${config.gmail.fromEmail}>`;
+    const fallbackFrom = config.smtp.fromEmail
+      ? `"${config.smtp.fromName}" <${config.smtp.fromEmail}>`
+      : `"${config.gmail.fromName}" <${config.gmail.fromEmail}>`;
+    const from = config.smtp.from || fallbackFrom;
 
     const info = await transporter.sendMail({
       from,
@@ -29,8 +29,18 @@ export async function sendEmail(to, subject, html, text) {
       html: html || text,
       text: text || html?.replace(/<[^>]+>/g, '') || '',
     });
+
+    // Some SMTP providers resolve successfully even when recipients are rejected.
+    // Treat this as a send failure so callers don't get false-positive success.
+    const accepted = Array.isArray(info.accepted) ? info.accepted : [];
+    const rejected = Array.isArray(info.rejected) ? info.rejected : [];
+    if (accepted.length === 0 || rejected.length > 0) {
+      const rejectedList = rejected.map((value) => String(value)).join(', ') || 'unknown recipient';
+      throw new Error(`SMTP rejected recipient(s): ${rejectedList}`);
+    }
+
     console.log('Message sent: %s', info.messageId);
-    return { success: true, messageId: info.messageId };
+    return { success: true, messageId: info.messageId, accepted, rejected };
   } catch (error) {
     console.error('Error sending email:', error);
     // Don't swallow the error, let the caller handle it or at least know it failed

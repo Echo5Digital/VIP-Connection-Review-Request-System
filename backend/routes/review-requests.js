@@ -55,20 +55,32 @@ router.post(
         manifestId: contact.manifestId?._id || contact.manifestId,
         token,
         channel,
-        status: 'sent',
+        status: 'failed',
       });
 
       const link = `${config.nextAppUrl}/r/${token}`;
       const passengerName = contact.extra?.PassengerFirstName || contact.name || 'Valued Customer';
 
       if (channel === 'email') {
-        await sendReviewRequestEmail(targetEmail, token, passengerName);
-        return res.json({ success: true, channel: 'email', sentTo: targetEmail });
+        const emailResult = await sendReviewRequestEmail(targetEmail, token, passengerName);
+        reviewRequest.status = 'sent';
+        reviewRequest.sentAt = new Date();
+        await reviewRequest.save();
+        return res.json({
+          success: true,
+          channel: 'email',
+          sentTo: targetEmail,
+          messageId: emailResult?.messageId || null,
+          accepted: emailResult?.accepted || [],
+        });
       }
 
       if (channel === 'sms') {
         const body = `Hi ${passengerName}, thank you for riding with VIP Connection! Please take a moment to rate your experience: ${link}`;
         await sendSms(targetPhone, body);
+        reviewRequest.status = 'sent';
+        reviewRequest.sentAt = new Date();
+        await reviewRequest.save();
         return res.json({ success: true, channel: 'sms', sentTo: targetPhone });
       }
     } catch (err) {

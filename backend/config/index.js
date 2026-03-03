@@ -11,9 +11,14 @@ export const config = {
   smtp: {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: Number(process.env.SMTP_PORT || 587),
+    secure: String(process.env.SMTP_SECURE || '').toLowerCase() === 'true'
+      ? true
+      : Number(process.env.SMTP_PORT || 587) === 465,
     user: process.env.SMTP_USER || process.env.GMAIL_USER,
     pass: process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD,
     from: process.env.SMTP_FROM,
+    fromName: process.env.SMTP_FROM_NAME || process.env.GMAIL_FROM_NAME || 'Review Request',
+    fromEmail: process.env.SMTP_FROM_EMAIL || process.env.GMAIL_FROM_EMAIL || process.env.SMTP_USER || process.env.GMAIL_USER,
   },
   twilio: {
     accountSid: process.env.TWILIO_ACCOUNT_SID,

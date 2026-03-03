@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams, notFound } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
+import { formatPickupDateTime, formatPickupDateTimeFromParts } from '@/lib/pickupDateTime';
 
 function fmt(val) {
   return val ?? '—';
@@ -140,6 +141,10 @@ export default function ManifestDetailPage() {
                     <td>{fmt(c.email)}</td>
                     {sortedColumns.map(col => {
                       const val = ex[col];
+                      const isPickupDateTime = col === 'PickupDateTime' || col === 'Pickup Date Time';
+                      const displayValue = isPickupDateTime
+                        ? (formatPickupDateTimeFromParts(c.pickupDate, c.pickupTime) || formatPickupDateTime(val))
+                        : val;
                       const isStatus = col === 'SegmentStatusCode' || col === 'Segment Status Code' || col === 'SegmentStatusCode';
                       const isTotal = col === 'SegmentTotal' || col === 'Segment Total';
 
@@ -147,7 +152,7 @@ export default function ManifestDetailPage() {
                         return (
                           <td key={col}>
                             <span className={`badge ${val === 'Done' ? 'badge--green' : 'badge--yellow'}`}>
-                              {fmt(val)}
+                              {fmt(displayValue)}
                             </span>
                           </td>
                         );
@@ -159,7 +164,7 @@ export default function ManifestDetailPage() {
                           fontWeight: isTotal ? 600 : 400,
                           textAlign: isTotal ? 'right' : 'left'
                         }}>
-                          {fmt(val)}
+                          {fmt(displayValue)}
                         </td>
                       );
                     })}
