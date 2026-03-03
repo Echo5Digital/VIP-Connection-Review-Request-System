@@ -69,7 +69,7 @@ function FeedbackContent() {
 
   return (
     <div>
-      <h1 className="page-title">Feedback</h1>
+      <h1 className="page-title">Customer Reviews</h1>
       <p className="text-muted text-sm mb-4">
         Displays private feedback submitted by passengers after their ride.
       </p>
