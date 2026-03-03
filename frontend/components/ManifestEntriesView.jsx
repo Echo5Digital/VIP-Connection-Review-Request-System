@@ -49,7 +49,7 @@ function getMissingRequiredFields(entry) {
     PickupDateTime: extra.PickupDateTime || ((entry?.pickupDate || entry?.pickupTime) ? `${entry?.pickupDate || ''}${entry?.pickupTime || ''}` : ''),
     PassengerName: entry?.name || extra.PassengerName,
     PassengerCellPhoneNumber: extra.PassengerCellPhoneNumber || extra.PassngerCellPhoneNumber || entry?.phone,
-    PassengerEmailAddress: extra.PassengerEmailAddress || entry?.email,
+    PassengerEmailAddress: extra.PassengerEmailAddress || extra['Passenger Email Address'],
     PassengerFirstName: extra.PassengerFirstName,
     PassengerLastName: extra.PassengerLastName,
     DispatchDriverCode: extra.DispatchDriverCode,
@@ -568,7 +568,7 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                   const isSelected = selectedIds.has(entry._id);
                   const missingRequiredFields = getMissingRequiredFields(entry);
                   const hasMissingRequiredFields = missingRequiredFields.length > 0;
-                  const noEmailOnFile = !entry.email && !entry.extra?.PassengerEmailAddress;
+                  const noEmailOnFile = !entry.extra?.PassengerEmailAddress && !entry.extra?.['Passenger Email Address'];
                   const noPhoneOnFile = !entry.phone && !entry.extra?.PassengerCellPhoneNumber && !entry.extra?.PassngerCellPhoneNumber;
                   const disableEmail = !canManageEntries || isSending || hasMissingRequiredFields || noEmailOnFile;
                   const disableSms = !canManageEntries || isSending || hasMissingRequiredFields || noPhoneOnFile;

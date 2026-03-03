@@ -6,7 +6,7 @@ import ReviewRequest, { generateToken } from '../models/ReviewRequest.js';
 import Rating from '../models/Rating.js';
 import PrivateFeedback from '../models/PrivateFeedback.js';
 import PublicReviewClick from '../models/PublicReviewClick.js';
-import { sendEmail } from '../services/emailService.js';
+import { sendReviewRequestEmail } from '../services/emailService.js';
 import { sendSms } from '../services/twilioService.js';
 import { config } from '../config/index.js';
 
@@ -34,12 +34,16 @@ router.post(
       const contact = await Contact.findById(contactId).populate('manifestId', 'name');
       if (!contact) return res.status(404).json({ message: 'Contact not found' });
 
-      // Determine target email and phone, prioritizing extra fields
-      const targetEmail = contact.extra?.PassengerEmailAddress || contact.email;
+      // Email requests must use the manifest PassengerEmailAddress value.
+      const targetEmail = String(
+        contact.extra?.PassengerEmailAddress ||
+        contact.extra?.['Passenger Email Address'] ||
+        ''
+      ).trim();
       const targetPhone = contact.extra?.PassengerCellPhoneNumber || contact.extra?.PassngerCellPhoneNumber || contact.phone;
 
       if (channel === 'email' && !targetEmail) {
-        return res.status(400).json({ message: 'This contact does not have an email address.' });
+        return res.status(400).json({ message: 'PassengerEmailAddress is required to send review email.' });
       }
       if (channel === 'sms' && !targetPhone) {
         return res.status(400).json({ message: 'This contact does not have a phone number.' });
@@ -58,24 +62,7 @@ router.post(
       const passengerName = contact.extra?.PassengerFirstName || contact.name || 'Valued Customer';
 
       if (channel === 'email') {
-        const subject = 'Rate Your VIP Connection Experience';
-        const html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #1e40af;">Thank You for Riding with VIP Connection</h2>
-            <p>Dear ${passengerName},</p>
-            <p>We hope you enjoyed your recent ride. We would love to hear about your experience!</p>
-            <p>Please take a moment to rate your driver and vehicle:</p>
-            <div style="text-align: center; margin: 32px 0;">
-              <a href="${link}" style="background: #1e40af; color: #fff; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: 600;">
-                Rate Our Service
-              </a>
-            </div>
-            <p style="color: #64748b; font-size: 13px;">Or copy this link into your browser: ${link}</p>
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-            <p style="color: #94a3b8; font-size: 12px;">© ${new Date().getFullYear()} VIP Connection Review System</p>
-          </div>
-        `;
-        await sendEmail(targetEmail, subject, html);
+        await sendReviewRequestEmail(targetEmail, token, passengerName);
         return res.json({ success: true, channel: 'email', sentTo: targetEmail });
       }
 

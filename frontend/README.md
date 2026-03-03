@@ -1,13 +1,13 @@
 # Review Request System
 
-Full-stack app: **Next.js 15 (App Router)** frontend, **Express** API, **MongoDB (Mongoose)**, **Twilio** (SMS), **SendGrid** (email). Admin dashboard, manifest upload, send review, rating page, private feedback, and redirect tracking.
+Full-stack app: **Next.js 15 (App Router)** frontend, **Express** API, **MongoDB (Mongoose)**, **Twilio** (SMS), **Gmail SMTP** (email). Admin dashboard, manifest upload, send review, rating page, private feedback, and redirect tracking.
 
 ## Prerequisites
 
 - Node.js 18+
 - MongoDB (local or Atlas)
 - Twilio account (SMS)
-- SendGrid account (email)
+- Gmail account + App Password (email)
 
 ## Setup
 
@@ -16,7 +16,7 @@ Full-stack app: **Next.js 15 (App Router)** frontend, **Express** API, **MongoDB
 ```bash
 cd api
 cp .env.example .env
-# Edit .env: MONGODB_URI, JWT_SECRET, TWILIO_*, SENDGRID_*, EXPRESS_URL, NEXT_PUBLIC_APP_URL
+# Edit .env: MONGODB_URI, JWT_SECRET, TWILIO_*, SMTP_*, FRONTEND_URL, EXPRESS_URL
 # Optional: SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD to create first admin
 npm install
 npm run dev
@@ -49,9 +49,11 @@ App runs at **http://localhost:3000**.
 | TWILIO_ACCOUNT_SID | Twilio account SID |
 | TWILIO_AUTH_TOKEN | Twilio auth token |
 | TWILIO_PHONE_NUMBER | Twilio from number (E.164) |
-| SENDGRID_API_KEY | SendGrid API key |
-| SENDGRID_FROM_EMAIL | From email for SendGrid |
-| SENDGRID_FROM_NAME | From name |
+| SMTP_HOST | SMTP host (`smtp.gmail.com`) |
+| SMTP_PORT | SMTP port (`587`) |
+| SMTP_USER | Gmail address for SMTP auth |
+| SMTP_PASS | Gmail app password |
+| SMTP_FROM | From header (e.g. `VIP Connection <yourgmail@gmail.com>`) |
 | SEED_ADMIN_EMAIL | (Optional) Create first admin with this email |
 | SEED_ADMIN_PASSWORD | (Optional) First admin password |
 
