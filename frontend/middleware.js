@@ -30,6 +30,11 @@ export function middleware(request) {
   const token = request.cookies.get('token')?.value;
   const role = getRoleFromToken(token);
 
+  if (pathname === '/clients' || pathname === '/clients/' || pathname === '/client/clients' || pathname === '/client/clients/') {
+    const target = role === 'admin' ? '/admin/clients' : role === 'client' ? '/client/dashboard' : '/';
+    return NextResponse.redirect(new URL(target, request.url));
+  }
+
   if (pathname === '/') {
     if (role === 'admin') {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url));
@@ -63,4 +68,4 @@ export function middleware(request) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ['/', '/admin/:path*', '/client/:path*'] };
+export const config = { matcher: ['/', '/clients', '/admin/:path*', '/client/:path*'] };

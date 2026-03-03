@@ -47,6 +47,25 @@ router.get('/count', async (req, res, next) => {
   }
 });
 
+router.get('/entries/count', async (req, res, next) => {
+  try {
+    const query = {};
+    const manifestIds = await getAccessibleManifestIds(req.user);
+
+    if (manifestIds) {
+      if (manifestIds.length === 0) {
+        return res.json({ total: 0 });
+      }
+      query.manifestId = { $in: manifestIds };
+    }
+
+    const total = await Contact.countDocuments(query);
+    res.json({ total });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /entries - Fetch all manifest entries with pagination, sorting, and filtering
 router.get('/entries', async (req, res, next) => {
   try {

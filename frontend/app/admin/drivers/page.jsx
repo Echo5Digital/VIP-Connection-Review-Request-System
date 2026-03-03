@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
@@ -510,7 +510,7 @@ export default function DriversPage() {
                     paddingLeft: '40px',
                     height: '40px',
                     borderRadius: '8px',
-                    borderColor: '#cbd5e1',
+                    borderColor: '#cfe1d4',
                     fontSize: '14px',
                     width: '100%'
                   }}
@@ -535,12 +535,12 @@ export default function DriversPage() {
                   style={{
                     height: '40px',
                     borderRadius: '8px',
-                    background: '#f1f5f9',
+                    background: '#f4f8f4',
                     border: 'none',
                     paddingRight: '36px',
                     appearance: 'none',
                     fontWeight: 600,
-                    color: '#334155'
+                    color: '#2f493b'
                   }}
                 >
                   <option value="">All Vehicle Types</option>
@@ -552,7 +552,7 @@ export default function DriversPage() {
                   <option value="Luxury Sedan">Luxury Sedan</option>
                   <option value="Van">Van</option>
                 </select>
-                <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b' }}>
+                <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#577162' }}>
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                     <path d="M6 9l6 6 6-6" />
                   </svg>
@@ -637,10 +637,10 @@ export default function DriversPage() {
                       </td>
                       <td>{driver.vipCarNum}</td>
                       <td style={{ fontWeight: 500 }}>{driver.name}</td>
-                      <td>{driver.carYear || '—'}</td>
-                      <td>{driver.carMake || '—'}</td>
-                      <td>{driver.carModel || '—'}</td>
-                      <td>{driver.vehicleType || '—'}</td>
+                      <td>{driver.carYear || 'â€”'}</td>
+                      <td>{driver.carMake || 'â€”'}</td>
+                      <td>{driver.carModel || 'â€”'}</td>
+                      <td>{driver.vehicleType || 'â€”'}</td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => user?.role === 'admin' && toggleStatus(driver)}
@@ -677,9 +677,9 @@ export default function DriversPage() {
                             onClick={() => openEditModal(driver)}
                             className="btn btn--sm"
                             style={{
-                              background: '#f1f5f9',
-                              color: '#475569',
-                              border: '1px solid #e2e8f0',
+                              background: '#f4f8f4',
+                              color: '#486050',
+                              border: '1px solid #e2ece3',
                               padding: '4px 12px',
                               borderRadius: '4px',
                               fontWeight: 600
@@ -896,3 +896,4 @@ export default function DriversPage() {
     </div >
   );
 }
+

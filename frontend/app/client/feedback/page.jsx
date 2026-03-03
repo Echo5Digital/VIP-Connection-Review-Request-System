@@ -64,7 +64,7 @@ export default function FeedbackPage() {
       </p>
 
       {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: '4px', background: '#e2e8f0', padding: '4px', borderRadius: '8px', marginBottom: '16px', width: 'fit-content' }}>
+      <div className="feedback-filter-toggle" role="tablist" aria-label="Feedback filters">
         {[
           { id: 'all', label: 'All' },
           { id: 'negative', label: 'Negative' },
@@ -72,29 +72,18 @@ export default function FeedbackPage() {
           <button
             key={tab.id}
             onClick={() => handleFilterChange(tab.id)}
-            style={{
-              padding: '6px 18px',
-              fontSize: '13px',
-              fontWeight: '600',
-              borderRadius: '6px',
-              border: 'none',
-              background: filter === tab.id ? '#fff' : 'transparent',
-              color: filter === tab.id ? '#0f172a' : '#64748b',
-              boxShadow: filter === tab.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
+            className={`feedback-filter-toggle__button no-hover-anim${
+              filter === tab.id
+                ? tab.id === 'all'
+                  ? ' feedback-filter-toggle__button--active-all'
+                  : ' feedback-filter-toggle__button--active-negative'
+                : ''
+            }`}
+            aria-pressed={filter === tab.id}
           >
             {tab.label}
             {tab.id === 'negative' && filter === 'negative' && list.length > 0 && (
-              <span style={{
-                marginLeft: '6px',
-                background: '#fecaca',
-                color: '#dc2626',
-                borderRadius: '10px',
-                padding: '1px 6px',
-                fontSize: '11px',
-              }}>
+              <span className="feedback-filter-toggle__count">
                 {list.length}
               </span>
             )}

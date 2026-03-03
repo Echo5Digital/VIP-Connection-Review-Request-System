@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
@@ -15,7 +15,7 @@ const MODAL_STYLE = {
 };
 const FIELD_STYLE = {
   width: '100%', height: '36px', borderRadius: '6px',
-  border: '1px solid #cbd5e1', padding: '0 10px', fontSize: '14px',
+  border: '1px solid #cfe1d4', padding: '0 10px', fontSize: '14px',
   boxSizing: 'border-box',
 };
 const LABEL_STYLE = { display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '4px' };
@@ -235,7 +235,7 @@ export default function ManifestEntriesPage() {
     window.location.href = `/api-backend/manifests/entries/export?${params.toString()}`;
   }
 
-  // Column derivation — new order
+  // Column derivation â€” new order
   const PREFERRED_ORDER = [
     'PickupDateTime', 'ResNumber', 'CustomerCode', 'CustomerName', 
     'PassengerCellPhoneNumber', 'PassengerEmailAddress', 'PassengerFirstName', 'PassengerLastName',
@@ -268,14 +268,14 @@ export default function ManifestEntriesPage() {
       <ManifestUpload onUploadSuccess={handleUploadSuccess} />
 
       <div className="card" style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <div className="card__header" style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', fontWeight: '600', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="card__header" style={{ padding: '16px 24px', borderBottom: '1px solid #e2ece3', fontWeight: '600', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>All Manifest Entries</span>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={handleDownload}
               style={{
                 padding: '7px 16px', fontSize: '13px', fontWeight: '500',
-                borderRadius: '6px', border: '1px solid #cbd5e1',
+                borderRadius: '6px', border: '1px solid #cfe1d4',
                 background: '#fff', color: '#374151', cursor: 'pointer',
               }}
             >
@@ -286,7 +286,7 @@ export default function ManifestEntriesPage() {
               style={{
                 padding: '7px 16px', fontSize: '13px', fontWeight: '500',
                 borderRadius: '6px', border: 'none',
-                background: '#2563eb', color: '#fff', cursor: 'pointer',
+                background: '#1d7149', color: '#fff', cursor: 'pointer',
               }}
             >
               + Add Entry
@@ -295,7 +295,7 @@ export default function ManifestEntriesPage() {
         </div>
 
         {/* Filters */}
-        <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+        <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2ece3', background: '#f8fafc' }}>
           <div style={{ position: 'relative', width: '100%', maxWidth: '560px' }}>
             <input
               type="text"
@@ -303,9 +303,9 @@ export default function ManifestEntriesPage() {
               placeholder="Search by name, phone, email, res#, code, etc..."
               value={searchTerm}
               onChange={handleSearch}
-              style={{ paddingLeft: '36px', height: '40px', borderRadius: '6px', border: '1px solid #cbd5e1', width: '100%' }}
+              style={{ paddingLeft: '36px', height: '40px', borderRadius: '6px', border: '1px solid #cfe1d4', width: '100%' }}
             />
-            <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }}>
+            <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#577162' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -318,26 +318,26 @@ export default function ManifestEntriesPage() {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', whiteSpace: 'nowrap' }}>
             <thead>
-              <tr style={{ background: '#f1f5f9', color: '#475569', textAlign: 'left' }}>
-                <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2e8f0', minWidth: '220px' }}>Actions</th>
+              <tr style={{ background: '#f4f8f4', color: '#486050', textAlign: 'left' }}>
+                <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2ece3', minWidth: '220px' }}>Actions</th>
                 {hasSegmentStatus && (
-                  <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2e8f0' }}>SegmentStatusCode</th>
+                  <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2ece3' }}>SegmentStatusCode</th>
                 )}
-                <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2e8f0', minWidth: '150px' }}>Passenger Name</th>
+                <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2ece3', minWidth: '150px' }}>Passenger Name</th>
                 {remainingExtras.map(col => (
-                  <th key={col} style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2e8f0' }}>{col}</th>
+                  <th key={col} style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2ece3' }}>{col}</th>
                 ))}
-                <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2e8f0', minWidth: '150px' }}>Source (Manifest)</th>
+                <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2ece3', minWidth: '150px' }}>Source (Manifest)</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={totalCols} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>Loading entries...</td>
+                  <td colSpan={totalCols} style={{ padding: '32px', textAlign: 'center', color: '#577162' }}>Loading entries...</td>
                 </tr>
               ) : entries.length === 0 ? (
                 <tr>
-                  <td colSpan={totalCols} style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
+                  <td colSpan={totalCols} style={{ padding: '32px', textAlign: 'center', color: '#577162' }}>
                     No entries found. Upload a manifest or adjust filters.
                   </td>
                 </tr>
@@ -348,8 +348,8 @@ export default function ManifestEntriesPage() {
                   const isSending = !!status.sending;
                   const isDeleting = deleteConfirmId === entry._id && modalLoading;
                   return (
-                    <tr key={entryKey} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                      {/* Actions column — first */}
+                    <tr key={entryKey} style={{ borderBottom: '1px solid #e2ece3' }}>
+                      {/* Actions column â€” first */}
                       <td style={{ padding: '10px 16px' }}>
                         {status.error && (
                           <div style={{ color: '#dc2626', fontSize: '12px', marginBottom: '6px', maxWidth: '200px', whiteSpace: 'normal' }}>
@@ -364,18 +364,18 @@ export default function ManifestEntriesPage() {
                             title={(!entry.email && !entry.extra?.PassengerEmailAddress) ? 'No email on file' : 'Send review request via email'}
                             style={{
                               padding: '5px 10px', fontSize: '12px', borderRadius: '4px',
-                              border: '1px solid #bfdbfe',
+                              border: '1px solid #cfe1d4',
                               background: status.sent === 'email' ? '#dcfce7' : '#eff6ff',
-                              color: status.sent === 'email' ? '#16a34a' : ((!entry.email && !entry.extra?.PassengerEmailAddress) ? '#94a3b8' : '#1d4ed8'),
+                              color: status.sent === 'email' ? '#16a34a' : ((!entry.email && !entry.extra?.PassengerEmailAddress) ? '#94a3b8' : '#1f5d3f'),
                               cursor: isSending || (!entry.email && !entry.extra?.PassengerEmailAddress) ? 'not-allowed' : 'pointer',
                               opacity: (!entry.email && !entry.extra?.PassengerEmailAddress) ? 0.5 : 1,
                               whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '4px',
                             }}
                           >
                             {status.sending === 'email' ? (
-                              <span style={{ display: 'inline-block', width: '10px', height: '10px', border: '2px solid #1d4ed8', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                              <span style={{ display: 'inline-block', width: '10px', height: '10px', border: '2px solid #1f5d3f', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
                             ) : null}
-                            {status.sent === 'email' ? '✓ Sent' : '📧 Email'}
+                            {status.sent === 'email' ? 'âœ“ Sent' : 'ðŸ“§ Email'}
                           </button>
                           {/* SMS */}
                           <button
@@ -395,7 +395,7 @@ export default function ManifestEntriesPage() {
                             {status.sending === 'sms' ? (
                               <span style={{ display: 'inline-block', width: '10px', height: '10px', border: '2px solid #15803d', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
                             ) : null}
-                            {status.sent === 'sms' ? '✓ Sent' : '📱 SMS'}
+                            {status.sent === 'sms' ? 'âœ“ Sent' : 'ðŸ“± SMS'}
                           </button>
                           {/* Edit */}
                           <button
@@ -404,13 +404,13 @@ export default function ManifestEntriesPage() {
                             title="Edit entry"
                             style={{
                               padding: '5px 10px', fontSize: '12px', borderRadius: '4px',
-                              border: '1px solid #cbd5e1', background: '#f8fafc', color: '#374151',
+                              border: '1px solid #cfe1d4', background: '#f8fafc', color: '#374151',
                               cursor: isSending ? 'not-allowed' : 'pointer',
                               opacity: isSending ? 0.5 : 1,
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            ✏️ Edit
+                            âœï¸ Edit
                           </button>
                           {/* Delete */}
                           <button
@@ -425,7 +425,7 @@ export default function ManifestEntriesPage() {
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            🗑️ Delete
+                            ðŸ—‘ï¸ Delete
                           </button>
                         </div>
                       </td>
@@ -441,8 +441,8 @@ export default function ManifestEntriesPage() {
                       {remainingExtras.map(col => (
                         <td key={col} style={{ padding: '12px 16px' }}>{entry.extra?.[col] || ''}</td>
                       ))}
-                      {/* Source (Manifest) — last */}
-                      <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px' }}>
+                      {/* Source (Manifest) â€” last */}
+                      <td style={{ padding: '12px 16px', color: '#577162', fontSize: '13px' }}>
                         {entry.manifestId?.name || 'Unknown'}
                       </td>
                     </tr>
@@ -455,19 +455,19 @@ export default function ManifestEntriesPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'center', gap: '8px', borderTop: '1px solid #e2e8f0' }}>
+          <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'center', gap: '8px', borderTop: '1px solid #e2ece3' }}>
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', background: currentPage === 1 ? '#f1f5f9' : '#fff', color: currentPage === 1 ? '#94a3b8' : '#334155', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+              style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cfe1d4', background: currentPage === 1 ? '#f4f8f4' : '#fff', color: currentPage === 1 ? '#94a3b8' : '#2f493b', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
             >Previous</button>
-            <span style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: '#475569' }}>
+            <span style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: '#486050' }}>
               Page {currentPage} of {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', background: currentPage === totalPages ? '#f1f5f9' : '#fff', color: currentPage === totalPages ? '#94a3b8' : '#334155', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+              style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cfe1d4', background: currentPage === totalPages ? '#f4f8f4' : '#fff', color: currentPage === totalPages ? '#94a3b8' : '#2f493b', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
             >Next</button>
           </div>
         )}
@@ -490,7 +490,7 @@ export default function ManifestEntriesPage() {
               <button
                 onClick={() => setDeleteConfirmId(null)}
                 disabled={modalLoading}
-                style={{ padding: '8px 18px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f8fafc', color: '#374151', cursor: 'pointer', fontSize: '14px' }}
+                style={{ padding: '8px 18px', borderRadius: '6px', border: '1px solid #cfe1d4', background: '#f8fafc', color: '#374151', cursor: 'pointer', fontSize: '14px' }}
               >
                 Cancel
               </button>
@@ -523,7 +523,7 @@ export default function ManifestEntriesPage() {
                onClick={() => setAlertModal({ open: false, message: '' })}
                style={{
                  padding: '10px 24px', borderRadius: '6px', border: 'none',
-                 background: '#2563eb', color: '#fff', cursor: 'pointer',
+                 background: '#1d7149', color: '#fff', cursor: 'pointer',
                  fontSize: '14px', fontWeight: '500'
                }}
              >
@@ -552,13 +552,13 @@ export default function ManifestEntriesPage() {
                     style={{ ...FIELD_STYLE }}
                     required
                   >
-                    <option value="">— Select manifest —</option>
+                    <option value="">â€” Select manifest â€”</option>
                     {manifests.map(m => (
                       <option key={m._id} value={m._id}>{m.name}</option>
                     ))}
                   </select>
                 ) : (
-                  <div style={{ ...FIELD_STYLE, background: '#f1f5f9', color: '#64748b', display: 'flex', alignItems: 'center' }}>
+                  <div style={{ ...FIELD_STYLE, background: '#f4f8f4', color: '#577162', display: 'flex', alignItems: 'center' }}>
                     {modal.entry?.manifestId?.name || 'Unknown'}
                   </div>
                 )}
@@ -737,14 +737,14 @@ export default function ManifestEntriesPage() {
                   type="button"
                   onClick={closeModal}
                   disabled={modalLoading}
-                  style={{ padding: '8px 18px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#f8fafc', color: '#374151', cursor: 'pointer', fontSize: '14px' }}
+                  style={{ padding: '8px 18px', borderRadius: '6px', border: '1px solid #cfe1d4', background: '#f8fafc', color: '#374151', cursor: 'pointer', fontSize: '14px' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={modalLoading}
-                  style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', background: '#2563eb', color: '#fff', cursor: modalLoading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '500', opacity: modalLoading ? 0.7 : 1 }}
+                  style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', background: '#1d7149', color: '#fff', cursor: modalLoading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '500', opacity: modalLoading ? 0.7 : 1 }}
                 >
                   {modalLoading ? 'Saving...' : 'Save Entry'}
                 </button>
@@ -760,3 +760,4 @@ export default function ManifestEntriesPage() {
     </div>
   );
 }
+

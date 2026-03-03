@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
@@ -131,7 +131,7 @@ export default function ClientsPage() {
                                     {clients.map((client) => (
                                         <tr key={client._id} style={{ borderBottom: '1px solid var(--gray-50)' }}>
                                             <td style={{ padding: '16px 24px' }}>
-                                                <div style={{ fontWeight: 600, color: 'var(--gray-900)' }}>{client.name || '—'}</div>
+                                                <div style={{ fontWeight: 600, color: 'var(--gray-900)' }}>{client.name || 'â€”'}</div>
                                             </td>
                                             <td style={{ color: 'var(--gray-600)' }}>{client.email}</td>
                                             <td>
@@ -303,3 +303,4 @@ export default function ClientsPage() {
         </div>
     );
 }
+
