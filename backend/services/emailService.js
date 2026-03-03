@@ -1,27 +1,195 @@
 import nodemailer from 'nodemailer';
 import { config } from '../config/index.js';
 
-const transporter = nodemailer.createTransport({
-  host: config.smtp.host,
-  port: config.smtp.port,
-  secure: config.smtp.secure,
-  auth: {
-    user: config.smtp.user,
-    pass: config.smtp.pass,
-  },
-});
+const transporterCache = new Map();
 
-export async function sendEmail(to, subject, html, text) {
-  if (!config.smtp.user || !config.smtp.pass) {
-    throw new Error('SMTP is not configured. Set SMTP_USER and SMTP_PASS.');
+function isGmailSmtp(host = '') {
+  const value = String(host || '').toLowerCase();
+  return value.includes('gmail');
+}
+
+function isLikelyGmailAppPassword(password = '') {
+  const normalized = String(password).replace(/\s+/g, '');
+  return /^[a-zA-Z0-9]{16}$/.test(normalized);
+}
+
+function resolveTransportConfig(options = {}) {
+  const shouldUseMailtrap = Boolean(options.useMailtrap) || config.smtp.useMailtrap || String(config.smtp.provider).toLowerCase() === 'mailtrap';
+
+  if (shouldUseMailtrap) {
+    return {
+      provider: 'mailtrap',
+      host: config.mailtrap.host,
+      port: config.mailtrap.port,
+      secure: config.mailtrap.secure,
+      user: config.mailtrap.user,
+      pass: config.mailtrap.pass,
+      fromName: config.mailtrap.fromName || config.smtp.fromName || 'VIP Connection',
+      fromEmail: config.mailtrap.fromEmail || config.mailtrap.user,
+    };
   }
 
-  try {
-    const fallbackFrom = config.smtp.fromEmail
-      ? `"${config.smtp.fromName}" <${config.smtp.fromEmail}>`
-      : `"${config.gmail.fromName}" <${config.gmail.fromEmail}>`;
-    const from = config.smtp.from || fallbackFrom;
+  return {
+    provider: 'smtp',
+    host: config.smtp.host,
+    port: config.smtp.port,
+    secure: isGmailSmtp(config.smtp.host)
+      ? Number(config.smtp.port) === 465
+      : config.smtp.secure,
+    user: config.smtp.user,
+    pass: config.smtp.pass,
+    fromName: config.smtp.fromName || 'VIP Connection',
+    fromEmail: config.smtp.fromEmail || config.smtp.user,
+  };
+}
 
+function getTransporter(transportConfig) {
+  const cacheKey = `${transportConfig.provider}:${transportConfig.host}:${transportConfig.port}:${transportConfig.user}:${transportConfig.secure}`;
+  if (transporterCache.has(cacheKey)) {
+    return transporterCache.get(cacheKey);
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: transportConfig.host,
+    port: transportConfig.port,
+    secure: transportConfig.secure,
+    logger: config.smtp.logger,
+    debug: config.smtp.debug,
+    auth: {
+      user: transportConfig.user,
+      pass: transportConfig.pass,
+    },
+  });
+
+  transporterCache.set(cacheKey, transporter);
+  return transporter;
+}
+
+function buildFromAddress(transportConfig, warnings) {
+  const senderName = transportConfig.fromName || 'VIP Connection';
+  const configuredFromEmail = String(config.smtp.fromEmail || '').trim();
+  const authUser = String(transportConfig.user || '').trim();
+
+  if (isGmailSmtp(transportConfig.host)) {
+    if (Number(transportConfig.port) !== 465 && Number(transportConfig.port) !== 587) {
+      warnings.push(`Gmail detected: recommended SMTP_PORT is 465 (secure:true) or 587 (secure:false). Current port is ${transportConfig.port}.`);
+    }
+    if (Number(transportConfig.port) === 465 && transportConfig.secure !== true) {
+      warnings.push('Gmail detected: port 465 should use secure:true.');
+    }
+    if (Number(transportConfig.port) === 587 && transportConfig.secure !== false) {
+      warnings.push('Gmail detected: port 587 should use secure:false.');
+    }
+    if (!isLikelyGmailAppPassword(transportConfig.pass)) {
+      warnings.push('Gmail detected: SMTP_PASS does not look like a 16-character Gmail app password. Gmail may reject or silently drop this.');
+    }
+    if (!config.smtp.gmail2faEnabled) {
+      warnings.push('Gmail detected: set GMAIL_2FA_ENABLED=true after enabling 2-Step Verification. App passwords require 2FA.');
+    }
+    if (configuredFromEmail && authUser && configuredFromEmail.toLowerCase() !== authUser.toLowerCase()) {
+      warnings.push(`Gmail detected: SMTP_FROM_EMAIL (${configuredFromEmail}) mismatches SMTP_USER (${authUser}). Using SMTP_USER for "from" to improve deliverability.`);
+    }
+  }
+
+  // Many providers accept a message for queueing but later drop it if "from" does not align
+  // with the authenticated SMTP identity or authorized sending domain.
+  const fromEmail = authUser || configuredFromEmail || transportConfig.fromEmail;
+  return `"${senderName}" <${fromEmail}>`;
+}
+
+function normalizeSendResult(info, warnings = []) {
+  const accepted = Array.isArray(info?.accepted) ? info.accepted : [];
+  const rejected = Array.isArray(info?.rejected) ? info.rejected : [];
+  const pending = Array.isArray(info?.pending) ? info.pending : [];
+  const success = accepted.length > 0 && rejected.length === 0;
+
+  return {
+    success,
+    messageId: info?.messageId || null,
+    accepted,
+    rejected,
+    pending,
+    response: info?.response || null,
+    envelope: info?.envelope || null,
+    warnings,
+  };
+}
+
+export async function verifyEmailTransport(options = {}) {
+  const transportConfig = resolveTransportConfig(options);
+  const transporter = getTransporter(transportConfig);
+
+  try {
+    const verifyResponse = await transporter.verify();
+    return {
+      success: true,
+      transport: {
+        provider: transportConfig.provider,
+        host: transportConfig.host,
+        port: transportConfig.port,
+        secure: transportConfig.secure,
+        user: transportConfig.user,
+      },
+      verifyResponse,
+    };
+  } catch (error) {
+    console.error('SMTP verify failed (full error object):', error);
+    return {
+      success: false,
+      transport: {
+        provider: transportConfig.provider,
+        host: transportConfig.host,
+        port: transportConfig.port,
+        secure: transportConfig.secure,
+        user: transportConfig.user,
+      },
+      error: {
+        name: error?.name,
+        message: error?.message,
+        code: error?.code,
+        response: error?.response,
+        responseCode: error?.responseCode,
+        command: error?.command,
+        stack: error?.stack,
+      },
+    };
+  }
+}
+
+export async function sendEmail(to, subject, html, text) {
+  return sendEmailWithDiagnostics({ to, subject, html, text });
+}
+
+export async function sendEmailWithDiagnostics({
+  to,
+  subject,
+  html,
+  text,
+  useMailtrap = false,
+}) {
+  const transportConfig = resolveTransportConfig({ useMailtrap });
+
+  if (!transportConfig.user || !transportConfig.pass) {
+    return {
+      success: false,
+      messageId: null,
+      accepted: [],
+      rejected: [],
+      pending: [],
+      response: null,
+      envelope: null,
+      warnings: [],
+      error: {
+        message: 'SMTP is not configured. Set SMTP_USER/SMTP_PASS (or MAILTRAP_USER/MAILTRAP_PASS when using Mailtrap).',
+      },
+    };
+  }
+
+  const warnings = [];
+  const transporter = getTransporter(transportConfig);
+  const from = buildFromAddress(transportConfig, warnings);
+
+  try {
     const info = await transporter.sendMail({
       from,
       to,
@@ -30,21 +198,52 @@ export async function sendEmail(to, subject, html, text) {
       text: text || html?.replace(/<[^>]+>/g, '') || '',
     });
 
-    // Some SMTP providers resolve successfully even when recipients are rejected.
-    // Treat this as a send failure so callers don't get false-positive success.
-    const accepted = Array.isArray(info.accepted) ? info.accepted : [];
-    const rejected = Array.isArray(info.rejected) ? info.rejected : [];
-    if (accepted.length === 0 || rejected.length > 0) {
-      const rejectedList = rejected.map((value) => String(value)).join(', ') || 'unknown recipient';
-      throw new Error(`SMTP rejected recipient(s): ${rejectedList}`);
+    // A "sent" response only confirms SMTP accepted the message for processing.
+    // Mailbox providers can still quarantine/drop later due to reputation, SPF/DKIM/DMARC, or policy.
+    console.log('SMTP sendMail info object (full):');
+    console.dir(info, { depth: null });
+
+    const result = normalizeSendResult(info, warnings);
+    console.log('SMTP diagnostics:', {
+      accepted: result.accepted,
+      rejected: result.rejected,
+      pending: result.pending,
+      response: result.response,
+      envelope: result.envelope,
+    });
+
+    if (!result.success) {
+      const rejectedList = result.rejected.map((value) => String(value)).join(', ') || 'unknown recipient';
+      result.error = {
+        message: `SMTP accepted request but recipient delivery is not confirmed. Rejected recipients: ${rejectedList}`,
+      };
     }
 
-    console.log('Message sent: %s', info.messageId);
-    return { success: true, messageId: info.messageId, accepted, rejected };
+    return result;
   } catch (error) {
-    console.error('Error sending email:', error);
-    // Don't swallow the error, let the caller handle it or at least know it failed
-    throw error; 
+    // Silent dropping often starts as soft policy-level failures here (auth, envelope, sender alignment).
+    // Logging the full error object makes SMTP response codes visible for debugging.
+    console.error('SMTP send failed (full error object):', error);
+
+    return {
+      success: false,
+      messageId: null,
+      accepted: [],
+      rejected: [],
+      pending: [],
+      response: error?.response || null,
+      envelope: error?.envelope || null,
+      warnings,
+      error: {
+        name: error?.name,
+        message: error?.message,
+        code: error?.code,
+        response: error?.response,
+        responseCode: error?.responseCode,
+        command: error?.command,
+        stack: error?.stack,
+      },
+    };
   }
 }
 
@@ -62,7 +261,8 @@ export async function sendReviewRequestEmail(clientEmail, token, passengerName =
   const baseUrl = String(config.nextAppUrl || 'http://localhost:3000').replace(/\/$/, '');
   const reviewUrl = `${baseUrl}/r/${encodeURIComponent(token)}`;
 
-  const subject = 'Rate Your VIP Connection Experience';
+  // Keep subject clear and neutral to reduce spam heuristics and increase open rates.
+  const subject = 'Your recent VIP Connection ride - quick feedback request';
   const html = `
 <!doctype html>
 <html lang="en">
@@ -125,6 +325,6 @@ export async function sendReviewRequestEmail(clientEmail, token, passengerName =
   </body>
 </html>`;
 
-  const text = `VIP Connection\n\nHi ${passengerName}, thank you for riding with us.\nRate your experience here: ${reviewUrl}`;
-  return sendEmail(clientEmail, subject, html, text);
+  const text = `VIP Connection\n\nHi ${passengerName}, thank you for riding with us.\nPlease share your feedback here: ${reviewUrl}`;
+  return sendEmailWithDiagnostics({ to: clientEmail, subject, html, text });
 }

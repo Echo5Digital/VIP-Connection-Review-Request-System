@@ -63,15 +63,25 @@ router.post(
 
       if (channel === 'email') {
         const emailResult = await sendReviewRequestEmail(targetEmail, token, passengerName);
-        reviewRequest.status = 'sent';
-        reviewRequest.sentAt = new Date();
+        if (emailResult.success) {
+          reviewRequest.status = 'sent';
+          reviewRequest.sentAt = new Date();
+        } else {
+          reviewRequest.status = 'failed';
+        }
         await reviewRequest.save();
-        return res.json({
-          success: true,
+        return res.status(emailResult.success ? 200 : 502).json({
+          success: emailResult.success,
           channel: 'email',
           sentTo: targetEmail,
           messageId: emailResult?.messageId || null,
           accepted: emailResult?.accepted || [],
+          rejected: emailResult?.rejected || [],
+          pending: emailResult?.pending || [],
+          response: emailResult?.response || null,
+          envelope: emailResult?.envelope || null,
+          warnings: emailResult?.warnings || [],
+          error: emailResult?.error || null,
         });
       }
 
