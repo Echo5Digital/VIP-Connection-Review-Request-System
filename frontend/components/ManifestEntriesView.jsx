@@ -185,14 +185,11 @@ export default function ManifestEntriesView({ role = 'admin' }) {
     const key = getEntryPrimaryKey(entry);
     setRowStatus(prev => ({ ...prev, [key]: { sending: channel, sent: null, error: null, info: null } }));
     try {
-      const result = await api.post('/api/review-requests/send', { contactId: entry._id, channel });
-      const sentTo = result?.sentTo ? String(result.sentTo).trim() : '';
-      const messageId = result?.messageId ? ` (id: ${result.messageId})` : '';
-      const info = sentTo ? `Queued to ${sentTo}${messageId}` : null;
+      await api.post('/api/review-requests/send', { contactId: entry._id, channel });
+      const info = channel === 'email' ? 'Sent Successfully' : null;
       setRowStatus(prev => ({ ...prev, [key]: { sending: null, sent: channel, error: null, info } }));
-    } catch (err) {
-      const msg = err?.message || 'Failed to send. Please try again.';
-      setRowStatus(prev => ({ ...prev, [key]: { sending: null, sent: null, error: msg, info: null } }));
+    } catch {
+      setRowStatus(prev => ({ ...prev, [key]: { sending: null, sent: null, error: 'Failed to Send', info: null } }));
     }
   }
 
@@ -574,7 +571,8 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                   const hasMissingRequiredFields = missingRequiredFields.length > 0;
                   const noEmailOnFile = !entry.extra?.PassengerEmailAddress && !entry.extra?.['Passenger Email Address'];
                   const noPhoneOnFile = !entry.phone && !entry.extra?.PassengerCellPhoneNumber && !entry.extra?.PassngerCellPhoneNumber;
-                  const disableEmail = !canManageEntries || isSending || hasMissingRequiredFields || noEmailOnFile;
+                  const emailAlreadySent = status.sent === 'email';
+                  const disableEmail = !canManageEntries || isSending || hasMissingRequiredFields || noEmailOnFile || emailAlreadySent;
                   const disableSms = !canManageEntries || isSending || hasMissingRequiredFields || noPhoneOnFile;
                   const missingFieldsTitle = hasMissingRequiredFields
                     ? `Missing required fields: ${missingRequiredFields.join(', ')}`
@@ -626,7 +624,7 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                             {status.sending === 'email' ? (
                               <span className="admin-review-action-spinner" />
                             ) : null}
-                            {status.sent === 'email' ? 'Queued' : 'Email'}
+                            {status.sent === 'email' ? 'Sent' : 'Email'}
                           </button>
                           {/* SMS */}
                           <button
@@ -638,7 +636,7 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                             {status.sending === 'sms' ? (
                               <span className="admin-review-action-spinner" />
                             ) : null}
-                            {status.sent === 'sms' ? 'Queued' : 'SMS'}
+                            {status.sent === 'sms' ? 'Sent' : 'SMS'}
                           </button>
                           {canManageEntries && (
                             <>
