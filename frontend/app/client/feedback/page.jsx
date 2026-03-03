@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
@@ -16,7 +16,7 @@ function RatingBadge({ value }) {
   );
 }
 
-export default function FeedbackPage() {
+function FeedbackContent() {
   const searchParams = useSearchParams();
   const tableTopRef = useRef(null);
   const [list, setList] = useState([]);
@@ -187,5 +187,13 @@ export default function FeedbackPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function FeedbackPage() {
+  return (
+    <Suspense>
+      <FeedbackContent />
+    </Suspense>
   );
 }

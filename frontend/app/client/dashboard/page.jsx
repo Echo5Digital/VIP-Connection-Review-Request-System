@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { serverApi } from '@/lib/server-api';
 import ClientDashboardCards from './stats-cards';
 import FeedbackTrendGraph from '@/components/FeedbackTrendGraph';
@@ -26,7 +27,9 @@ export default async function ClientDashboardPage() {
 
   return (
     <div className="admin-dashboard">
-      <ClientDashboardCards cards={cards} counts={counts} />
+      <Suspense fallback={null}>
+        <ClientDashboardCards cards={cards} counts={counts} />
+      </Suspense>
       <FeedbackTrendGraph />
     </div>
   );
