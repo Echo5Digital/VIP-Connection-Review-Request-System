@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams, notFound } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
 
 function fmt(val) {
@@ -26,6 +26,7 @@ export default function ManifestDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const tableTopRef = useRef(null);
   const limit = 50; // Increased limit for manifest as it can be large
 
   useEffect(() => {
@@ -73,6 +74,16 @@ export default function ManifestDetailPage() {
     currentPage * limit
   );
 
+  function changePage(nextPage) {
+    setCurrentPage(nextPage);
+    requestAnimationFrame(() => {
+      document.querySelector('.admin-shell__main')?.scrollTo({ top: 0, behavior: 'auto' });
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
@@ -99,7 +110,7 @@ export default function ManifestDetailPage() {
           </span>
         </div>
 
-        <div className="table-wrap" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div className="table-wrap" ref={tableTopRef} style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <table className="data-table" style={{ minWidth: sortedColumns.length > 5 ? '1500px' : 'auto' }}>
             <thead>
               <tr>
@@ -178,7 +189,7 @@ export default function ManifestDetailPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
                 disabled={currentPage === 1}
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                onClick={() => changePage(Math.max(1, currentPage - 1))}
                 className="btn btn--sm btn--outline"
                 style={{ borderRadius: '6px', minWidth: '80px' }}
               >
@@ -196,7 +207,7 @@ export default function ManifestDetailPage() {
                     return (
                       <button
                         key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
+                        onClick={() => changePage(pageNum)}
                         style={{
                           width: '32px',
                           height: '32px',
@@ -229,7 +240,7 @@ export default function ManifestDetailPage() {
 
               <button
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
                 className="btn btn--sm btn--outline"
                 style={{ borderRadius: '6px', minWidth: '80px' }}
               >

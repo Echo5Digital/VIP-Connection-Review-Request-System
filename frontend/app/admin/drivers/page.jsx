@@ -194,6 +194,7 @@ async function parseDriverFile(file) {
 
 export default function DriversPage() {
   const inputRef = useRef(null);
+  const tableTopRef = useRef(null);
   const [file, setFile] = useState(null);
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -412,6 +413,16 @@ export default function DriversPage() {
     window.location.href = '/api-backend/drivers/export';
   }
 
+  function changePage(nextPage) {
+    setCurrentPage(nextPage);
+    requestAnimationFrame(() => {
+      document.querySelector('.admin-shell__main')?.scrollTo({ top: 0, behavior: 'auto' });
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+  }
+
   return (
     <div>
       <Script
@@ -598,7 +609,7 @@ export default function DriversPage() {
           <p className="card__empty">No drivers match your search.</p>
         ) : (
           <>
-            <div className="table-wrap">
+            <div className="table-wrap" ref={tableTopRef}>
               <table className="data-table">
                 <thead>
                   <tr>
@@ -727,7 +738,7 @@ export default function DriversPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  onClick={() => changePage(Math.max(1, currentPage - 1))}
                   className="btn btn--sm btn--outline"
                   style={{ borderRadius: '6px', minWidth: '80px' }}
                 >
@@ -745,7 +756,7 @@ export default function DriversPage() {
                       return (
                         <button
                           key={pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
+                          onClick={() => changePage(pageNum)}
                           style={{
                             width: '32px',
                             height: '32px',
@@ -778,7 +789,7 @@ export default function DriversPage() {
 
                 <button
                   disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
                   className="btn btn--sm btn--outline"
                   style={{ borderRadius: '6px', minWidth: '80px' }}
                 >

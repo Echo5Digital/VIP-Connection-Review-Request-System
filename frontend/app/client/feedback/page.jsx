@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
@@ -18,6 +18,7 @@ function RatingBadge({ value }) {
 
 export default function FeedbackPage() {
   const searchParams = useSearchParams();
+  const tableTopRef = useRef(null);
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all' | 'negative'
@@ -56,6 +57,16 @@ export default function FeedbackPage() {
     setCurrentPage(1);
   }
 
+  function changePage(nextPage) {
+    setCurrentPage(nextPage);
+    requestAnimationFrame(() => {
+      document.querySelector('.admin-shell__main')?.scrollTo({ top: 0, behavior: 'auto' });
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+  }
+
   return (
     <div>
       <h1 className="page-title">Feedback</h1>
@@ -91,7 +102,7 @@ export default function FeedbackPage() {
         ))}
       </div>
 
-      <div className="card">
+      <div className="card" ref={tableTopRef}>
         {loading ? (
           <p style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>Loading feedback...</p>
         ) : list.length === 0 ? (
@@ -142,7 +153,7 @@ export default function FeedbackPage() {
         {totalPages > 1 && (
           <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'center', gap: '8px', borderTop: '1px solid #e2e8f0' }}>
             <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              onClick={() => changePage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
               style={{
                 padding: '6px 12px',
@@ -159,7 +170,7 @@ export default function FeedbackPage() {
               Page {currentPage} of {totalPages}
             </span>
             <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
               style={{
                 padding: '6px 12px',

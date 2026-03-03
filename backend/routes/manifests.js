@@ -11,27 +11,50 @@ import * as XLSX from 'xlsx';
 const router = Router();
 router.use(requireAuth, requireRoles('admin', 'client'));
 
-function getManifestAccessFilter(user) {
-  if (user?.role === 'client') {
-    return { uploadedBy: user._id, uploadedByModel: 'Client' };
-  }
+function getManifestAccessFilter() {
   return {};
 }
 
-async function getAccessibleManifestIds(user) {
-  if (user?.role !== 'client') return null;
-  const manifests = await Manifest.find(getManifestAccessFilter(user)).select('_id');
-  return manifests.map((m) => m._id);
+async function getAccessibleManifestIds() {
+  return null;
 }
 
-async function canAccessManifest(user, manifestId) {
-  const manifest = await Manifest.findOne({ ...getManifestAccessFilter(user), _id: manifestId }).select('_id');
+async function canAccessManifest(manifestId) {
+  const manifest = await Manifest.findById(manifestId).select('_id');
   return Boolean(manifest);
+}
+
+function ensureAdmin(req, res) {
+  if (req.user?.role !== 'admin') {
+    res.status(403).json({ message: 'Only admin can modify manifests or manifest entries' });
+    return false;
+  }
+  return true;
+}
+
+function ensureEntryOperator(req, res) {
+  const isAdmin = req.user?.role === 'admin';
+  const isActiveClient = req.user?.role === 'client' && req.user?.active === true;
+  if (!isAdmin && !isActiveClient) {
+    res.status(403).json({ message: 'Only admin or active clients can edit/delete manifest entries' });
+    return false;
+  }
+  return true;
+}
+
+function ensureUploadAllowed(req, res) {
+  const isAdmin = req.user?.role === 'admin';
+  const isActiveClient = req.user?.role === 'client' && req.user?.active === true;
+  if (!isAdmin && !isActiveClient) {
+    res.status(403).json({ message: 'Only admin or active clients can upload manifests' });
+    return false;
+  }
+  return true;
 }
 
 router.get('/', async (req, res, next) => {
   try {
-    const manifests = await Manifest.find(getManifestAccessFilter(req.user)).sort({ createdAt: -1 });
+    const manifests = await Manifest.find(getManifestAccessFilter()).sort({ createdAt: -1 });
     res.json(manifests);
   } catch (err) {
     next(err);
@@ -40,7 +63,7 @@ router.get('/', async (req, res, next) => {
 
 router.get('/count', async (req, res, next) => {
   try {
-    const total = await Manifest.countDocuments(getManifestAccessFilter(req.user));
+    const total = await Manifest.countDocuments(getManifestAccessFilter());
     res.json({ total });
   } catch (err) {
     next(err);
@@ -50,7 +73,7 @@ router.get('/count', async (req, res, next) => {
 router.get('/entries/count', async (req, res, next) => {
   try {
     const query = {};
-    const manifestIds = await getAccessibleManifestIds(req.user);
+    const manifestIds = await getAccessibleManifestIds();
 
     if (manifestIds) {
       if (manifestIds.length === 0) {
@@ -71,8 +94,8 @@ router.get('/entries', async (req, res, next) => {
   try {
     const { page = 1, limit = 20, search, startDate, endDate, sortBy = 'pickupDate', order = 'asc' } = req.query;
     const query = {};
-    const manifestIds = await getAccessibleManifestIds(req.user);
-    const manifestScopeFilter = getManifestAccessFilter(req.user);
+    const manifestIds = await getAccessibleManifestIds();
+    const manifestScopeFilter = getManifestAccessFilter();
 
     if (manifestIds) {
       if (manifestIds.length === 0) {
@@ -170,8 +193,8 @@ router.get('/entries/export', async (req, res, next) => {
   try {
     const { search, startDate, endDate, sortBy = 'pickupDate', order = 'asc' } = req.query;
     const query = {};
-    const manifestIds = await getAccessibleManifestIds(req.user);
-    const manifestScopeFilter = getManifestAccessFilter(req.user);
+    const manifestIds = await getAccessibleManifestIds();
+    const manifestScopeFilter = getManifestAccessFilter();
 
     if (manifestIds) {
       if (manifestIds.length === 0) {
@@ -291,10 +314,11 @@ router.get('/entries/export', async (req, res, next) => {
 // POST /entries - Create a single contact entry manually
 router.post('/entries', async (req, res, next) => {
   try {
+    if (!ensureAdmin(req, res)) return;
     const { manifestId, name, phone, email, pickupDate, pickupTime, pickupAddress, dropoffAddress, status, extra } = req.body;
     if (!manifestId) return res.status(400).json({ message: 'manifestId is required' });
 
-    const manifest = await Manifest.findOne({ ...getManifestAccessFilter(req.user), _id: manifestId });
+    const manifest = await Manifest.findOne({ ...getManifestAccessFilter(), _id: manifestId });
     if (!manifest) return res.status(404).json({ message: 'Manifest not found' });
 
     const contact = await Contact.create({
@@ -319,11 +343,12 @@ router.post('/entries', async (req, res, next) => {
 // PATCH /entries/:id - Update a contact entry
 router.patch('/entries/:id', async (req, res, next) => {
   try {
+    if (!ensureEntryOperator(req, res)) return;
     const { name, phone, email, pickupDate, pickupTime, pickupAddress, dropoffAddress, status, extra } = req.body;
     const contact = await Contact.findById(req.params.id);
     if (!contact) return res.status(404).json({ message: 'Contact not found' });
 
-    const hasAccess = await canAccessManifest(req.user, contact.manifestId);
+    const hasAccess = await canAccessManifest(contact.manifestId);
     if (!hasAccess) return res.status(404).json({ message: 'Contact not found' });
 
     if (name !== undefined) contact.name = name;
@@ -347,10 +372,11 @@ router.patch('/entries/:id', async (req, res, next) => {
 // DELETE /entries/:id - Delete a single contact entry (cascades to ReviewRequests)
 router.delete('/entries/:id', async (req, res, next) => {
   try {
+    if (!ensureEntryOperator(req, res)) return;
     const contact = await Contact.findById(req.params.id);
     if (!contact) return res.status(404).json({ message: 'Contact not found' });
 
-    const hasAccess = await canAccessManifest(req.user, contact.manifestId);
+    const hasAccess = await canAccessManifest(contact.manifestId);
     if (!hasAccess) return res.status(404).json({ message: 'Contact not found' });
 
     await Contact.findByIdAndDelete(req.params.id);
@@ -361,8 +387,35 @@ router.delete('/entries/:id', async (req, res, next) => {
   }
 });
 
+// POST /entries/bulk-delete - Delete multiple contact entries (admin or active client)
+router.post('/entries/bulk-delete', async (req, res, next) => {
+  try {
+    if (!ensureEntryOperator(req, res)) return;
+
+    const ids = Array.isArray(req.body?.ids) ? req.body.ids.filter(Boolean) : [];
+    if (!ids.length) {
+      return res.status(400).json({ message: 'ids must be a non-empty array' });
+    }
+
+    const contacts = await Contact.find({ _id: { $in: ids } }).select('_id');
+    const contactIds = contacts.map((contact) => contact._id);
+
+    if (!contactIds.length) {
+      return res.json({ ok: true, deletedCount: 0 });
+    }
+
+    await Contact.deleteMany({ _id: { $in: contactIds } });
+    await ReviewRequest.deleteMany({ contactId: { $in: contactIds } });
+
+    res.json({ ok: true, deletedCount: contactIds.length });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/upload', upload.single('file'), async (req, res, next) => {
   try {
+    if (!ensureUploadAllowed(req, res)) return;
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
     const name = req.body.name || req.file.originalname.replace(/\.[^.]+$/, '') || 'Manifest';
     const extension = req.file.originalname.split('.').pop().toLowerCase();
@@ -471,7 +524,7 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const manifest = await Manifest.findOne({ ...getManifestAccessFilter(req.user), _id: req.params.id });
+    const manifest = await Manifest.findOne({ ...getManifestAccessFilter(), _id: req.params.id });
     if (!manifest) return res.status(404).json({ message: 'Manifest not found' });
 
     const contacts = await Contact.find({ manifestId: manifest._id });
@@ -483,7 +536,8 @@ router.get('/:id', async (req, res, next) => {
 
 router.delete('/:id', async (req, res, next) => {
   try {
-    const manifest = await Manifest.findOneAndDelete({ ...getManifestAccessFilter(req.user), _id: req.params.id });
+    if (!ensureAdmin(req, res)) return;
+    const manifest = await Manifest.findOneAndDelete({ ...getManifestAccessFilter(), _id: req.params.id });
     if (!manifest) return res.status(404).json({ message: 'Manifest not found' });
 
     await Contact.deleteMany({ manifestId: manifest._id });

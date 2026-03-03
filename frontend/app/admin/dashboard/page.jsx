@@ -1,5 +1,6 @@
 import { serverApi } from '@/lib/server-api';
 import AdminDashboardCards from './stats-cards';
+import FeedbackTrendGraph from '@/components/FeedbackTrendGraph';
 
 const cards = [
   { title: 'Review Request', key: 'files', subtitle: 'Uploaded files', href: '/admin/manifest', primary: true },
@@ -29,6 +30,7 @@ export default async function DashboardPage() {
   return (
     <div className="admin-dashboard">
       <AdminDashboardCards cards={cards} counts={counts} />
+      <FeedbackTrendGraph />
     </div>
   );
 }

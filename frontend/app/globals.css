@@ -1414,7 +1414,7 @@ button {
 }
 
 .admin-review-action-btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -1425,6 +1425,51 @@ button {
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
+}
+
+.review-request-row-invalid {
+  background: #fecaca;
+}
+
+.review-request-row-invalid > td {
+  background: #fecaca !important;
+  color: #1f2937;
+}
+
+.review-request-missing-tooltip-float {
+  position: fixed;
+  z-index: 1200;
+  width: 260px;
+  max-width: calc(100vw - 16px);
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.review-request-missing-tooltip__title {
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.review-request-missing-tooltip__list {
+  margin: 0;
+  padding-left: 16px;
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .review-request-missing-tooltip-float {
+    width: min(240px, calc(100vw - 16px));
+    padding: 8px;
+  }
 }
 
 .admin-dashboard__section {
@@ -1519,6 +1564,83 @@ button {
 .admin-dashboard__status--busy {
   background: #fef9c3;
   color: #a16207;
+}
+
+.feedback-trend-card {
+  background: #fff;
+  border: 1px solid #dce7dd;
+  border-radius: 16px;
+  box-shadow: 0 8px 22px rgba(17, 44, 30, 0.06);
+  padding: 16px;
+}
+
+.feedback-trend-card__head {
+  margin-bottom: 12px;
+}
+
+.feedback-trend-card__head h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #163123;
+}
+
+.feedback-trend-card__head p {
+  margin: 4px 0 0;
+  color: #6a8576;
+  font-size: 13px;
+}
+
+.feedback-trend-card__empty {
+  margin: 0;
+  padding: 28px 10px;
+  text-align: center;
+  color: #73907f;
+}
+
+.feedback-trend-chart-wrap {
+  width: 100%;
+}
+
+.feedback-trend-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.feedback-trend-chart__axis-label {
+  fill: #6f8a7a;
+  font-size: 12px;
+}
+
+.feedback-trend-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+  color: #425c4d;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.feedback-trend-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feedback-trend-legend__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.feedback-trend-legend__dot--all {
+  background: #1d7149;
+}
+
+.feedback-trend-legend__dot--negative {
+  background: #dc2626;
 }
 
 /* ---------- Utils ---------- */

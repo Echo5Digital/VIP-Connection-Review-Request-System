@@ -1,5 +1,6 @@
 import { serverApi } from '@/lib/server-api';
 import ClientDashboardCards from './stats-cards';
+import FeedbackTrendGraph from '@/components/FeedbackTrendGraph';
 
 const cards = [
   { title: 'Review Request', key: 'files', subtitle: 'Uploaded files', href: '/client/manifest', primary: true },
@@ -26,6 +27,7 @@ export default async function ClientDashboardPage() {
   return (
     <div className="admin-dashboard">
       <ClientDashboardCards cards={cards} counts={counts} />
+      <FeedbackTrendGraph />
     </div>
   );
 }
