@@ -20,7 +20,7 @@ const FIELD_STYLE = {
   boxSizing: 'border-box',
 };
 const LABEL_STYLE = { display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '4px' };
-const FORM_ROW_STYLE = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '14px' };
+const FORM_FIELD_WRAP_STYLE = { marginBottom: '14px' };
 
 const REQUIRED_REVIEW_FIELDS = [
   'ResNumber',
@@ -36,6 +36,7 @@ const REQUIRED_REVIEW_FIELDS = [
   'DispatchDriverPhoneNumber',
   'DispatchVehicleTypeCode',
 ];
+const SEGMENT_STATUS_OPTIONS = ['PASSN', 'AFF-D', 'RIP', 'COMP'];
 
 function hasValue(value) {
   if (value === null || value === undefined) return false;
@@ -61,6 +62,41 @@ function getMissingRequiredFields(entry) {
   };
 
   return REQUIRED_REVIEW_FIELDS.filter((field) => !hasValue(valueByField[field]));
+}
+
+function getEmptyForm(defaultManifestId = '') {
+  return {
+    manifestId: defaultManifestId,
+    name: '',
+    phone: '',
+    email: '',
+    pickupDate: '',
+    pickupTime: '',
+    pickupAddress: '',
+    dropoffAddress: '',
+    status: 'Pending',
+    passengerFirstName: '',
+    passengerLastName: '',
+    resNumber: '',
+    customerCode: '',
+    customerName: '',
+    pickupPricingZone: '',
+    dropoffPricingZone: '',
+    dispatchDriverCode: '',
+    dispatchDriverName: '',
+    dispatchVehicleCode: '',
+    dispatchDriverPhoneNumber: '',
+    dispatchVehicleTypeCode: '',
+    onLocationDateTime: '',
+    passengerOnBoardDateTime: '',
+    segmentStatusCode: '',
+    segmentTotal: '',
+    contactFirstName: '',
+    contactLastName: '',
+    contactEmailAddress: '',
+    contactPhoneNumber: '',
+    extra: {},
+  };
 }
 
 function FormField({ label, children }) {
@@ -96,6 +132,7 @@ export default function ManifestEntriesView({ role = 'admin' }) {
   const [alertModal, setAlertModal] = useState({ open: false, message: '' });
   const [missingTooltip, setMissingTooltip] = useState({ open: false, fields: [], top: 0, left: 0 });
   const tableWrapRef = useRef(null);
+  const entryFormRef = useRef(null);
   const selectAllRef = useRef(null);
 
   useEffect(() => {
@@ -194,45 +231,20 @@ export default function ManifestEntriesView({ role = 'admin' }) {
   }
 
   // CRUD handlers
+  function scrollToEntryForm() {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        entryFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  }
+
   function openCreateModal() {
     if (!canManageEntries) return;
-    setForm({
-      manifestId: manifests[0]?._id || '',
-      name: '', 
-      phone: '', 
-      email: '',
-      pickupDate: '', 
-      pickupTime: '',
-      pickupAddress: '', 
-      dropoffAddress: '',
-      status: 'Pending', 
-      
-      // Additional standard fields
-      passengerFirstName: '',
-      passengerLastName: '',
-      resNumber: '',
-      customerCode: '',
-      customerName: '',
-      pickupPricingZone: '',
-      dropoffPricingZone: '',
-      dispatchDriverCode: '',
-      dispatchDriverName: '',
-      dispatchVehicleCode: '',
-      dispatchDriverPhoneNumber: '',
-      dispatchVehicleTypeCode: '',
-      onLocationDateTime: '',
-      passengerOnBoardDateTime: '',
-      segmentStatusCode: '',
-      segmentTotal: '',
-      contactFirstName: '',
-      contactLastName: '',
-      contactEmailAddress: '',
-      contactPhoneNumber: '',
-
-      extra: {},
-    });
+    setForm(getEmptyForm(manifests[0]?._id || ''));
     setModalError('');
     setModal({ open: true, mode: 'create', entry: null });
+    scrollToEntryForm();
   }
 
   function openEditModal(entry) {
@@ -257,10 +269,12 @@ export default function ManifestEntriesView({ role = 'admin' }) {
     });
     setModalError('');
     setModal({ open: true, mode: 'edit', entry });
+    scrollToEntryForm();
   }
 
   function closeModal() {
     setModal({ open: false, mode: null, entry: null });
+    setForm(getEmptyForm(manifests[0]?._id || ''));
     setModalError('');
     setModalLoading(false);
   }
@@ -286,11 +300,14 @@ export default function ManifestEntriesView({ role = 'admin' }) {
           return;
         }
         await api.post('/api/manifests/entries', form);
+        setForm(getEmptyForm(form.manifestId || manifests[0]?._id || ''));
       } else {
         await api.patch(`/api/manifests/entries/${modal.entry._id}`, form);
+        setForm(getEmptyForm(manifests[0]?._id || ''));
+        setModal({ open: true, mode: 'create', entry: null });
       }
-      closeModal();
       fetchEntries();
+      setModalLoading(false);
     } catch (err) {
       setModalError(err?.message || 'An error occurred. Please try again.');
       setModalLoading(false);
@@ -445,6 +462,145 @@ export default function ManifestEntriesView({ role = 'admin' }) {
       </div>
 
       {canUpload && <ManifestUpload onUploadSuccess={handleUploadSuccess} />}
+
+      {canManageEntries && modal.open && (
+        <div
+          ref={entryFormRef}
+          className="card manifest-entry-inline-card"
+          style={{ background: '#e3f2e8', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px', border: '1px solid #bddbc7' }}
+        >
+          <div className="card__header manifest-entry-inline-card__header" style={{ padding: '16px 24px', borderBottom: '1px solid #bddbc7', background: '#d7ebdf', fontWeight: '600' }}>
+            {modal.mode === 'create' ? 'Add Entry' : 'Edit Entry'}
+          </div>
+          <form onSubmit={handleModalSubmit} className="manifest-entry-inline-card__body" style={{ padding: '16px 24px 20px' }}>
+            <div style={FORM_FIELD_WRAP_STYLE}>
+              <label style={LABEL_STYLE}>
+                Manifest {modal.mode === 'create' && <span style={{ color: '#dc2626' }}>*</span>}
+              </label>
+              {modal.mode === 'create' ? (
+                <select
+                  value={form.manifestId || ''}
+                  onChange={e => setField('manifestId', e.target.value)}
+                  style={{ ...FIELD_STYLE }}
+                  required
+                >
+                  <option value="">- Select manifest -</option>
+                  {manifests.map(m => (
+                    <option key={m._id} value={m._id}>{m.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <div style={{ ...FIELD_STYLE, background: '#f4f8f4', color: '#577162', display: 'flex', alignItems: 'center' }}>
+                  {modal.entry?.manifestId?.name || 'Unknown'}
+                </div>
+              )}
+            </div>
+
+            <div className="manifest-entry-grid">
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Passenger First Name"><input type="text" value={form.extra?.PassengerFirstName || ''} onChange={e => setExtraField('PassengerFirstName', e.target.value)} style={FIELD_STYLE} placeholder="First Name" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Passenger Last Name"><input type="text" value={form.extra?.PassengerLastName || ''} onChange={e => setExtraField('PassengerLastName', e.target.value)} style={FIELD_STYLE} placeholder="Last Name" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Passenger Phone (Cell)"><input type="text" value={form.extra?.PassengerCellPhoneNumber || ''} onChange={e => setExtraField('PassengerCellPhoneNumber', e.target.value)} style={FIELD_STYLE} placeholder="Cell Phone" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Passenger Email"><input type="email" value={form.extra?.PassengerEmailAddress || ''} onChange={e => setExtraField('PassengerEmailAddress', e.target.value)} style={FIELD_STYLE} placeholder="Email Address" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Passenger Name (Full)"><input type="text" value={form.name || ''} onChange={e => setField('name', e.target.value)} style={FIELD_STYLE} placeholder="Full name" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Mapped Phone"><input type="text" value={form.phone || ''} onChange={e => setField('phone', e.target.value)} style={FIELD_STYLE} placeholder="+1 555 000 0000" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Mapped Email"><input type="email" value={form.email || ''} onChange={e => setField('email', e.target.value)} style={FIELD_STYLE} placeholder="email@example.com" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Status"><input type="text" value={form.status || ''} onChange={e => setField('status', e.target.value)} style={FIELD_STYLE} placeholder="Pending" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Date"><input type="date" value={form.pickupDate || ''} onChange={e => setField('pickupDate', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Time"><input type="text" value={form.pickupTime || ''} onChange={e => setField('pickupTime', e.target.value)} style={FIELD_STYLE} placeholder="e.g. 08:30 AM" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Address"><input type="text" value={form.pickupAddress || ''} onChange={e => setField('pickupAddress', e.target.value)} style={FIELD_STYLE} placeholder="Pickup Address" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dropoff Address"><input type="text" value={form.dropoffAddress || ''} onChange={e => setField('dropoffAddress', e.target.value)} style={FIELD_STYLE} placeholder="Dropoff Address" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Pricing Zone"><input type="text" value={form.extra?.PickupPricingZone || ''} onChange={e => setExtraField('PickupPricingZone', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dropoff Pricing Zone"><input type="text" value={form.extra?.DropoffPricingZone || ''} onChange={e => setExtraField('DropoffPricingZone', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Res Number"><input type="text" value={form.extra?.ResNumber || ''} onChange={e => setExtraField('ResNumber', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Customer Code"><input type="text" value={form.extra?.CustomerCode || ''} onChange={e => setExtraField('CustomerCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Customer Name"><input type="text" value={form.extra?.CustomerName || ''} onChange={e => setExtraField('CustomerName', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="On Location Date/Time"><input type="text" value={form.extra?.OnLocationDateTime || ''} onChange={e => setExtraField('OnLocationDateTime', e.target.value)} style={FIELD_STYLE} placeholder="YYYY-MM-DD HH:mm:ss" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Passenger On Board Date/Time"><input type="text" value={form.extra?.PassengerOnBoardDateTime || ''} onChange={e => setExtraField('PassengerOnBoardDateTime', e.target.value)} style={FIELD_STYLE} placeholder="YYYY-MM-DD HH:mm:ss" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}>
+                <FormField label="Segment Status Code">
+                  <select
+                    value={form.extra?.SegmentStatusCode || ''}
+                    onChange={e => setExtraField('SegmentStatusCode', e.target.value)}
+                    style={{ ...FIELD_STYLE }}
+                  >
+                    <option value="">Select status</option>
+                    {SEGMENT_STATUS_OPTIONS.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                    {form.extra?.SegmentStatusCode && !SEGMENT_STATUS_OPTIONS.includes(form.extra.SegmentStatusCode) && (
+                      <option value={form.extra.SegmentStatusCode}>{form.extra.SegmentStatusCode}</option>
+                    )}
+                  </select>
+                </FormField>
+              </div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Segment Total"><input type="text" value={form.extra?.SegmentTotal || ''} onChange={e => setExtraField('SegmentTotal', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+
+              <div style={{ gridColumn: '1 / -1', fontSize: '13px', fontWeight: '600', color: '#111827', margin: '4px 0 8px', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>
+                Dispatch Info
+              </div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dispatch Driver Code"><input type="text" value={form.extra?.DispatchDriverCode || ''} onChange={e => setExtraField('DispatchDriverCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dispatch Driver Name"><input type="text" value={form.extra?.DispatchDriverName || ''} onChange={e => setExtraField('DispatchDriverName', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dispatch Vehicle Code"><input type="text" value={form.extra?.DispatchVehicleCode || ''} onChange={e => setExtraField('DispatchVehicleCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dispatch Driver Phone"><input type="text" value={form.extra?.DispatchDriverPhoneNumber || ''} onChange={e => setExtraField('DispatchDriverPhoneNumber', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dispatch Vehicle Type Code"><input type="text" value={form.extra?.DispatchVehicleTypeCode || ''} onChange={e => setExtraField('DispatchVehicleTypeCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+
+              <div style={{ gridColumn: '1 / -1', fontSize: '13px', fontWeight: '600', color: '#111827', margin: '4px 0 8px', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>
+                Contact Info
+              </div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Contact First Name"><input type="text" value={form.extra?.ContactFirstName || ''} onChange={e => setExtraField('ContactFirstName', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Contact Last Name"><input type="text" value={form.extra?.ContactLastName || ''} onChange={e => setExtraField('ContactLastName', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Contact Email"><input type="email" value={form.extra?.ContactEmailAddress || ''} onChange={e => setExtraField('ContactEmailAddress', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Contact Phone"><input type="text" value={form.extra?.ContactPhoneNumber || ''} onChange={e => setExtraField('ContactPhoneNumber', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+
+              {modal.mode === 'edit' && Object.keys(form.extra || {}).length > 0 && (
+                <div style={{ ...FORM_FIELD_WRAP_STYLE, gridColumn: '1 / -1' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#6b7280', marginBottom: '10px', borderTop: '1px solid #e5e7eb', paddingTop: '14px' }}>
+                    Additional Fields
+                  </div>
+                  <div className="manifest-entry-grid manifest-entry-grid--nested">
+                    {Object.keys(form.extra).map(key => (
+                      <div key={key} style={FORM_FIELD_WRAP_STYLE}>
+                        <FormField label={key}>
+                          <input
+                            type="text"
+                            value={form.extra[key] || ''}
+                            onChange={e => setExtraField(key, e.target.value)}
+                            style={FIELD_STYLE}
+                          />
+                        </FormField>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {modalError && (
+                <div style={{ gridColumn: '1 / -1', color: '#dc2626', fontSize: '13px', marginBottom: '16px', padding: '8px 12px', background: '#fef2f2', borderRadius: '6px', border: '1px solid #fecaca' }}>
+                  {modalError}
+                </div>
+              )}
+            </div>
+
+            <div className="manifest-entry-inline-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '4px' }}>
+              <button
+                type="button"
+                onClick={closeModal}
+                disabled={modalLoading}
+                style={{ padding: '10px 18px', borderRadius: '6px', border: '1px solid #cfe1d4', background: '#f8fafc', color: '#374151', cursor: 'pointer', fontSize: '14px' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={modalLoading}
+                style={{ padding: '10px 20px', borderRadius: '6px', border: 'none', background: '#1d7149', color: '#fff', cursor: modalLoading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '500', opacity: modalLoading ? 0.7 : 1 }}
+              >
+                {modalLoading ? 'Saving...' : (modal.mode === 'edit' ? 'Apply Changes' : 'Add Entry')}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div className="card" style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <div className="card__header" style={{ padding: '16px 24px', borderBottom: '1px solid #e2ece3', fontWeight: '600', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -821,233 +977,54 @@ export default function ManifestEntriesView({ role = 'admin' }) {
         </div>
       )}
 
-      {/* Create / Edit modal */}
-      {modal.open && (
-        <div style={OVERLAY_STYLE} onClick={() => { if (!modalLoading) closeModal(); }}>
-          <div style={MODAL_STYLE} onClick={e => e.stopPropagation()}>
-            <h2 style={{ margin: '0 0 20px', fontSize: '18px', fontWeight: '600', color: '#111827' }}>
-              {modal.mode === 'create' ? 'Add Entry' : 'Edit Entry'}
-            </h2>
-
-            <form onSubmit={handleModalSubmit}>
-              {/* Manifest selector (create) or label (edit) */}
-              <div style={{ marginBottom: '14px' }}>
-                <label style={LABEL_STYLE}>Manifest {modal.mode === 'create' && <span style={{ color: '#dc2626' }}>*</span>}</label>
-                {modal.mode === 'create' ? (
-                  <select
-                    value={form.manifestId || ''}
-                    onChange={e => setField('manifestId', e.target.value)}
-                    style={{ ...FIELD_STYLE }}
-                    required
-                  >
-                    <option value="">— Select manifest —</option>
-                    {manifests.map(m => (
-                      <option key={m._id} value={m._id}>{m.name}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <div style={{ ...FIELD_STYLE, background: '#f4f8f4', color: '#577162', display: 'flex', alignItems: 'center' }}>
-                    {modal.entry?.manifestId?.name || 'Unknown'}
-                  </div>
-                )}
-              </div>
-
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Passenger First Name">
-                  <input type="text" value={form.extra.PassengerFirstName || ''} onChange={e => setExtraField('PassengerFirstName', e.target.value)} style={FIELD_STYLE} placeholder="First Name" />
-                </FormField>
-                <FormField label="Passenger Last Name">
-                  <input type="text" value={form.extra.PassengerLastName || ''} onChange={e => setExtraField('PassengerLastName', e.target.value)} style={FIELD_STYLE} placeholder="Last Name" />
-                </FormField>
-              </div>
-
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Passenger Phone (Cell)">
-                  <input type="text" value={form.extra.PassengerCellPhoneNumber || ''} onChange={e => setExtraField('PassengerCellPhoneNumber', e.target.value)} style={FIELD_STYLE} placeholder="Cell Phone" />
-                </FormField>
-                <FormField label="Passenger Email">
-                  <input type="email" value={form.extra.PassengerEmailAddress || ''} onChange={e => setExtraField('PassengerEmailAddress', e.target.value)} style={FIELD_STYLE} placeholder="Email Address" />
-                </FormField>
-              </div>
-
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Passenger Name (Full)">
-                  <input type="text" value={form.name || ''} onChange={e => setField('name', e.target.value)} style={FIELD_STYLE} placeholder="Full name" />
-                </FormField>
-                <FormField label="Mapped Phone">
-                  <input type="text" value={form.phone || ''} onChange={e => setField('phone', e.target.value)} style={FIELD_STYLE} placeholder="+1 555 000 0000" />
-                </FormField>
-              </div>
-
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Mapped Email">
-                  <input type="email" value={form.email || ''} onChange={e => setField('email', e.target.value)} style={FIELD_STYLE} placeholder="email@example.com" />
-                </FormField>
-                <FormField label="Status">
-                  <input type="text" value={form.status || ''} onChange={e => setField('status', e.target.value)} style={FIELD_STYLE} placeholder="Pending" />
-                </FormField>
-              </div>
-
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Pickup Date">
-                  <input type="date" value={form.pickupDate || ''} onChange={e => setField('pickupDate', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-                <FormField label="Pickup Time">
-                  <input type="text" value={form.pickupTime || ''} onChange={e => setField('pickupTime', e.target.value)} style={FIELD_STYLE} placeholder="e.g. 08:30 AM" />
-                </FormField>
-              </div>
-
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Pickup Address">
-                  <input type="text" value={form.pickupAddress || ''} onChange={e => setField('pickupAddress', e.target.value)} style={FIELD_STYLE} placeholder="Pickup Address" />
-                </FormField>
-                <FormField label="Dropoff Address">
-                  <input type="text" value={form.dropoffAddress || ''} onChange={e => setField('dropoffAddress', e.target.value)} style={FIELD_STYLE} placeholder="Dropoff Address" />
-                </FormField>
-              </div>
-
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Pickup Pricing Zone">
-                  <input type="text" value={form.extra.PickupPricingZone || ''} onChange={e => setExtraField('PickupPricingZone', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-                <FormField label="Dropoff Pricing Zone">
-                  <input type="text" value={form.extra.DropoffPricingZone || ''} onChange={e => setExtraField('DropoffPricingZone', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-              </div>
-
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Res Number">
-                  <input type="text" value={form.extra.ResNumber || ''} onChange={e => setExtraField('ResNumber', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-                <FormField label="Customer Code">
-                  <input type="text" value={form.extra.CustomerCode || ''} onChange={e => setExtraField('CustomerCode', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-              </div>
-
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Customer Name">
-                  <input type="text" value={form.extra.CustomerName || ''} onChange={e => setExtraField('CustomerName', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-                <FormField label="On Location Date/Time">
-                  <input type="text" value={form.extra.OnLocationDateTime || ''} onChange={e => setExtraField('OnLocationDateTime', e.target.value)} style={FIELD_STYLE} placeholder="YYYY-MM-DD HH:mm:ss" />
-                </FormField>
-              </div>
-
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Passenger On Board Date/Time">
-                  <input type="text" value={form.extra.PassengerOnBoardDateTime || ''} onChange={e => setExtraField('PassengerOnBoardDateTime', e.target.value)} style={FIELD_STYLE} placeholder="YYYY-MM-DD HH:mm:ss" />
-                </FormField>
-                 <FormField label="Segment Status Code">
-                  <input type="text" value={form.extra.SegmentStatusCode || ''} onChange={e => setExtraField('SegmentStatusCode', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-              </div>
-              
-              <div style={FORM_ROW_STYLE}>
-                 <FormField label="Segment Total">
-                  <input type="text" value={form.extra.SegmentTotal || ''} onChange={e => setExtraField('SegmentTotal', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-              </div>
-
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827', margin: '16px 0 8px', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>
-                Dispatch Info
-              </div>
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Dispatch Driver Code">
-                  <input type="text" value={form.extra.DispatchDriverCode || ''} onChange={e => setExtraField('DispatchDriverCode', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-                <FormField label="Dispatch Driver Name">
-                  <input type="text" value={form.extra.DispatchDriverName || ''} onChange={e => setExtraField('DispatchDriverName', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-              </div>
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Dispatch Vehicle Code">
-                  <input type="text" value={form.extra.DispatchVehicleCode || ''} onChange={e => setExtraField('DispatchVehicleCode', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-                <FormField label="Dispatch Driver Phone">
-                  <input type="text" value={form.extra.DispatchDriverPhoneNumber || ''} onChange={e => setExtraField('DispatchDriverPhoneNumber', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-              </div>
-              <div style={{ marginBottom: '14px' }}>
-                <FormField label="Dispatch Vehicle Type Code">
-                  <input type="text" value={form.extra.DispatchVehicleTypeCode || ''} onChange={e => setExtraField('DispatchVehicleTypeCode', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-              </div>
-
-              <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827', margin: '16px 0 8px', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>
-                Contact Info
-              </div>
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Contact First Name">
-                  <input type="text" value={form.extra.ContactFirstName || ''} onChange={e => setExtraField('ContactFirstName', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-                <FormField label="Contact Last Name">
-                  <input type="text" value={form.extra.ContactLastName || ''} onChange={e => setExtraField('ContactLastName', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-              </div>
-              <div style={FORM_ROW_STYLE}>
-                <FormField label="Contact Email">
-                  <input type="email" value={form.extra.ContactEmailAddress || ''} onChange={e => setExtraField('ContactEmailAddress', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-                <FormField label="Contact Phone">
-                  <input type="text" value={form.extra.ContactPhoneNumber || ''} onChange={e => setExtraField('ContactPhoneNumber', e.target.value)} style={FIELD_STYLE} />
-                </FormField>
-              </div>
-
-              {/* Extra fields (edit mode only) */}
-              {modal.mode === 'edit' && Object.keys(form.extra || {}).length > 0 && (
-                <div style={{ marginBottom: '14px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#6b7280', marginBottom: '10px', borderTop: '1px solid #e5e7eb', paddingTop: '14px' }}>
-                    Additional Fields
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    {Object.keys(form.extra).map(key => (
-                      <FormField key={key} label={key}>
-                        <input
-                          type="text"
-                          value={form.extra[key] || ''}
-                          onChange={e => setExtraField(key, e.target.value)}
-                          style={FIELD_STYLE}
-                        />
-                      </FormField>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {modalError && (
-                <div style={{ color: '#dc2626', fontSize: '13px', marginBottom: '16px', padding: '8px 12px', background: '#fef2f2', borderRadius: '6px', border: '1px solid #fecaca' }}>
-                  {modalError}
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '4px' }}>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  disabled={modalLoading}
-                  style={{ padding: '8px 18px', borderRadius: '6px', border: '1px solid #cfe1d4', background: '#f8fafc', color: '#374151', cursor: 'pointer', fontSize: '14px' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={modalLoading}
-                  style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', background: '#1d7149', color: '#fff', cursor: modalLoading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '500', opacity: modalLoading ? 0.7 : 1 }}
-                >
-                  {modalLoading ? 'Saving...' : 'Save Entry'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       <style jsx global>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        .manifest-entry-inline-card {
+          background: #e3f2e8 !important;
+          border-color: #bddbc7 !important;
+        }
+        .manifest-entry-inline-card__header {
+          background: #d7ebdf !important;
+          border-bottom-color: #bddbc7 !important;
+        }
+        .manifest-entry-inline-card__body {
+          background: #e3f2e8 !important;
+        }
+        .manifest-entry-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          column-gap: 16px;
+          align-items: start;
+        }
+        .manifest-entry-grid--nested {
+          margin-top: 8px;
+        }
+        @media (max-width: 1280px) {
+          .manifest-entry-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+        }
+        @media (max-width: 1024px) {
+          .manifest-entry-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+        @media (max-width: 768px) {
+          .manifest-entry-grid {
+            grid-template-columns: 1fr;
+          }
+          .manifest-entry-inline-actions {
+            flex-direction: column;
+          }
+          .manifest-entry-inline-actions button {
+            width: 100%;
+          }
+        }
       `}</style>
     </div>
   );
 }
+
 
 
 

@@ -951,9 +951,7 @@ button {
 
 /* ---------- Admin Shell Redesign ---------- */
 .admin-shell {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  display: block;
   background: linear-gradient(160deg, #f4f7f4 0%, #edf3ee 100%);
 }
 
@@ -964,9 +962,14 @@ button {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  width: 260px;
   height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 40;
 }
 
 .admin-shell__brand {
@@ -1028,7 +1031,14 @@ button {
 }
 
 .admin-shell__content {
+  margin-left: 260px;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 .admin-shell__header {
@@ -1131,6 +1141,7 @@ button {
 
 .admin-shell__main {
   padding: 20px 24px 28px;
+  flex: 1;
 }
 
 .admin-shell__overlay {
@@ -1701,6 +1712,7 @@ html,
 body {
   overflow-x: hidden;
   max-width: 100%;
+  height: 100%;
 }
 
 * {
@@ -1824,7 +1836,7 @@ body {
 
   /* --- Admin Shell sidebar (new layout) --- */
   .admin-shell {
-    grid-template-columns: 1fr;
+    display: block;
   }
 
   .admin-shell__sidebar {
@@ -1833,7 +1845,7 @@ body {
     width: 260px;
     z-index: 50;
     transform: translateX(-100%);
-    transition: transform 0.25s ease;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 16px 36px rgba(7, 21, 13, 0.32);
   }
 
@@ -1848,6 +1860,13 @@ body {
     background: rgba(9, 23, 15, 0.4);
     border: none;
     z-index: 45;
+  }
+
+  .admin-shell__content {
+    margin-left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .admin-shell__header {
