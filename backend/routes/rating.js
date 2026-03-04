@@ -11,11 +11,21 @@ const router = Router();
 router.get('/page/:token', async (req, res, next) => {
   try {
     const request = await ReviewRequest.findOne({ token: req.params.token })
-      .populate('contactId', 'name email phone');
+      .populate('contactId', 'name email phone extra');
     if (!request) return res.status(404).json({ message: 'Invalid or expired link' });
     const existing = await Rating.findOne({ reviewRequestId: request._id });
+    const resNumber = request.resNumber ||
+      request.contactId?.extra?.ResNumber ||
+      request.contactId?.extra?.['Res Number'] ||
+      '';
     if (existing) {
-      return res.json({ alreadySubmitted: true, rating: existing.value });
+      return res.json({
+        alreadySubmitted: true,
+        rating: existing.value,
+        contactName: request.contactId?.name || '',
+        contactEmail: request.contactId?.email || '',
+        resNumber,
+      });
     }
     const settings = await getSettings('ratingPage') || {};
     res.json({
@@ -26,6 +36,7 @@ router.get('/page/:token', async (req, res, next) => {
       contactName: request.contactId?.name || '',
       contactEmail: request.contactId?.email || '',
       contactPhone: request.contactId?.phone || '',
+      resNumber,
     });
   } catch (err) {
     next(err);

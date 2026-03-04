@@ -50,19 +50,28 @@ router.post(
       }
 
       const token = generateToken();
+      const passengerName = contact.extra?.PassengerFirstName || contact.name || 'Valued Customer';
+      const resNumber = String(
+        contact.extra?.ResNumber ||
+        contact.extra?.['Res Number'] ||
+        contact.extra?.['RES_NUMBER'] ||
+        contact.extra?.resNumber ||
+        ''
+      ).trim();
+
       const reviewRequest = await ReviewRequest.create({
         contactId: contact._id,
         manifestId: contact.manifestId?._id || contact.manifestId,
         token,
         channel,
         status: 'failed',
+        resNumber,
       });
 
       const link = `${config.nextAppUrl}/r/${token}`;
-      const passengerName = contact.extra?.PassengerFirstName || contact.name || 'Valued Customer';
 
       if (channel === 'email') {
-        const emailResult = await sendReviewRequestEmail(targetEmail, token, passengerName);
+        const emailResult = await sendReviewRequestEmail(targetEmail, token, passengerName, resNumber);
         if (emailResult.success) {
           reviewRequest.status = 'sent';
           reviewRequest.sentAt = new Date();

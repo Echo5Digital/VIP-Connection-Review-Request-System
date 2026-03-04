@@ -15,6 +15,7 @@ function PrivateFeedbackContent() {
 
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
+  const [resNumber, setResNumber] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [comments, setComments] = useState('');
@@ -34,9 +35,16 @@ function PrivateFeedbackContent() {
           setContactEmail(data.contactEmail);
           setEmail(data.contactEmail);
         }
+        if (data?.resNumber) {
+          setResNumber(String(data.resNumber));
+        }
       })
       .catch(() => {});
   }, [token]);
+
+  const hasNegativeRating =
+    (Number.isInteger(driverRating) && driverRating > 0 && driverRating < 5) ||
+    (Number.isInteger(vehicleRating) && vehicleRating > 0 && vehicleRating < 5);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -189,6 +197,33 @@ function PrivateFeedbackContent() {
               }}
             />
           </div>
+
+          {hasNegativeRating && (
+            <div style={{ marginBottom: '18px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+                ResNumber
+              </label>
+              <input
+                type="text"
+                value={resNumber}
+                disabled
+                readOnly
+                style={{
+                  width: '100%',
+                  height: '40px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  padding: '0 12px',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  background: '#f8fafc',
+                  color: '#475569',
+                  cursor: 'not-allowed',
+                }}
+              />
+            </div>
+          )}
 
           <div style={{ marginBottom: '24px' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>

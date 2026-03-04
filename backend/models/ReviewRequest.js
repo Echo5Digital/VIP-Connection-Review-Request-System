@@ -6,6 +6,7 @@ const reviewRequestSchema = new mongoose.Schema({
   manifestId: { type: mongoose.Schema.Types.ObjectId, ref: 'Manifest', required: true },
   token: { type: String, required: true, unique: true },
   channel: { type: String, enum: ['sms', 'email'], required: true },
+  resNumber: { type: String, default: '' },
   sentAt: { type: Date, default: Date.now },
   status: { type: String, enum: ['sent', 'delivered', 'failed'], default: 'sent' },
   redirectId: { type: String, default: null },

@@ -256,8 +256,9 @@ function escapeHtml(value = '') {
     .replace(/'/g, '&#39;');
 }
 
-export async function sendReviewRequestEmail(clientEmail, token, passengerName = 'Valued Customer') {
+export async function sendReviewRequestEmail(clientEmail, token, passengerName = 'Valued Customer', resNumber = '') {
   const safeName = escapeHtml(passengerName);
+  const safeResNumber = escapeHtml(resNumber || '');
   const baseUrl = String(config.nextAppUrl || 'http://localhost:3000').replace(/\/$/, '');
   const reviewUrl = `${baseUrl}/r/${encodeURIComponent(token)}`;
 
@@ -288,6 +289,9 @@ export async function sendReviewRequestEmail(clientEmail, token, passengerName =
                 <h1 style="margin:0 0 10px 0;font-size:28px;line-height:1.25;color:#111827;">Rate Your Service</h1>
                 <p style="margin:0;font-size:16px;line-height:1.6;color:#374151;">
                   Hi ${safeName}, thank you for riding with us. Your feedback helps us keep every trip exceptional.
+                </p>
+                <p style="margin:10px 0 0 0;font-size:14px;line-height:1.5;color:#1f2937;font-weight:600;">
+                  Reservation Number: ${safeResNumber || 'N/A'}
                 </p>
               </td>
             </tr>
@@ -325,6 +329,6 @@ export async function sendReviewRequestEmail(clientEmail, token, passengerName =
   </body>
 </html>`;
 
-  const text = `VIP Connection\n\nHi ${passengerName}, thank you for riding with us.\nPlease share your feedback here: ${reviewUrl}`;
+  const text = `VIP Connection\n\nHi ${passengerName}, thank you for riding with us.\nReservation Number: ${resNumber || 'N/A'}\nPlease share your feedback here: ${reviewUrl}`;
   return sendEmailWithDiagnostics({ to: clientEmail, subject, html, text });
 }

@@ -13,7 +13,6 @@ export default function RatingPage() {
   const [loading, setLoading] = useState(true);
   const [driverRating, setDriverRating] = useState(0);
   const [vehicleRating, setVehicleRating] = useState(0);
-  const [publicComment, setPublicComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -40,7 +39,6 @@ export default function RatingPage() {
         token,
         driverRating,
         vehicleRating,
-        publicComment: publicComment.trim() || undefined,
       });
       // Route based on ratings
       if (result.redirect === 'public') {
@@ -53,7 +51,7 @@ export default function RatingPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [token, driverRating, vehicleRating, publicComment, router]);
+  }, [token, driverRating, vehicleRating, router]);
 
   if (loading) {
     return (
@@ -134,21 +132,9 @@ export default function RatingPage() {
               onChange={setVehicleRating}
             />
 
-            <div className="form-group" style={{ marginBottom: '24px' }}>
-              <label className="form-label" style={{ textAlign: 'center', display: 'block', fontSize: '16px', fontWeight: 700, marginBottom: '8px' }}>Comments:</label>
-              <textarea
-                value={publicComment}
-                onChange={(e) => setPublicComment(e.target.value)}
-                rows={4}
-                placeholder="Please provide any additional feedback..."
-                className="form-textarea"
-                style={{ resize: 'none' }}
-              />
-            </div>
-
             {error && <p className="form-error" style={{ marginBottom: '16px', textAlign: 'center' }}>{error}</p>}
 
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div className="submit-row">
               <button
                 type="submit"
                 disabled={submitting || driverRating < 1 || vehicleRating < 1}
@@ -191,6 +177,22 @@ export default function RatingPage() {
         .rating-card__subtitle {
           font-size: 15px;
           color: var(--gray-500);
+        }
+        .submit-row {
+          display: flex;
+          justify-content: center;
+        }
+        @media (max-width: 640px) {
+          .wrap {
+            padding: 20px 12px;
+          }
+          .rating-card__header {
+            margin-bottom: 24px;
+          }
+          .submit-row .btn {
+            width: 100%;
+            max-width: 100%;
+          }
         }
       `}</style>
     </main>
