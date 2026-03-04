@@ -112,7 +112,13 @@ async function fetchAllFeedback() {
   let pages = 1;
 
   do {
-    const data = await api.get(`/api/feedback?filter=all&page=${page}&limit=${PAGE_SIZE}`);
+    let data;
+    try {
+      data = await api.get(`/api/feedback?filter=all&compact=1&page=${page}&limit=${PAGE_SIZE}`);
+    } catch {
+      // Stop pagination on transient API failures and keep already collected points.
+      break;
+    }
     if (Array.isArray(data?.list)) {
       list.push(...data.list);
     }
@@ -131,8 +137,6 @@ export default function FeedbackTrendGraph() {
     try {
       const list = await fetchAllFeedback();
       setFeedbackList(list);
-    } catch (error) {
-      console.error('Failed to fetch feedback trend data', error);
     } finally {
       setLoading(false);
     }
