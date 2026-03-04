@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 
 const STAR_EMOJIS = ['', '😡', '😔', '😐', '😊', '😍'];
@@ -17,31 +16,21 @@ function RatingBadge({ value }) {
 }
 
 function FeedbackContent() {
-  const searchParams = useSearchParams();
   const tableTopRef = useRef(null);
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // 'all' | 'negative'
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 20;
 
   useEffect(() => {
     fetchFeedback();
-  }, [filter, currentPage]);
-
-  useEffect(() => {
-    const queryFilter = searchParams.get('filter');
-    if (queryFilter === 'negative' || queryFilter === 'all') {
-      setFilter(queryFilter);
-      setCurrentPage(1);
-    }
-  }, [searchParams]);
+  }, [currentPage]);
 
   async function fetchFeedback() {
     try {
       setLoading(true);
-      const params = new URLSearchParams({ filter, page: currentPage, limit });
+      const params = new URLSearchParams({ filter: 'negative', page: currentPage, limit });
       const data = await api.get(`/api/feedback?${params.toString()}`);
       setList(data.list || []);
       setTotalPages(data.pagination?.pages || 1);
@@ -50,11 +39,6 @@ function FeedbackContent() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function handleFilterChange(newFilter) {
-    setFilter(newFilter);
-    setCurrentPage(1);
   }
 
   function changePage(nextPage) {
@@ -74,39 +58,21 @@ function FeedbackContent() {
         Displays private feedback submitted by passengers after their ride.
       </p>
 
-      {/* Filter Tabs */}
-      <div className="feedback-filter-toggle" role="tablist" aria-label="Feedback filters">
-        {[
-          { id: 'all', label: 'All' },
-          { id: 'negative', label: 'Negative' },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => handleFilterChange(tab.id)}
-            className={`feedback-filter-toggle__button no-hover-anim${
-              filter === tab.id
-                ? tab.id === 'all'
-                  ? ' feedback-filter-toggle__button--active-all'
-                  : ' feedback-filter-toggle__button--active-negative'
-                : ''
-            }`}
-            aria-pressed={filter === tab.id}
-          >
-            {tab.label}
-            {tab.id === 'negative' && filter === 'negative' && list.length > 0 && (
-              <span className="feedback-filter-toggle__count">
-                {list.length}
-              </span>
-            )}
-          </button>
-        ))}
+      {/* Negative Feedback Label */}
+      <div className="feedback-filter-label">
+        <span className="feedback-filter-label__badge">
+          Negative Feedback
+          {list.length > 0 && (
+            <span className="feedback-filter-toggle__count">{list.length}</span>
+          )}
+        </span>
       </div>
 
       <div className="card" ref={tableTopRef}>
         {loading ? (
           <p style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>Loading feedback...</p>
         ) : list.length === 0 ? (
-          <p className="card__empty">No {filter === 'negative' ? 'negative ' : ''}feedback yet.</p>
+          <p className="card__empty">No negative feedback yet.</p>
         ) : (
           <div className="table-wrap">
             <table className="data-table">

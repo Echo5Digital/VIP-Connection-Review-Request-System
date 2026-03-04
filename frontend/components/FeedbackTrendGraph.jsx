@@ -56,8 +56,7 @@ function buildTrendPoints(list) {
     if (Number.isNaN(date.getTime())) return;
     const key = toDateKey(date, granularity);
 
-    const current = grouped.get(key) || { all: 0, negative: 0 };
-    current.all += 1;
+    const current = grouped.get(key) || { negative: 0 };
     if (isNegativeFeedback(item)) current.negative += 1;
     grouped.set(key, current);
   });
@@ -67,16 +66,13 @@ function buildTrendPoints(list) {
     ? { month: 'short', year: '2-digit' }
     : { month: 'short', day: 'numeric' });
 
-  let cumulativeAll = 0;
   let cumulativeNegative = 0;
   return sortedKeys.map((key) => {
     const current = grouped.get(key);
-    cumulativeAll += current.all;
     cumulativeNegative += current.negative;
     return {
       key,
       label: formatter.format(parseKeyToDate(key, granularity)),
-      all: cumulativeAll,
       negative: cumulativeNegative,
     };
   });
@@ -114,7 +110,7 @@ async function fetchAllFeedback() {
   do {
     let data;
     try {
-      data = await api.get(`/api/feedback?filter=all&compact=1&page=${page}&limit=${PAGE_SIZE}`);
+      data = await api.get(`/api/feedback?filter=negative&compact=1&page=${page}&limit=${PAGE_SIZE}`);
     } catch {
       // Stop pagination on transient API failures and keep already collected points.
       break;
@@ -171,7 +167,7 @@ export default function FeedbackTrendGraph() {
     const innerWidth = CHART_WIDTH - PAD_LEFT - PAD_RIGHT;
     const innerHeight = CHART_HEIGHT - PAD_TOP - PAD_BOTTOM;
     const maxValue = trendPoints.length > 0
-      ? Math.max(...trendPoints.map((item) => Math.max(item.all, item.negative)))
+      ? Math.max(...trendPoints.map((item) => item.negative))
       : 0;
     const normalizedMax = getNiceMax(maxValue || 1);
 
@@ -179,12 +175,10 @@ export default function FeedbackTrendGraph() {
       const x = trendPoints.length === 1
         ? PAD_LEFT + innerWidth / 2
         : PAD_LEFT + (index / (trendPoints.length - 1)) * innerWidth;
-      const allY = PAD_TOP + innerHeight - (item.all / normalizedMax) * innerHeight;
       const negativeY = PAD_TOP + innerHeight - (item.negative / normalizedMax) * innerHeight;
       return {
         x,
         label: item.label,
-        allY,
         negativeY,
       };
     });
@@ -210,33 +204,29 @@ export default function FeedbackTrendGraph() {
     };
   }, [feedbackList]);
 
-  const allPath = useMemo(
-    () => buildSmoothPath(points.map((point) => ({ x: point.x, y: point.allY }))),
-    [points],
-  );
   const negativePath = useMemo(
     () => buildSmoothPath(points.map((point) => ({ x: point.x, y: point.negativeY }))),
     [points],
   );
 
   return (
-    <section className="feedback-trend-card" aria-label="Feedback trend graph">
+    <section className="feedback-trend-card" aria-label="Negative feedback trend graph">
       <div className="feedback-trend-card__head">
-        <h2>Feedback Trend</h2>
-        <p>Cumulative feedback growth over time</p>
+        <h2>Negative Feedback Trend</h2>
+        <p>Cumulative negative feedback growth over time</p>
       </div>
 
       {loading ? (
         <p className="feedback-trend-card__empty">Loading trend data...</p>
       ) : points.length === 0 ? (
-        <p className="feedback-trend-card__empty">No feedback data available yet.</p>
+        <p className="feedback-trend-card__empty">No negative feedback data available yet.</p>
       ) : (
         <div className="feedback-trend-chart-wrap">
           <svg
             className="feedback-trend-chart"
             viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
             role="img"
-            aria-label={`Line chart showing cumulative all feedback and cumulative negative feedback up to ${yMax}`}
+            aria-label={`Line chart showing cumulative negative feedback up to ${yMax}`}
           >
             <rect
               x={PAD_LEFT}
@@ -253,7 +243,7 @@ export default function FeedbackTrendGraph() {
                   y1={tick.y}
                   x2={CHART_WIDTH - PAD_RIGHT}
                   y2={tick.y}
-                  stroke="#e4ede6"
+                  stroke="#f4dede"
                   strokeWidth="1"
                 />
                 <text
@@ -267,7 +257,22 @@ export default function FeedbackTrendGraph() {
               </g>
             ))}
 
-            <path d={allPath} fill="none" stroke="#1d7149" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Subtle red gradient area under the line */}
+            <defs>
+              <linearGradient id="negativeAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#dc2626" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+
+            {/* Filled area */}
+            {points.length > 0 && (
+              <path
+                d={`${negativePath} L ${points[points.length - 1].x} ${PAD_TOP + CHART_HEIGHT - PAD_TOP - PAD_BOTTOM} L ${points[0].x} ${PAD_TOP + CHART_HEIGHT - PAD_TOP - PAD_BOTTOM} Z`}
+                fill="url(#negativeAreaGrad)"
+              />
+            )}
+
             <path d={negativePath} fill="none" stroke="#dc2626" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
 
             {xTicks.map((tick) => (
@@ -284,7 +289,6 @@ export default function FeedbackTrendGraph() {
           </svg>
 
           <div className="feedback-trend-legend" aria-hidden="true">
-            <span><i className="feedback-trend-legend__dot feedback-trend-legend__dot--all" />All Feedback (cumulative)</span>
             <span><i className="feedback-trend-legend__dot feedback-trend-legend__dot--negative" />Negative Feedback (cumulative)</span>
           </div>
         </div>
