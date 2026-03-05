@@ -17,11 +17,15 @@ const router = Router();
 router.post(
   '/send',
   requireAuth,
-  requireRoles('admin'),
+  requireRoles('admin', 'client'),
   body('contactId').notEmpty().withMessage('contactId is required'),
   body('channel').isIn(['email', 'sms']).withMessage('channel must be email or sms'),
   async (req, res, next) => {
     try {
+      if (req.user.role === 'client' && !req.user.active) {
+        return res.status(403).json({ message: 'Only active clients can send review requests.' });
+      }
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 

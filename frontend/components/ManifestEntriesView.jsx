@@ -153,7 +153,7 @@ export default function ManifestEntriesView({ role = 'admin' }) {
     if (!(isAdmin || isActiveClient)) return;
     api.get('/api/manifests')
       .then(data => setManifests(Array.isArray(data) ? data : []))
-      .catch(() => {});
+      .catch(() => { });
   }, [isAdmin, isActiveClient]);
 
   const canManageEntries = isAdmin || isActiveClient;
@@ -225,8 +225,9 @@ export default function ManifestEntriesView({ role = 'admin' }) {
       await api.post('/api/review-requests/send', { contactId: entry._id, channel });
       const info = channel === 'email' ? 'Sent Successfully' : null;
       setRowStatus(prev => ({ ...prev, [key]: { sending: null, sent: channel, error: null, info } }));
-    } catch {
-      setRowStatus(prev => ({ ...prev, [key]: { sending: null, sent: null, error: 'Failed to Send', info: null } }));
+    } catch (err) {
+      console.error('Error sending review request:', err);
+      setRowStatus(prev => ({ ...prev, [key]: { sending: null, sent: null, error: err?.message || 'Failed to Send', info: null } }));
     }
   }
 
@@ -259,7 +260,7 @@ export default function ManifestEntriesView({ role = 'admin' }) {
       pickupAddress: entry.pickupAddress || '',
       dropoffAddress: entry.dropoffAddress || '',
       status: entry.status || 'Pending',
-      
+
       // Map extra fields to top-level form state for editing convenience, 
       // or keep them in 'extra' if we want to save them back to 'extra'.
       // The requirement is to include all fields displayed as columns.
@@ -393,12 +394,12 @@ export default function ManifestEntriesView({ role = 'admin' }) {
 
   // Column derivation — new order
   const PREFERRED_ORDER = [
-    'PickupDateTime', 'ResNumber', 'CustomerCode', 'CustomerName', 
+    'PickupDateTime', 'ResNumber', 'CustomerCode', 'CustomerName',
     'PassengerCellPhoneNumber', 'PassengerEmailAddress', 'PassengerFirstName', 'PassengerLastName',
-    'PickupAddress', 'PickupPricingZone', 'DropoffPricingZone', 'DropoffAddress', 
+    'PickupAddress', 'PickupPricingZone', 'DropoffPricingZone', 'DropoffAddress',
     'DispatchDriverCode', 'DispatchDriverName', 'DispatchVehicleCode', 'DispatchDriverPhoneNumber',
     'DispatchVehicleTypeCode', 'OnLocationDateTime', 'PassengerOnBoardDateTime',
-    'SegmentStatusCode', 'SegmentTotal', 
+    'SegmentStatusCode', 'SegmentTotal',
     'ContactEmailAddress', 'ContactFirstName', 'ContactLastName', 'ContactPhoneNumber'
   ];
 
@@ -954,25 +955,25 @@ export default function ManifestEntriesView({ role = 'admin' }) {
       {alertModal.open && (
         <div style={OVERLAY_STYLE} onClick={() => setAlertModal({ open: false, message: '' })}>
           <div style={{ ...MODAL_STYLE, maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-             <div style={{ marginBottom: '16px', color: '#f59e0b', display: 'flex', justifyContent: 'center' }}>
-               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" width="48" height="48">
-                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-               </svg>
-             </div>
-             <h2 style={{ margin: '0 0 12px', fontSize: '18px', fontWeight: '600', color: '#111827' }}>Notice</h2>
-             <p style={{ margin: '0 0 24px', color: '#4b5563', fontSize: '15px' }}>
-               {alertModal.message}
-             </p>
-             <button
-               onClick={() => setAlertModal({ open: false, message: '' })}
-               style={{
-                 padding: '10px 24px', borderRadius: '6px', border: 'none',
-                 background: '#1d7149', color: '#fff', cursor: 'pointer',
-                 fontSize: '14px', fontWeight: '500'
-               }}
-             >
-               OK
-             </button>
+            <div style={{ marginBottom: '16px', color: '#f59e0b', display: 'flex', justifyContent: 'center' }}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" width="48" height="48">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 style={{ margin: '0 0 12px', fontSize: '18px', fontWeight: '600', color: '#111827' }}>Notice</h2>
+            <p style={{ margin: '0 0 24px', color: '#4b5563', fontSize: '15px' }}>
+              {alertModal.message}
+            </p>
+            <button
+              onClick={() => setAlertModal({ open: false, message: '' })}
+              style={{
+                padding: '10px 24px', borderRadius: '6px', border: 'none',
+                background: '#1d7149', color: '#fff', cursor: 'pointer',
+                fontSize: '14px', fontWeight: '500'
+              }}
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
