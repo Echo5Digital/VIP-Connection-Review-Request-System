@@ -6,11 +6,11 @@ import { api } from '@/lib/api';
 const STAR_EMOJIS = ['', '😡', '😔', '😐', '😊', '😍'];
 
 function RatingBadge({ value }) {
-  if (!value) return <span style={{ color: '#94a3b8' }}>-</span>;
+  if (!value) return <span style={{ color: 'var(--text-muted)' }}>-</span>;
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '14px' }}>
       <span>{STAR_EMOJIS[value] || ''}</span>
-      <span style={{ fontWeight: '600', color: '#334155' }}>{value}/5</span>
+      <span style={{ fontWeight: '600', color: 'var(--text-main)' }}>{value}/5</span>
     </span>
   );
 }
@@ -69,34 +69,36 @@ export default function NegativeFeedbackTable({ title = 'Feedback' }) {
   return (
     <div>
       <h1 className="page-title">{title}</h1>
-      <p className="text-muted text-sm mb-4">
+      <p className="text-muted text-sm mb-6">
         Displays private feedback submitted by passengers after their ride.
       </p>
 
-      <div className="feedback-filter-label">
-        <span className="feedback-filter-label__badge">
+      <div style={{ marginBottom: '24px' }}>
+        <span className="badge badge--gold" style={{ padding: '8px 20px', fontSize: '13px', fontWeight: 700, borderRadius: '20px' }}>
           Negative Feedback
           {list.length > 0 && (
-            <span className="feedback-filter-toggle__count">{list.length}</span>
+            <span style={{ marginLeft: '10px', opacity: 0.8, background: 'rgba(0,0,0,0.2)', padding: '2px 8px', borderRadius: '10px' }}>{list.length}</span>
           )}
         </span>
       </div>
 
       <div className="card" ref={tableTopRef}>
         {loading ? (
-          <p style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>Loading feedback...</p>
+          <div className="card__empty" style={{ padding: '60px' }}>
+            <div className="page-loader" style={{ position: 'static', background: 'none' }}>Loading feedback...</div>
+          </div>
         ) : list.length === 0 ? (
-          <p className="card__empty">No negative feedback yet.</p>
+          <p className="card__empty">No negative feedback found.</p>
         ) : (
           <div className="table-wrap feedback-table-wrap">
             <table className="data-table feedback-data-table">
               <thead>
                 <tr>
-                  <th>ResNumber</th>
+                  <th style={{ paddingLeft: '24px' }}>ResNumber</th>
                   <th>Contact</th>
                   <th>Driver Rating</th>
                   <th>Vehicle Rating</th>
-                  <th>Date</th>
+                  <th style={{ paddingRight: '24px' }}>Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -125,29 +127,34 @@ export default function NegativeFeedbackTable({ title = 'Feedback' }) {
                         tabIndex={0}
                         role="button"
                         aria-expanded={isExpanded}
+                        style={{
+                          cursor: 'pointer',
+                          borderBottom: isExpanded ? 'none' : '1px solid var(--border-dim)',
+                          background: isExpanded ? 'rgba(201, 162, 74, 0.03)' : 'transparent'
+                        }}
                       >
-                        <td data-label="ResNumber" style={{ fontWeight: 600 }}>{resNumber}</td>
+                        <td data-label="ResNumber" style={{ fontWeight: 700, color: 'var(--accent)', paddingLeft: '24px' }}>{resNumber}</td>
                         <td data-label="Contact" className="text-muted">{contactLabel}</td>
                         <td data-label="Driver Rating"><RatingBadge value={f.driverRating} /></td>
                         <td data-label="Vehicle Rating"><RatingBadge value={f.vehicleRating} /></td>
-                        <td data-label="Date" className="text-muted text-sm">{formatDate(f.submittedAt)}</td>
+                        <td data-label="Date" className="text-muted text-sm" style={{ paddingRight: '24px' }}>{formatDate(f.submittedAt)}</td>
                       </tr>
                       <tr className={`feedback-row-details ${isExpanded ? 'feedback-row-details--open' : ''}`}>
-                        <td colSpan={5}>
-                          <div className="feedback-row-details__content">
-                            <div className="feedback-row-details__grid">
+                        <td colSpan={5} style={{ padding: 0 }}>
+                          <div className="feedback-row-details__content" style={{ padding: '24px', background: 'rgba(201, 162, 74, 0.02)', borderBottom: isExpanded ? '1px solid var(--border-dim)' : 'none' }}>
+                            <div className="feedback-row-details__grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px', marginBottom: '24px' }}>
                               <div>
-                                <div className="feedback-row-details__label">DispatchDriverName</div>
-                                <div className="feedback-row-details__value">{dispatchDriverName}</div>
+                                <div className="feedback-row-details__label" style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '8px', letterSpacing: '0.05em' }}>Dispatch Driver</div>
+                                <div className="feedback-row-details__value" style={{ fontWeight: 600, color: 'var(--text-main)' }}>{dispatchDriverName}</div>
                               </div>
                               <div>
-                                <div className="feedback-row-details__label">DispatchVehicleTypeCode</div>
-                                <div className="feedback-row-details__value">{dispatchVehicleTypeCode}</div>
+                                <div className="feedback-row-details__label" style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '8px', letterSpacing: '0.05em' }}>Vehicle Type</div>
+                                <div className="feedback-row-details__value" style={{ fontWeight: 600, color: 'var(--text-main)' }}>{dispatchVehicleTypeCode}</div>
                               </div>
                             </div>
-                            <div className="feedback-row-details__comment">
-                              <div className="feedback-row-details__label">Full Comment</div>
-                              <p className="feedback-row-details__value">{fullComment}</p>
+                            <div className="feedback-row-details__comment" style={{ padding: '20px', background: 'var(--bg-deep)', borderRadius: '12px', border: '1px solid var(--border-dim)' }}>
+                              <div className="feedback-row-details__label" style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px', letterSpacing: '0.05em' }}>Full Comment</div>
+                              <p className="feedback-row-details__value" style={{ color: 'var(--text-main)', lineHeight: '1.6', margin: 0 }}>{fullComment}</p>
                             </div>
                           </div>
                         </td>
@@ -161,37 +168,29 @@ export default function NegativeFeedbackTable({ title = 'Feedback' }) {
         )}
 
         {totalPages > 1 && (
-          <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'center', gap: '8px', borderTop: '1px solid #e2e8f0' }}>
+          <div className="card__footer" style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '16px',
+            borderTop: '1px solid var(--border-dim)'
+          }}>
             <button
               onClick={() => changePage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '4px',
-                border: '1px solid #cbd5e1',
-                background: currentPage === 1 ? '#f1f5f9' : '#fff',
-                color: currentPage === 1 ? '#94a3b8' : '#334155',
-                cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
-              }}
+              className="btn btn--secondary btn--sm"
             >
-              Previous
+              ← Previous
             </button>
-            <span style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: '#475569' }}>
-              Page {currentPage} of {totalPages}
+            <span className="text-sm font-medium">
+              Page <span className="text-accent">{currentPage}</span> of {totalPages}
             </span>
             <button
               onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '4px',
-                border: '1px solid #cbd5e1',
-                background: currentPage === totalPages ? '#f1f5f9' : '#fff',
-                color: currentPage === totalPages ? '#94a3b8' : '#334155',
-                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
-              }}
+              className="btn btn--secondary btn--sm"
             >
-              Next
+              Next →
             </button>
           </div>
         )}

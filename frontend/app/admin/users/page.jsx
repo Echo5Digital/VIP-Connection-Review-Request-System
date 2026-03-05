@@ -11,11 +11,13 @@ export default function UsersPage() {
 
     // CRUD State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
-        role: 'client',
+        role: 'manager',
+        active: true,
     });
 
     useEffect(() => {
@@ -34,16 +36,43 @@ export default function UsersPage() {
         }
     }
 
+    function openAddModal() {
+        setEditingUser(null);
+        setFormData({ name: '', email: '', password: '', role: 'manager', active: true });
+        setIsModalOpen(true);
+    }
+
+    function openEditModal(user) {
+        setEditingUser(user);
+        setFormData({
+            name: user.name || '',
+            email: user.email || '',
+            password: '', // Keep empty unless changing
+            role: user.role,
+            active: user.active !== false,
+        });
+        setIsModalOpen(true);
+    }
+
     async function handleFormSubmit(e) {
         e.preventDefault();
         setError('');
         setSuccess('');
         try {
-            await api.post('/api/users', formData);
-            setSuccess('User created successfully');
+            if (editingUser) {
+                // Update User
+                const updateData = { ...formData };
+                if (!updateData.password) delete updateData.password;
+
+                await api.put(`/api/users/${editingUser.role}/${editingUser._id}`, updateData);
+                setSuccess('User updated successfully');
+            } else {
+                // Create User
+                await api.post('/api/users', formData);
+                setSuccess('User created successfully');
+            }
             setIsModalOpen(false);
             fetchUsers();
-            setFormData({ name: '', email: '', password: '', role: 'client' });
         } catch (err) {
             setError(err.message);
         }
@@ -60,20 +89,29 @@ export default function UsersPage() {
         }
     }
 
+    const getRoleBadgeClass = (role) => {
+        switch (role) {
+            case 'admin': return 'badge--purple';
+            case 'manager': return 'badge--blue';
+            case 'dispatcher': return 'badge--green';
+            default: return 'badge--gray';
+        }
+    };
+
     return (
-        <div style={{ padding: '24px' }}>
+        <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <h1 className="page-title" style={{ margin: 0 }}>User Management</h1>
-                <button onClick={() => setIsModalOpen(true)} className="btn btn--primary" style={{ borderRadius: '6px' }}>
+                <button onClick={openAddModal} className="btn btn--primary">
                     Add New User
                 </button>
             </div>
 
-            {error && <div className="form-error mb-4" style={{ padding: '12px', borderRadius: '4px' }}>{error}</div>}
-            {success && <div style={{ color: 'var(--success-600)', background: 'var(--success-50)', padding: '12px', borderRadius: '4px', marginBottom: '16px', fontSize: '14px' }}>{success}</div>}
+            {error && <div className="form-error mb-4">{error}</div>}
+            {success && <div className="form-success mb-4">{success}</div>}
 
             <div className="card">
-                <div className="card__header">Admins & Clients</div>
+                <div className="card__header">Admins, Managers & Dispatchers</div>
 
                 {loading ? (
                     <p className="card__empty">Loading users...</p>
@@ -85,31 +123,34 @@ export default function UsersPage() {
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Role</th>
+                                    <th>Status</th>
                                     <th>Created</th>
                                     <th style={{ textAlign: 'right' }}>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {users.map((user) => (
-                                    <tr key={user._id}>
+                                    <tr key={user._id} style={{ opacity: user.active === false ? 0.5 : 1 }}>
                                         <td style={{ fontWeight: 500 }}>{user.name}</td>
                                         <td>{user.email}</td>
                                         <td>
-                                            <span className={`badge ${user.role === 'admin' ? 'badge--purple' : 'badge--blue'}`} style={{ textTransform: 'uppercase' }}>
+                                            <span className={`badge ${getRoleBadgeClass(user.role)}`} style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                                 {user.role}
                                             </span>
                                         </td>
-                                        <td style={{ color: 'var(--gray-500)', fontSize: '13px' }}>
+                                        <td>
+                                            <span className={`badge ${user.active !== false ? 'badge--green' : 'badge--red'}`}>
+                                                {user.active !== false ? 'Active' : 'Disabled'}
+                                            </span>
+                                        </td>
+                                        <td className="text-muted text-sm">
                                             {new Date(user.createdAt).toLocaleDateString()}
                                         </td>
                                         <td style={{ textAlign: 'right' }}>
-                                            <button
-                                                onClick={() => handleDelete(user.role, user._id)}
-                                                className="btn btn--sm btn--outline"
-                                                style={{ color: '#dc2626' }}
-                                            >
-                                                Delete
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                <button onClick={() => openEditModal(user)} className="btn btn--secondary btn--sm" title="Edit" style={{ padding: '6px 10px', minWidth: 'auto' }}>Edit</button>
+                                                <button onClick={() => handleDelete(user.role, user._id)} className="btn btn--secondary btn--sm" title="Delete" style={{ padding: '6px 10px', minWidth: 'auto', borderColor: 'rgba(220, 38, 38, 0.3)', color: 'var(--danger)' }}>Delete</button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -120,9 +161,14 @@ export default function UsersPage() {
             </div>
 
             {isModalOpen && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-                    <div className="card" style={{ width: '100%', maxWidth: '400px', marginBottom: 0 }}>
-                        <div className="card__header">Add New User</div>
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 2000,
+                    background: 'rgba(0,0,0,0.85)', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center',
+                    padding: '16px', backdropFilter: 'blur(10px)'
+                }}>
+                    <div className="card" style={{ width: '100%', maxWidth: '440px', marginBottom: 0, border: '1px solid var(--border-dim)' }}>
+                        <div className="card__header" style={{ borderBottom: '1px solid var(--border-dim)' }}>{editingUser ? 'Edit User' : 'Add New User'}</div>
                         <div className="card__body">
                             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <div className="form-group">
@@ -133,6 +179,7 @@ export default function UsersPage() {
                                         className="form-control"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        placeholder="Enter full name"
                                     />
                                 </div>
                                 <div className="form-group">
@@ -143,16 +190,18 @@ export default function UsersPage() {
                                         className="form-control"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        placeholder="email@example.com"
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Initial Password</label>
+                                    <label className="form-label">{editingUser ? 'New Password (leave blank to keep current)' : 'Initial Password'}</label>
                                     <input
                                         type="password"
-                                        required
+                                        required={!editingUser}
                                         className="form-control"
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        placeholder="••••••••"
                                     />
                                 </div>
                                 <div className="form-group">
@@ -162,13 +211,25 @@ export default function UsersPage() {
                                         value={formData.role}
                                         onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                     >
-                                        <option value="client">Client</option>
+                                        <option value="manager">Manager</option>
+                                        <option value="dispatcher">Dispatcher</option>
                                         <option value="admin">Admin</option>
                                     </select>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
-                                    <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn--outline btn--sm">Cancel</button>
-                                    <button type="submit" className="btn btn--primary btn--sm px-6">Create User</button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <input
+                                        type="checkbox"
+                                        id="user-active"
+                                        checked={formData.active}
+                                        onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                                    />
+                                    <label htmlFor="user-active" className="form-label" style={{ marginBottom: 0 }}>Active</label>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn--secondary flex-1">Cancel</button>
+                                    <button type="submit" className="btn btn--primary flex-1">
+                                        {editingUser ? 'Save Changes' : 'Create User'}
+                                    </button>
                                 </div>
                             </form>
                         </div>

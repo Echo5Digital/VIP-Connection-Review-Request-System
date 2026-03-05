@@ -155,43 +155,68 @@ export default function RatingPage() {
           align-items: center;
           justify-content: center;
           padding: 32px 20px;
-          background: var(--gray-100);
+          background: var(--bg-deep);
         }
         .rating-card {
           width: 100%;
           max-width: 600px;
-          box-shadow: var(--shadow-lg);
-          border-radius: var(--radius-xl);
-          border: none;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+          border-radius: 16px;
+          border: 1px solid var(--border-dim);
+          background: var(--bg-surface);
         }
         .rating-card__header {
           text-align: center;
           margin-bottom: 32px;
         }
         .rating-card__title {
-          font-size: 24px;
+          font-size: 26px;
           font-weight: 800;
-          color: var(--gray-900);
-          margin-bottom: 8px;
+          color: var(--text-main);
+          margin-bottom: 12px;
         }
         .rating-card__subtitle {
           font-size: 15px;
-          color: var(--gray-500);
+          color: var(--text-muted);
+          line-height: 1.6;
         }
         .submit-row {
           display: flex;
           justify-content: center;
+          margin-top: 24px;
+        }
+        .btn--success {
+          background: var(--accent);
+          color: #000;
+          font-weight: 700;
+          border: none;
+          transition: transform 0.2s, background 0.2s;
+        }
+        .btn--success:hover {
+          background: var(--accent-hover);
+          transform: translateY(-1px);
+        }
+        .btn--success:active {
+          transform: translateY(0);
+        }
+        .btn--success:disabled {
+          background: var(--border-dim);
+          color: var(--text-muted);
+          cursor: not-allowed;
+          transform: none;
         }
         @media (max-width: 640px) {
           .wrap {
             padding: 20px 12px;
+          }
+          .rating-card {
+            padding: 16px;
           }
           .rating-card__header {
             margin-bottom: 24px;
           }
           .submit-row .btn {
             width: 100%;
-            max-width: 100%;
           }
         }
       `}</style>

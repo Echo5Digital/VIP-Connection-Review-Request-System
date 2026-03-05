@@ -76,22 +76,7 @@ export default function ClientLayout({ children }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isProfileMenuOpen]);
 
-  // Apply dynamic branding
-  useEffect(() => {
-    async function applyBranding() {
-      try {
-        const settings = await api.get('/api/settings');
-        if (settings?.branding?.themeColors?.primary) {
-          const primaryColor = settings.branding.themeColors.primary;
-          document.documentElement.style.setProperty('--blue-500', primaryColor);
-          document.documentElement.style.setProperty('--primary-600', primaryColor);
-        }
-      } catch (err) {
-        console.error('Failed to apply branding', err);
-      }
-    }
-    applyBranding();
-  }, []);
+  // Dynamic branding removed to ensure VIP Gold theme consistency per requirements
 
   const pageTitle = useMemo(() => {
     if (pathname?.startsWith('/client/dashboard')) return 'Dashboard';
@@ -114,7 +99,9 @@ export default function ClientLayout({ children }) {
   return (
     <div className="admin-shell">
       <aside className={`admin-shell__sidebar${isSidebarOpen ? ' admin-shell__sidebar--open' : ''}`}>
-        <div className="admin-shell__brand">VIP Connection</div>
+        <div className="admin-shell__brand">
+          VIP <span>CONNECTION</span>
+        </div>
         <nav className="admin-shell__nav">
           {nav.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
@@ -137,40 +124,25 @@ export default function ClientLayout({ children }) {
       <div className="admin-shell__content">
         <header className="admin-shell__header">
           <button type="button" className="admin-shell__menu-btn" onClick={() => setIsSidebarOpen((v) => !v)} aria-label="Toggle menu">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
 
           <h1 className="admin-shell__title">{pageTitle}</h1>
+
           <div className="admin-shell__spacer" />
 
-          <div className="admin-shell__profile-menu" ref={profileMenuRef}>
-            <button
-              type="button"
-              className="admin-shell__profile-trigger"
-              title="Client Menu"
-              onClick={() => setIsProfileMenuOpen((v) => !v)}
-            >
-              <span>Client</span>
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
-            {isProfileMenuOpen && (
-              <div className="admin-shell__profile-dropdown">
-                <button
-                  type="button"
-                  className="admin-shell__profile-item admin-shell__profile-item--danger"
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                >
-                  {isLoggingOut ? 'Logging out...' : 'Logout'}
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            type="button"
+            className="btn btn--secondary btn--sm"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? 'Logging out...' : 'Logout'}
+          </button>
         </header>
+
         <main className="admin-shell__main">{children}</main>
       </div>
     </div>

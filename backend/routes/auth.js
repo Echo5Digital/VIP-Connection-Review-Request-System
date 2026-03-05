@@ -4,7 +4,7 @@ import { body, validationResult } from 'express-validator';
 import { config } from '../config/index.js';
 import { requireAuth, requireRoles } from '../middleware/auth.js';
 import Admin from '../models/Admin.js';
-import Client from '../models/Client.js';
+import Staff from '../models/Staff.js';
 
 const router = Router();
 const authCookieOptions = {
@@ -102,23 +102,26 @@ router.post(
       }
 
       const { email, password } = req.body;
-      const [admin, client] = await Promise.all([
+      const [admin, staff] = await Promise.all([
         Admin.findOne({ email }).select('+password'),
-        Client.findOne({ email }).select('+password'),
+        Staff.findOne({ email }).select('+password'),
       ]);
 
       let user = null;
       let role = null;
 
       if (admin && (await admin.comparePassword(password))) {
-        user = admin;
-        role = 'admin';
-      } else if (client && (await client.comparePassword(password))) {
-        if (client.active === false) {
+        if (admin.active === false) {
           return res.status(403).json({ message: 'Account is deactivated' });
         }
-        user = client;
-        role = 'client';
+        user = admin;
+        role = 'admin';
+      } else if (staff && (await staff.comparePassword(password))) {
+        if (staff.active === false) {
+          return res.status(403).json({ message: 'Account is deactivated' });
+        }
+        user = staff;
+        role = staff.role;
       }
 
       if (!user || !role) {
@@ -201,7 +204,8 @@ router.post(
 
 const roleModelMap = {
   admin: Admin,
-  client: Client,
+  manager: Staff,
+  dispatcher: Staff,
 };
 
 export default router;

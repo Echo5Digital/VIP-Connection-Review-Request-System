@@ -30,13 +30,14 @@ export function RatingSettingsForm({ initial }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <form onSubmit={handleSubmit} style={{ maxWidth: '480px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div className="form-group">
         <label className="form-label">Title</label>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="form-input"
+          className="form-control"
+          placeholder="How was your experience?"
         />
       </div>
 
@@ -45,7 +46,8 @@ export function RatingSettingsForm({ initial }) {
         <input
           value={subtitle}
           onChange={(e) => setSubtitle(e.target.value)}
-          className="form-input"
+          className="form-control"
+          placeholder="Your feedback helps us improve."
         />
       </div>
 
@@ -54,7 +56,8 @@ export function RatingSettingsForm({ initial }) {
         <input
           value={thankYouMessage}
           onChange={(e) => setThankYouMessage(e.target.value)}
-          className="form-input"
+          className="form-control"
+          placeholder="Thank you for your feedback!"
         />
       </div>
 
@@ -63,16 +66,18 @@ export function RatingSettingsForm({ initial }) {
         <input
           value={googleReviewUrl}
           onChange={(e) => setGoogleReviewUrl(e.target.value)}
-          className="form-input"
+          className="form-control"
           placeholder="https://search.google.com/local/writereview?placeid=..."
         />
       </div>
 
       {error && <p className="form-error">{error}</p>}
 
-      <button type="submit" disabled={loading} className="btn btn--primary">
-        {loading ? 'Saving…' : 'Save'}
-      </button>
+      <div style={{ marginTop: '8px' }}>
+        <button type="submit" disabled={loading} className="btn btn--primary" style={{ padding: '0 40px', height: '48px', fontSize: '15px', borderRadius: '12px' }}>
+          {loading ? 'Saving…' : 'Save Settings'}
+        </button>
+      </div>
     </form>
   );
 }

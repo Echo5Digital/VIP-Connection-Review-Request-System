@@ -2,54 +2,65 @@ import Link from 'next/link';
 import './analytics-widgets.css';
 
 export function FunnelMetricsWidget({ data }) {
+    const metrics = [
+        { label: 'Requests Sent', value: data.requestsSent },
+        { label: 'Delivered', value: data.delivered },
+        { label: 'Ratings Submitted', value: data.ratingsSubmitted },
+        { label: '5★ Driver & Vehicle', value: data.fiveStarDriverVehicle },
+        { label: 'Public Review Clicks', value: data.publicReviewClicks },
+        { label: 'Private Feedback', value: data.privateFeedback },
+    ];
+
+    const maxVal = data.requestsSent || 1;
+
     return (
         <div className="card">
-            <h3 className="card__title widget-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                Review Funnel Metrics
-                <Link href="/admin/manifest" className="text-xs text-green-600 font-bold hover:underline">View Trips →</Link>
-            </h3>
-            <div className="widget-grid widget-grid-3">
-                <div className="widget-stat-box blue-box">
-                    <span className="stat-card__label">Requests Sent</span>
-                    <div className="stat-card__value">{data.requestsSent}</div>
-                </div>
-                <div className="widget-stat-box gray-box">
-                    <span className="stat-card__label">Delivered</span>
-                    <div className="stat-card__value">{data.delivered}</div>
-                </div>
-                <div className="widget-stat-box blue-box">
-                    <span className="stat-card__label">Ratings Submitted</span>
-                    <div className="stat-card__value">{data.ratingsSubmitted}</div>
-                </div>
-                <div className="widget-stat-box blue-box">
-                    <span className="stat-card__label" style={{ textTransform: 'none', fontWeight: 700 }}>5★ Driver & Vehicle</span>
-                    <div className="stat-card__value">{data.fiveStarDriverVehicle}</div>
-                </div>
-                <div className="widget-stat-box gray-box">
-                    <span className="stat-card__label">Public Review Clicks</span>
-                    <div className="stat-card__value">{data.publicReviewClicks}</div>
-                </div>
-                <div className="widget-stat-box red-box">
-                    <span className="stat-card__label label-red">Private Feedback</span>
-                    <div className="stat-card__value value-red">{data.privateFeedback}</div>
-                </div>
+            <div className="widget-header">
+                <h3 className="card__title">Review Funnel Metrics</h3>
+                <Link href="/admin/manifest" className="btn btn--secondary btn--sm">View Trips →</Link>
+            </div>
+            <div className="funnel-container">
+                {metrics.map((m, i) => {
+                    const percentageFull = maxVal > 0 ? (m.value / maxVal) * 100 : 0;
+                    const displayPercentage = maxVal > 0 ? Math.round((m.value / maxVal) * 100) : 0;
+
+                    return (
+                        <div key={i} className="funnel-row">
+                            <div className="funnel-label">{m.label}</div>
+                            <div className="funnel-bar-wrapper">
+                                <div className="funnel-bar-bg">
+                                    <div
+                                        className="funnel-bar-fill"
+                                        style={{
+                                            width: `${Math.max(percentageFull, 5)}%`,
+                                        }}
+                                    >
+                                        {m.value > 0 && <span className="funnel-bar-count">{m.value.toLocaleString()}</span>}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="funnel-percentage">{displayPercentage}%</div>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
 }
+
 
 export function ConversionMetricsWidget({ data }) {
     return (
         <div className="card">
             <h3 className="card__title widget-header">Conversion Rates</h3>
             <div className="widget-flex-col">
-                <div className="widget-stat-box blue-box">
-                    <span className="stat-card__label">Sent → Rated Conversion %</span>
-                    <div className="stat-card__value">{data.sentRateConversion}%</div>
+                <div className="widget-stat-box">
+                    <span className="widget-subhead" style={{ marginBottom: '8px' }}>Sent → Rated Conversion %</span>
+                    <div className="stat-card__value" style={{ color: 'var(--accent)' }}>{data.sentRateConversion}%</div>
                 </div>
-                <div className="widget-stat-box blue-box">
-                    <span className="stat-card__label">Rated → Public Clicks %</span>
-                    <div className="stat-card__value">{data.clickConversion}%</div>
+                <div className="widget-stat-box">
+                    <span className="widget-subhead" style={{ marginBottom: '8px' }}>Rated → Public Clicks %</span>
+                    <div className="stat-card__value" style={{ color: 'var(--accent)' }}>{data.clickConversion}%</div>
                 </div>
             </div>
         </div>
@@ -59,31 +70,31 @@ export function ConversionMetricsWidget({ data }) {
 export function DriverPerformanceWidget({ data }) {
     return (
         <div className="card">
-            <h3 className="card__title widget-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                Driver Performance
-                <Link href="/admin/drivers" className="text-xs text-green-600 font-bold hover:underline">Manage Drivers →</Link>
-            </h3>
+            <div className="widget-header">
+                <h3 className="card__title">Driver Performance</h3>
+                <Link href="/admin/drivers" className="btn btn--secondary btn--sm">Manage Drivers →</Link>
+            </div>
             <div className="widget-grid widget-grid-2">
                 <div>
                     <h4 className="widget-subhead">Top Drivers</h4>
                     {data.topDrivers.length === 0 ? (
                         <p className="widget-empty">No top drivers yet.</p>
                     ) : (
-                        <div style={{ overflowX: 'auto' }}>
-                            <table className="data-table widget-table">
+                        <div className="table-wrap">
+                            <table className="widget-table">
                                 <thead>
                                     <tr>
                                         <th>Driver</th>
-                                        <th className="text-center">Rating</th>
-                                        <th className="text-center">Trips</th>
+                                        <th style={{ textAlign: 'center' }}>Rating</th>
+                                        <th style={{ textAlign: 'center' }}>Trips</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {data.topDrivers.map((d, i) => (
                                         <tr key={i}>
                                             <td className="font-medium">{d.name}</td>
-                                            <td className="text-center"><span className="badge badge--green">★ {d.avgRating}</span></td>
-                                            <td className="text-center text-gray">{d.ratedTrips}</td>
+                                            <td style={{ textAlign: 'center' }}><span className="badge badge--green">★ {d.avgRating}</span></td>
+                                            <td style={{ textAlign: 'center' }}>{d.ratedTrips}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -96,19 +107,19 @@ export function DriverPerformanceWidget({ data }) {
                     {data.attentionDrivers.length === 0 ? (
                         <p className="widget-empty">No drivers need attention.</p>
                     ) : (
-                        <div style={{ overflowX: 'auto' }}>
-                            <table className="data-table widget-table">
+                        <div className="table-wrap">
+                            <table className="widget-table">
                                 <thead>
                                     <tr>
                                         <th>Driver</th>
-                                        <th className="text-center">Rating</th>
+                                        <th style={{ textAlign: 'center' }}>Rating</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {data.attentionDrivers.map((d, i) => (
                                         <tr key={i}>
                                             <td className="font-medium">{d.name}</td>
-                                            <td className="text-center"><span className="badge badge--red">★ {d.avgRating}</span></td>
+                                            <td style={{ textAlign: 'center' }}><span className="badge badge--red">★ {d.avgRating}</span></td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -129,19 +140,19 @@ export function VehiclePerformanceWidget({ data }) {
                 {data.length === 0 ? (
                     <p className="widget-empty">No vehicle ratings yet.</p>
                 ) : (
-                    <div style={{ overflowX: 'auto' }}>
-                        <table className="data-table widget-table">
+                    <div className="table-wrap">
+                        <table className="widget-table">
                             <thead>
                                 <tr>
                                     <th>Vehicle Type</th>
-                                    <th className="text-center">Rating</th>
+                                    <th style={{ textAlign: 'center' }}>Rating</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {data.map((v, i) => (
                                     <tr key={i}>
                                         <td className="font-medium">{v.type}</td>
-                                        <td className="text-center"><span className="badge badge--blue">★ {v.avgRating}</span></td>
+                                        <td style={{ textAlign: 'center' }}><span className="badge badge--gold">★ {v.avgRating}</span></td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -156,33 +167,33 @@ export function VehiclePerformanceWidget({ data }) {
 export function NegativeFeedbackWidget({ data }) {
     return (
         <div className="card">
-            <h3 className="card__title widget-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                Action Required: Unresolved Feedback
-                <Link href="/admin/feedback" className="text-xs text-red-600 font-bold hover:underline">Go to Feedback →</Link>
-            </h3>
+            <div className="widget-header">
+                <h3 className="card__title">Action Required: Unresolved Feedback</h3>
+                <Link href="/admin/feedback" className="btn btn--danger btn--sm" style={{ background: 'var(--danger)' }}>Go to Feedback →</Link>
+            </div>
             <div className="widget-grid widget-grid-2">
                 <div>
-                    <div className="widget-subhead" style={{ marginBottom: '12px' }}>Unresolved Feedback Aging</div>
+                    <div className="widget-subhead">Unresolved Feedback Aging</div>
                     <div className="widget-flex-col">
                         <div className="aging-row gray-box">
                             <span className="font-medium">0–2 days</span>
-                            <span className="badge">{data.days_0_2}</span>
+                            <span className="badge badge--gold" style={{ background: 'rgba(201, 162, 74, 0.2)', border: '1px solid var(--accent)' }}>{data.days_0_2}</span>
                         </div>
                         <div className="aging-row gray-box">
                             <span className="font-medium">3–7 days</span>
-                            <span className="badge badge--blue">{data.days_3_7}</span>
+                            <span className="badge badge--gold" style={{ background: 'rgba(201, 162, 74, 0.2)', border: '1px solid var(--accent)' }}>{data.days_3_7}</span>
                         </div>
-                        <div className="aging-row red-box alert-border">
-                            <span className="font-medium label-red">8+ days</span>
-                            <span className="badge badge--red">{data.days_8_plus}</span>
+                        <div className="aging-row red-box" style={{ background: 'rgba(220, 38, 38, 0.05)', border: '1px solid rgba(220, 38, 38, 0.2)' }}>
+                            <span className="font-medium" style={{ color: 'var(--danger)' }}>8+ days</span>
+                            <span className="badge badge--red" style={{ background: 'rgba(220, 38, 38, 0.2)', border: '1px solid var(--danger)' }}>{data.days_8_plus}</span>
                         </div>
                     </div>
                 </div>
                 <div className="widget-actions">
-                    <div className="widget-subhead" style={{ marginBottom: '16px' }}>Quick Actions</div>
+                    <div className="widget-subhead">Quick Actions</div>
                     <button className="btn btn--primary">Assign Feedback</button>
-                    <button className="btn btn--outline">Mark as Resolved</button>
-                    <Link href="/admin/feedback" className="btn btn--outline" style={{ textAlign: 'center' }}>Email Passenger</Link>
+                    <button className="btn btn--secondary">Mark as Resolved</button>
+                    <Link href="/admin/feedback" className="btn btn--secondary" style={{ textAlign: 'center' }}>Email Passenger</Link>
                 </div>
             </div>
         </div>

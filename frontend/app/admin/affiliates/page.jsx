@@ -92,16 +92,16 @@ export default function AffiliatesPage() {
     }
 
     return (
-        <div style={{ padding: '24px' }}>
+        <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <h1 className="page-title" style={{ margin: 0 }}>Affiliates</h1>
-                <button onClick={openAddModal} className="btn btn--primary" style={{ borderRadius: '6px', fontWeight: 500, padding: '8px 16px' }}>
+                <button onClick={openAddModal} className="btn btn--primary">
                     Add Affiliate
                 </button>
             </div>
 
-            {error && <div className="form-error mb-4" style={{ padding: '12px', borderRadius: '4px' }}>{error}</div>}
-            {success && <div style={{ color: 'var(--success-600)', background: 'var(--success-50)', padding: '12px', borderRadius: '4px', marginBottom: '16px', fontSize: '14px' }}>{success}</div>}
+            {error && <div className="form-error mb-4">{error}</div>}
+            {success && <div className="form-success mb-4">{success}</div>}
 
             <div className="card">
                 <div className="card__header">All Affiliates</div>
@@ -128,21 +128,21 @@ export default function AffiliatesPage() {
                             <tbody>
                                 {affiliates.map((aff) => (
                                     <tr key={aff._id}>
-                                        <td style={{ fontWeight: 600 }}>{aff.code}</td>
+                                        <td style={{ fontWeight: 600, color: 'var(--accent)' }}>{aff.code}</td>
                                         <td style={{ fontWeight: 500 }}>{aff.name}</td>
                                         <td>{aff.contactPerson || '—'}</td>
                                         <td>{aff.email || '—'}</td>
                                         <td>{aff.phone || '—'}</td>
                                         <td>
-                                            <span className="badge badge--blue">
+                                            <span className="badge badge--gold">
                                                 {aff.avgRating?.toFixed(1) || '0.0'} ★
                                             </span>
                                         </td>
                                         <td>{aff.tripsCount || 0}</td>
                                         <td style={{ textAlign: 'right' }}>
                                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                                <button onClick={() => openEditModal(aff)} className="btn btn--sm btn--outline">Edit</button>
-                                                <button onClick={() => handleDelete(aff._id)} className="btn btn--sm btn--outline" style={{ color: '#dc2626' }}>Delete</button>
+                                                <button onClick={() => openEditModal(aff)} className="btn btn--secondary btn--sm" title="Edit" style={{ padding: '6px 10px', minWidth: 'auto' }}>Edit</button>
+                                                <button onClick={() => handleDelete(aff._id)} className="btn btn--secondary btn--sm" title="Delete" style={{ padding: '6px 10px', minWidth: 'auto', borderColor: 'rgba(220, 38, 38, 0.3)', color: 'var(--danger)' }}>Delete</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -154,9 +154,16 @@ export default function AffiliatesPage() {
             </div>
 
             {isModalOpen && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-                    <div className="card" style={{ width: '100%', maxWidth: '480px', marginBottom: 0 }}>
-                        <div className="card__header">{editingAffiliate ? 'Edit Affiliate' : 'Add New Affiliate'}</div>
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 2000,
+                    background: 'rgba(0,0,0,0.85)', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center',
+                    padding: '16px', backdropFilter: 'blur(8px)'
+                }}>
+                    <div className="card" style={{ width: '100%', maxWidth: '480px', marginBottom: 0, border: '1px solid var(--border-dim)' }}>
+                        <div className="card__header" style={{ borderBottom: '1px solid var(--border-dim)' }}>
+                            {editingAffiliate ? 'Edit Affiliate' : 'Add New Affiliate'}
+                        </div>
                         <div className="card__body">
                             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <div className="form-group">
@@ -208,8 +215,8 @@ export default function AffiliatesPage() {
                                     />
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
-                                    <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn--outline btn--sm">Cancel</button>
-                                    <button type="submit" className="btn btn--primary btn--sm px-6">{editingAffiliate ? 'Update' : 'Create'}</button>
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn--secondary flex-1">Cancel</button>
+                                    <button type="submit" className="btn btn--primary flex-1">{editingAffiliate ? 'Save Changes' : 'Create Affiliate'}</button>
                                 </div>
                             </form>
                         </div>

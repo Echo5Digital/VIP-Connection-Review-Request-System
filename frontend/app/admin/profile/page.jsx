@@ -19,11 +19,6 @@ export default function SettingsPage() {
         }
     });
 
-    const [passwordForm, setPasswordForm] = useState({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-    });
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -63,32 +58,15 @@ export default function SettingsPage() {
         }
     }
 
-    async function handlePasswordSubmit(e) {
-        e.preventDefault();
-        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-            setStatus({ type: 'error', message: 'New passwords do not match' });
-            return;
-        }
-        setSaving(true);
-        try {
-            await api.post('/api/auth/change-password', passwordForm);
-            setStatus({ type: 'success', message: 'Password changed successfully!' });
-            setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        } catch (err) {
-            setStatus({ type: 'error', message: err.message || 'Failed to change password' });
-        } finally {
-            setSaving(false);
-        }
-    }
 
     if (loading) return <p className="card__empty" style={{ padding: '48px' }}>Loading settings...</p>;
 
     return (
-        <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
-            <h1 className="page-title">System Settings</h1>
+        <div>
+            <h1 className="page-title">Profile Settings</h1>
 
             {status.message && (
-                <div className={status.type === 'success' ? 'form-success' : 'form-error'} style={{ marginBottom: '24px', padding: '12px', border: '1px solid currentColor', borderRadius: '6px', background: status.type === 'success' ? 'var(--success-50)' : 'var(--red-50)' }}>
+                <div className={status.type === 'success' ? 'form-success mb-6' : 'form-error mb-6'}>
                     {status.message}
                 </div>
             )}
@@ -161,7 +139,11 @@ export default function SettingsPage() {
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                                 <input
                                     type="color"
-                                    style={{ width: '60px', height: '40px', padding: '2px', borderRadius: '4px', border: '1px solid var(--gray-300)' }}
+                                    style={{
+                                        width: '60px', height: '40px', padding: '2px',
+                                        borderRadius: '8px', border: '1px solid var(--border-dim)',
+                                        background: 'var(--bg-deep)', cursor: 'pointer'
+                                    }}
                                     value={settings.branding.themeColors.primary}
                                     onChange={(e) => setSettings({
                                         ...settings,
@@ -174,7 +156,7 @@ export default function SettingsPage() {
                                 <input
                                     type="text"
                                     className="form-control"
-                                    style={{ maxWidth: '120px' }}
+                                    style={{ maxWidth: '140px' }}
                                     value={settings.branding.themeColors.primary}
                                     onChange={(e) => setSettings({
                                         ...settings,
@@ -189,57 +171,12 @@ export default function SettingsPage() {
                     </div>
                 </section>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <button type="submit" disabled={saving} className="btn btn--primary" style={{ padding: '12px 32px', fontSize: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
+                    <button type="submit" disabled={saving} className="btn btn--primary" style={{ padding: '0 40px', height: '48px', fontSize: '15px', borderRadius: '12px' }}>
                         {saving ? 'Saving...' : 'Save All Settings'}
                     </button>
                 </div>
             </form>
-
-            <div style={{ height: '40px' }}></div>
-            <hr style={{ border: 'none', borderTop: '1px solid var(--gray-200)', margin: '40px 0' }} />
-
-            {/* Password Management */}
-            <section className="card" style={{ maxWidth: '480px' }}>
-                <div className="card__header">Security / Change Password</div>
-                <div className="card__body">
-                    <form onSubmit={handlePasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div className="form-group">
-                            <label className="form-label">Current Password</label>
-                            <input
-                                type="password"
-                                className="form-control"
-                                required
-                                value={passwordForm.currentPassword}
-                                onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">New Password</label>
-                            <input
-                                type="password"
-                                className="form-control"
-                                required
-                                value={passwordForm.newPassword}
-                                onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Confirm New Password</label>
-                            <input
-                                type="password"
-                                className="form-control"
-                                required
-                                value={passwordForm.confirmPassword}
-                                onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                            />
-                        </div>
-                        <button type="submit" disabled={saving} className="btn btn--outline" style={{ marginTop: '8px' }}>
-                            Update Password
-                        </button>
-                    </form>
-                </div>
-            </section>
         </div>
     );
 }

@@ -12,7 +12,7 @@ export default async function RedirectsPage({ searchParams }) {
   return (
     <div>
       <h1 className="page-title">Redirect Tracking</h1>
-      <p className="text-muted text-sm mb-4">
+      <p className="text-muted text-sm mb-6">
         Clicks on tracking links (when &quot;Track redirects&quot; is enabled when sending reviews).
         Each hit is logged before redirecting to the rating page.
       </p>
@@ -35,7 +35,7 @@ export default async function RedirectsPage({ searchParams }) {
               <tbody>
                 {events.map((e) => (
                   <tr key={e._id}>
-                    <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{e.redirectId}</td>
+                    <td style={{ fontFamily: 'monospace', color: 'var(--accent)' }}>{e.redirectId}</td>
                     <td className="text-muted text-sm">
                       {new Date(e.hitAt).toLocaleString('en-US', {
                         month: '2-digit',

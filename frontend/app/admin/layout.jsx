@@ -82,18 +82,9 @@ const nav = [
     ),
   },
   {
-    href: '/admin/profile',
-    label: 'Settings',
-    icon: (
-      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-      </svg>
-    ),
-  },
-  {
-    href: '/admin/clients',
+    href: '/admin/users',
     label: 'Users',
+
     icon: (
       <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -104,6 +95,16 @@ const nav = [
     ),
   },
 
+  {
+    href: '/admin/profile',
+    label: 'Settings',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </svg>
+    ),
+  },
 ];
 
 export default function AdminLayout({ children }) {
@@ -130,24 +131,6 @@ export default function AdminLayout({ children }) {
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isProfileMenuOpen]);
-
-  // Apply dynamic branding
-  useEffect(() => {
-    async function applyBranding() {
-      try {
-        const settings = await api.get('/api/settings');
-        if (settings?.branding?.themeColors?.primary) {
-          const primaryColor = settings.branding.themeColors.primary;
-          document.documentElement.style.setProperty('--blue-500', primaryColor);
-          document.documentElement.style.setProperty('--primary-600', primaryColor);
-          // Also derived colors could be calculated here, but for now we apply the primary.
-        }
-      } catch (err) {
-        console.error('Failed to apply branding', err);
-      }
-    }
-    applyBranding();
-  }, []);
 
   const pageTitle = useMemo(() => {
     if (pathname?.startsWith('/admin/dashboard')) return 'Dashboard';
@@ -176,7 +159,9 @@ export default function AdminLayout({ children }) {
   return (
     <div className="admin-shell">
       <aside className={`admin-shell__sidebar${isSidebarOpen ? ' admin-shell__sidebar--open' : ''}`}>
-        <div className="admin-shell__brand">VIP Connection</div>
+        <div className="admin-shell__brand">
+          VIP <span>CONNECTION</span>
+        </div>
         <nav className="admin-shell__nav">
           {nav.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
@@ -199,7 +184,7 @@ export default function AdminLayout({ children }) {
       <div className="admin-shell__content">
         <header className="admin-shell__header">
           <button type="button" className="admin-shell__menu-btn" onClick={() => setIsSidebarOpen((v) => !v)} aria-label="Toggle menu">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
@@ -207,34 +192,15 @@ export default function AdminLayout({ children }) {
           <h1 className="admin-shell__title">{pageTitle}</h1>
 
           <div className="admin-shell__spacer" />
-          <div className="admin-shell__profile-menu" ref={profileMenuRef}>
-            <button
-              type="button"
-              className="admin-shell__profile-trigger"
-              title="Admin Menu"
-              onClick={() => setIsProfileMenuOpen((v) => !v)}
-            >
-              <span>Admin</span>
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4">
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
-            {isProfileMenuOpen && (
-              <div className="admin-shell__profile-dropdown">
-                <Link href="/admin/profile" className="admin-shell__profile-item">
-                  Settings
-                </Link>
-                <button
-                  type="button"
-                  className="admin-shell__profile-item admin-shell__profile-item--danger"
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                >
-                  {isLoggingOut ? 'Logging out...' : 'Logout'}
-                </button>
-              </div>
-            )}
-          </div>
+
+          <button
+            type="button"
+            className="btn btn--secondary btn--sm"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? 'Logging out...' : 'Logout'}
+          </button>
         </header>
 
         <main className="admin-shell__main">{children}</main>

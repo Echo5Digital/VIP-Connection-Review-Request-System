@@ -5,6 +5,7 @@ const adminSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true, minlength: 8, maxlength: 120, select: false },
   name: { type: String, default: '' },
+  active: { type: Boolean, default: true },
 }, { timestamps: true });
 
 adminSchema.pre('save', async function (next) {

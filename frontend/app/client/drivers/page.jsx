@@ -400,58 +400,54 @@ export default function DriversPage() {
         <div style={{ display: 'flex', gap: '12px' }}>
           {selectedIds.size > 0 && (
             <button
-              onClick={() => {
-                console.log('Bulk delete clicked', selectedIds);
-                handleBulkDelete();
-              }}
-              className="btn btn--sm"
-              style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none' }}
+              onClick={handleBulkDelete}
+              className="btn btn--danger btn--sm"
             >
               Delete Selected ({selectedIds.size})
             </button>
           )}
-          <button onClick={handleDownload} className="btn btn--outline" style={{ borderRadius: '6px', fontWeight: 500, fontSize: '13px', padding: '8px 16px' }}>
+          <button onClick={handleDownload} className="btn btn--secondary btn--sm">
             Download Excel
           </button>
-          <button onClick={openAddModal} className="btn btn--primary" style={{ borderRadius: '6px', fontWeight: 500, fontSize: '13px', padding: '8px 16px' }}>
-            Add Driver
+          <button onClick={openAddModal} className="btn btn--primary btn--sm">
+            + Add Driver
           </button>
         </div>
       </div>
 
       {/* Messages */}
-      {error && <div className="form-error mb-4" style={{ padding: '12px', borderRadius: '4px' }}>{error}</div>}
-      {success && <div style={{ color: 'var(--success-600)', background: 'var(--success-50)', padding: '12px', borderRadius: '4px', marginBottom: '16px', fontSize: '14px' }}>{success}</div>}
+      {error && <div className="form-error mb-4">{error}</div>}
+      {success && <div className="form-success mb-4">{success}</div>}
 
       {/* Upload section */}
       <div className="card mb-6">
         <div className="card__header">Upload Drivers File</div>
-        <div style={{ padding: '24px' }}>
+        <div className="card__body">
           <p className="text-muted text-sm mb-6">
             Upload a .csv or .xlsx file. New records will be appended. Existing VIP Car # will be skipped.
           </p>
-          <form onSubmit={handleFileUpload} style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <form onSubmit={handleFileUpload} style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ position: 'relative', display: 'inline-block' }}>
               <input
                 ref={inputRef}
                 type="file"
                 id="driver-file"
                 accept=".csv,.xlsx"
+                className="file-input-hidden"
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
                 style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
               />
               <label
                 htmlFor="driver-file"
-                className="btn btn--outline"
-                style={{ display: 'inline-block', cursor: 'pointer', borderRadius: '4px', background: '#f8f9fb' }}
+                className="btn btn--secondary"
               >
                 Choose File
               </label>
             </div>
-            <span style={{ fontSize: '13px', color: 'var(--gray-500)', margin: '0 12px' }}>
+            <span className="text-muted" style={{ fontSize: '13px', margin: '0 12px' }}>
               {file ? file.name : 'No file chosen'}
             </span>
-            <button type="submit" disabled={uploading} className="btn btn--primary" style={{ borderRadius: '4px' }}>
+            <button type="submit" disabled={uploading} className="btn btn--primary">
               {uploading ? 'Uploading...' : 'Upload Drivers'}
             </button>
           </form>
@@ -461,8 +457,8 @@ export default function DriversPage() {
       <div className="card">
         <div className="card__header">Drivers &amp; Vehicles</div>
 
-        {/* Filters Section Integrated */}
-        <div style={{ padding: '16px', borderBottom: '1px solid var(--gray-200)', background: '#fcfcfd' }}>
+        {/* Filters Section */}
+        <div className="card__filters" style={{ padding: '20px', borderBottom: '1px solid var(--border-dim)', background: 'rgba(255,255,255,0.02)' }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -470,7 +466,7 @@ export default function DriversPage() {
             gap: '16px',
             flexWrap: 'wrap'
           }}>
-            <div style={{ display: 'flex', gap: '24px', flex: 1, minWidth: '300px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '20px', flex: 1, minWidth: '300px', flexWrap: 'wrap', alignItems: 'center' }}>
               {/* SearchBar */}
               <div style={{ flex: 1, maxWidth: '600px', position: 'relative' }}>
                 <input
@@ -480,19 +476,12 @@ export default function DriversPage() {
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
-                    setCurrentPage(1); // Reset to first page on search
+                    setCurrentPage(1);
                   }}
-                  style={{
-                    paddingLeft: '40px',
-                    height: '40px',
-                    borderRadius: '8px',
-                    borderColor: '#cfe1d4',
-                    fontSize: '14px',
-                    width: '100%'
-                  }}
+                  style={{ paddingLeft: '40px' }}
                 />
-                <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--blue-500)' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                   </svg>
@@ -500,23 +489,13 @@ export default function DriversPage() {
               </div>
 
               {/* Vehicle Type Filter */}
-              <div style={{ minWidth: '180px', position: 'relative', marginLeft: 'auto' }}>
+              <div style={{ minWidth: '200px', position: 'relative' }}>
                 <select
                   className="form-control"
                   value={filterType}
                   onChange={(e) => {
                     setFilterType(e.target.value);
-                    setCurrentPage(1); // Reset to first page on filter
-                  }}
-                  style={{
-                    height: '40px',
-                    borderRadius: '8px',
-                    background: '#f4f8f4',
-                    border: 'none',
-                    paddingRight: '36px',
-                    appearance: 'none',
-                    fontWeight: 600,
-                    color: '#2f493b'
+                    setCurrentPage(1);
                   }}
                 >
                   <option value="">All Vehicle Types</option>
@@ -528,14 +507,13 @@ export default function DriversPage() {
                   <option value="Luxury Sedan">Luxury Sedan</option>
                   <option value="Van">Van</option>
                 </select>
-                <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#577162' }}>
+                <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }}>
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                     <path d="M6 9l6 6 6-6" />
                   </svg>
                 </span>
               </div>
 
-              {/* Reset Button */}
               {(searchTerm || filterType) && (
                 <button
                   onClick={() => {
@@ -544,41 +522,27 @@ export default function DriversPage() {
                     setCurrentPage(1);
                   }}
                   className="btn btn--text btn--sm"
-                  style={{ color: 'var(--gray-500)', fontWeight: 500 }}
                 >
                   Reset Filters
                 </button>
               )}
             </div>
-
-            {selectedIds.size > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span className="text-sm font-medium" style={{ color: 'var(--primary-600)' }}>
-                  {selectedIds.size} selected
-                </span>
-                <button
-                  onClick={() => setSelectedIds(new Set())}
-                  className="btn btn--text btn--sm"
-                >
-                  Clear Selection
-                </button>
-              </div>
-            )}
           </div>
         </div>
+
         {loading ? (
-          <p className="card__empty">Loading drivers...</p>
+          <div className="card__empty" style={{ padding: '60px' }}>
+            <div className="page-loader" style={{ position: 'static', background: 'none' }}>Loading drivers...</div>
+          </div>
         ) : drivers.length === 0 ? (
-          <p className="card__empty">No drivers found. Upload a file or add manually.</p>
-        ) : filteredDrivers.length === 0 ? (
-          <p className="card__empty">No drivers match your search.</p>
+          <p className="card__empty">No drivers found.</p>
         ) : (
           <>
             <div className="table-wrap" ref={tableTopRef}>
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th style={{ width: '40px' }}>
+                    <th style={{ width: '56px', textAlign: 'center' }}>
                       <input
                         type="checkbox"
                         checked={isAllSelected}
@@ -591,55 +555,42 @@ export default function DriversPage() {
                     <th>Make</th>
                     <th>Model</th>
                     <th>Type</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th style={{ textAlign: 'right', paddingRight: '24px' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredDrivers.map((driver) => (
                     <tr key={driver._id} className={selectedIds.has(driver._id) ? 'row-selected' : ''}>
-                      <td>
+                      <td style={{ textAlign: 'center' }}>
                         <input
                           type="checkbox"
                           checked={selectedIds.has(driver._id)}
                           onChange={() => toggleSelectRow(driver._id)}
-                          style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--blue-500)' }}
                         />
                       </td>
-                      <td>{driver.vipCarNum}</td>
-                      <td style={{ fontWeight: 500 }}>{driver.name}</td>
-                      <td>{driver.carYear || 'â€”'}</td>
-                      <td>{driver.carMake || 'â€”'}</td>
-                      <td>{driver.carModel || 'â€”'}</td>
-                      <td>{driver.vehicleType || 'â€”'}</td>
-                      <td style={{ textAlign: 'right' }}>
+                      <td style={{ fontWeight: 600, color: 'var(--accent)' }}>{driver.vipCarNum}</td>
+                      <td style={{ fontWeight: 600 }}>{driver.name}</td>
+                      <td>{driver.carYear || '—'}</td>
+                      <td>{driver.carMake || '—'}</td>
+                      <td>{driver.carModel || '—'}</td>
+                      <td>
+                        <span className="badge badge--gold">{driver.vehicleType || '—'}</span>
+                      </td>
+                      <td style={{ textAlign: 'right', paddingRight: '24px' }}>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                           <button
                             onClick={() => openEditModal(driver)}
-                            className="btn btn--sm"
-                            style={{
-                              background: '#f4f8f4',
-                              color: '#486050',
-                              border: '1px solid #e2ece3',
-                              padding: '4px 12px',
-                              borderRadius: '4px',
-                              fontWeight: 600
-                            }}
+                            className="btn btn--icon"
+                            title="Edit"
                           >
-                            Edit
+                            ✎
                           </button>
                           <button
                             onClick={() => handleDelete(driver._id)}
-                            className="btn btn--sm"
-                            style={{
-                              background: '#fef2f2',
-                              color: '#dc2626',
-                              border: '1px solid #fee2e2',
-                              padding: '4px 12px',
-                              borderRadius: '4px',
-                              fontWeight: 600
-                            }}
+                            className="btn btn--icon text-danger"
+                            title="Delete"
                           >
-                            Delete
+                            ✕
                           </button>
                         </div>
                       </td>
@@ -649,83 +600,66 @@ export default function DriversPage() {
               </table>
             </div>
 
-            {/* Pagination UI */}
-            <div style={{
-              padding: '16px 24px',
-              borderTop: '1px solid var(--gray-100)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '16px',
-              flexWrap: 'wrap',
-              background: '#fff'
-            }}>
-              <div style={{ fontSize: '14px', color: 'var(--gray-600)' }}>
-                Showing <span style={{ fontWeight: 600, color: 'var(--gray-900)' }}>{(currentPage - 1) * limit + 1}</span> to <span style={{ fontWeight: 600, color: 'var(--gray-900)' }}>{Math.min(currentPage * limit, totalRecords)}</span> of <span style={{ fontWeight: 600, color: 'var(--gray-900)' }}>{totalRecords}</span> records
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => changePage(Math.max(1, currentPage - 1))}
-                  className="btn btn--sm btn--outline"
-                  style={{ borderRadius: '6px', minWidth: '80px' }}
-                >
-                  Previous
-                </button>
-
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  {[...Array(totalPages)].map((_, i) => {
-                    const pageNum = i + 1;
-                    if (
-                      pageNum === 1 ||
-                      pageNum === totalPages ||
-                      (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                    ) {
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => changePage(pageNum)}
-                          style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '6px',
-                            border: '1px solid',
-                            borderColor: currentPage === pageNum ? 'var(--blue-600)' : 'var(--gray-200)',
-                            background: currentPage === pageNum ? 'var(--blue-600)' : 'transparent',
-                            color: currentPage === pageNum ? '#fff' : 'var(--gray-700)',
-                            fontWeight: 600,
-                            fontSize: '13px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.2s'
-                          }}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    } else if (
-                      pageNum === currentPage - 2 ||
-                      pageNum === currentPage + 2
-                    ) {
-                      return <span key={pageNum} style={{ padding: '0 4px', color: 'var(--gray-400)' }}>...</span>;
-                    }
-                    return null;
-                  })}
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="card__footer" style={{
+                padding: '16px 24px',
+                borderTop: '1px solid var(--border-dim)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div className="text-muted text-sm">
+                  Showing <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{(currentPage - 1) * limit + 1}</span> to <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{Math.min(currentPage * limit, totalRecords)}</span> of <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{totalRecords}</span> records
                 </div>
 
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
-                  className="btn btn--sm btn--outline"
-                  style={{ borderRadius: '6px', minWidth: '80px' }}
-                >
-                  Next
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => changePage(Math.max(1, currentPage - 1))}
+                    className="btn btn--secondary btn--sm"
+                  >
+                    Previous
+                  </button>
+
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {[...Array(totalPages)].map((_, i) => {
+                      const pageNum = i + 1;
+                      if (
+                        pageNum === 1 ||
+                        pageNum === totalPages ||
+                        (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                      ) {
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => changePage(pageNum)}
+                            className={`btn btn--sm ${currentPage === pageNum ? 'btn--primary' : 'btn--secondary'}`}
+                            style={{ minWidth: '32px', padding: 0 }}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      } else if (
+                        pageNum === currentPage - 2 ||
+                        pageNum === currentPage + 2
+                      ) {
+                        return <span key={pageNum} style={{ padding: '0 4px', color: 'var(--text-muted)' }}>...</span>;
+                      }
+                      return null;
+                    })}
+                  </div>
+
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
+                    className="btn btn--secondary btn--sm"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
       </div>
@@ -733,14 +667,18 @@ export default function DriversPage() {
       {/* Add/Edit Modal */}
       {isModalOpen && (
         <div className="modal-overlay" style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
-          alignItems: 'center', justifyContent: 'center', zIndex: 1000
+          position: 'fixed', inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+          backdropFilter: 'blur(8px)'
         }}>
-          <div className="card" style={{ width: '100%', maxWidth: '500px', margin: '16px' }}>
-            <div className="card__header">{editingDriver ? 'Edit Driver' : 'Add New Driver'}</div>
-            <form onSubmit={handleFormSubmit} style={{ padding: '16px' }}>
-              <div className="form-group mb-4">
+          <div className="card" style={{ width: '100%', maxWidth: '540px', margin: '16px', border: '1px solid var(--border-dim)' }}>
+            <div className="card__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>{editingDriver ? 'Edit Driver' : 'Add New Driver'}</span>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '20px' }}>✕</button>
+            </div>
+            <form onSubmit={handleFormSubmit} className="card__body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div className="form-group">
                 <label className="form-label">VIP Car #</label>
                 <input
                   type="text"
@@ -750,7 +688,7 @@ export default function DriversPage() {
                   onChange={e => setFormData({ ...formData, vipCarNum: e.target.value })}
                 />
               </div>
-              <div className="form-group mb-4">
+              <div className="form-group">
                 <label className="form-label">Driver Name</label>
                 <input
                   type="text"
@@ -760,7 +698,7 @@ export default function DriversPage() {
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }} className="mb-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div className="form-group">
                   <label className="form-label">Car Make</label>
                   <input
@@ -780,7 +718,7 @@ export default function DriversPage() {
                   />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }} className="mb-6">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div className="form-group">
                   <label className="form-label">Car Year</label>
                   <input
@@ -808,31 +746,21 @@ export default function DriversPage() {
                   </select>
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn--outline">Cancel</button>
-                <button type="submit" className="btn btn--primary">{editingDriver ? 'Update' : 'Add'} Driver</button>
+
+              {error && <div className="form-error">{error}</div>}
+
+              <div style={{ marginTop: '12px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn--secondary">
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn--primary px-8">
+                  {editingDriver ? 'Update Driver' : 'Save Driver'}
+                </button>
               </div>
             </form>
           </div>
         </div>
-      )
-      }
-
-      <style jsx>{`
-        .modal-overlay {
-          animation: fadeIn 0.1s ease-out;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .row-selected {
-          background-color: var(--primary-50);
-        }
-        .data-table tr.row-selected:hover {
-          background-color: var(--primary-100);
-        }
-      `}</style>
-    </div >
+      )}
+    </div>
   );
 }

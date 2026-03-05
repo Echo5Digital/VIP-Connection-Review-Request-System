@@ -6,21 +6,27 @@ import { ManifestUpload } from '@/app/admin/manifest/ManifestUpload';
 import { formatPickupDateTime, formatPickupDateTimeFromParts } from '@/lib/pickupDateTime';
 
 const OVERLAY_STYLE = {
-  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
   display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+  backdropFilter: 'blur(8px)',
 };
 const MODAL_STYLE = {
-  background: '#fff', borderRadius: '10px', padding: '28px 32px',
-  width: '100%', maxWidth: '560px', maxHeight: '90vh', overflowY: 'auto',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+  background: 'var(--bg-section)', borderRadius: 'var(--radius-lg)', padding: '32px',
+  width: '100%', maxWidth: '1000px', maxHeight: '95vh', overflowY: 'auto',
+  border: '1px solid var(--border-dim)',
+  boxShadow: 'var(--shadow-lg)',
 };
 const FIELD_STYLE = {
-  width: '100%', height: '36px', borderRadius: '6px',
-  border: '1px solid #cfe1d4', padding: '0 10px', fontSize: '14px',
+  width: '100%', height: '42px', borderRadius: 'var(--radius-md)',
+  border: '1px solid var(--border-dim)', padding: '0 12px', fontSize: '14px',
   boxSizing: 'border-box',
+  background: 'var(--bg-deep)',
+  color: 'var(--text-main)',
+  outline: 'none',
+  transition: 'border-color 0.2s ease',
 };
-const LABEL_STYLE = { display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '4px' };
-const FORM_FIELD_WRAP_STYLE = { marginBottom: '14px' };
+const LABEL_STYLE = { display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' };
+const FORM_FIELD_WRAP_STYLE = { marginBottom: '20px' };
 
 const REQUIRED_REVIEW_FIELDS = [
   'ResNumber',
@@ -457,9 +463,25 @@ export default function ManifestEntriesView({ role = 'admin' }) {
   }
 
   return (
-    <div style={{ maxWidth: '100%', margin: '0 auto', padding: '24px' }}>
+    <div style={{ maxWidth: '100%', margin: '0 auto', padding: 'var(--page-padding)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 className="page-title" style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Trips</h1>
+        <h1 className="page-title" style={{ margin: 0 }}>Trips</h1>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={handleDownload}
+            className="btn btn--secondary"
+          >
+            Download Excel
+          </button>
+          {canManageEntries && (
+            <button
+              onClick={openCreateModal}
+              className="btn btn--primary"
+            >
+              Add Trip Entry
+            </button>
+          )}
+        </div>
       </div>
 
       {canUpload && <ManifestUpload onUploadSuccess={handleUploadSuccess} />}
@@ -468,15 +490,15 @@ export default function ManifestEntriesView({ role = 'admin' }) {
         <div
           ref={entryFormRef}
           className="card manifest-entry-inline-card"
-          style={{ background: '#e3f2e8', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px', border: '1px solid #bddbc7' }}
+          style={{ marginBottom: '24px' }}
         >
-          <div className="card__header manifest-entry-inline-card__header" style={{ padding: '16px 24px', borderBottom: '1px solid #bddbc7', background: '#d7ebdf', fontWeight: '600' }}>
-            {modal.mode === 'create' ? 'Add Entry' : 'Edit Entry'}
+          <div className="card__header manifest-entry-inline-card__header">
+            {modal.mode === 'create' ? 'Add New Trip Entry' : 'Edit Trip Entry'}
           </div>
-          <form onSubmit={handleModalSubmit} className="manifest-entry-inline-card__body" style={{ padding: '16px 24px 20px' }}>
+          <form onSubmit={handleModalSubmit} className="card__body">
             <div style={FORM_FIELD_WRAP_STYLE}>
               <label style={LABEL_STYLE}>
-                Manifest {modal.mode === 'create' && <span style={{ color: '#dc2626' }}>*</span>}
+                Select Manifest {modal.mode === 'create' && <span style={{ color: 'var(--danger)' }}>*</span>}
               </label>
               {modal.mode === 'create' ? (
                 <select
@@ -485,40 +507,43 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                   style={{ ...FIELD_STYLE }}
                   required
                 >
-                  <option value="">- Select manifest -</option>
+                  <option value="">- Choose manifest -</option>
                   {manifests.map(m => (
                     <option key={m._id} value={m._id}>{m.name}</option>
                   ))}
                 </select>
               ) : (
-                <div style={{ ...FIELD_STYLE, background: '#f4f8f4', color: '#577162', display: 'flex', alignItems: 'center' }}>
+                <div style={{ ...FIELD_STYLE, background: 'var(--bg-section)', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
                   {modal.entry?.manifestId?.name || 'Unknown'}
                 </div>
               )}
             </div>
 
             <div className="manifest-entry-grid">
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Passenger First Name"><input type="text" value={form.extra?.PassengerFirstName || ''} onChange={e => setExtraField('PassengerFirstName', e.target.value)} style={FIELD_STYLE} placeholder="First Name" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Passenger Last Name"><input type="text" value={form.extra?.PassengerLastName || ''} onChange={e => setExtraField('PassengerLastName', e.target.value)} style={FIELD_STYLE} placeholder="Last Name" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Passenger Phone (Cell)"><input type="text" value={form.extra?.PassengerCellPhoneNumber || ''} onChange={e => setExtraField('PassengerCellPhoneNumber', e.target.value)} style={FIELD_STYLE} placeholder="Cell Phone" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Passenger Email"><input type="email" value={form.extra?.PassengerEmailAddress || ''} onChange={e => setExtraField('PassengerEmailAddress', e.target.value)} style={FIELD_STYLE} placeholder="Email Address" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Passenger Name (Full)"><input type="text" value={form.name || ''} onChange={e => setField('name', e.target.value)} style={FIELD_STYLE} placeholder="Full name" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Mapped Phone"><input type="text" value={form.phone || ''} onChange={e => setField('phone', e.target.value)} style={FIELD_STYLE} placeholder="+1 555 000 0000" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Mapped Email"><input type="email" value={form.email || ''} onChange={e => setField('email', e.target.value)} style={FIELD_STYLE} placeholder="email@example.com" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Status"><input type="text" value={form.status || ''} onChange={e => setField('status', e.target.value)} style={FIELD_STYLE} placeholder="Pending" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Date"><input type="date" value={form.pickupDate || ''} onChange={e => setField('pickupDate', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Time"><input type="text" value={form.pickupTime || ''} onChange={e => setField('pickupTime', e.target.value)} style={FIELD_STYLE} placeholder="e.g. 08:30 AM" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Address"><input type="text" value={form.pickupAddress || ''} onChange={e => setField('pickupAddress', e.target.value)} style={FIELD_STYLE} placeholder="Pickup Address" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dropoff Address"><input type="text" value={form.dropoffAddress || ''} onChange={e => setField('dropoffAddress', e.target.value)} style={FIELD_STYLE} placeholder="Dropoff Address" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Pricing Zone"><input type="text" value={form.extra?.PickupPricingZone || ''} onChange={e => setExtraField('PickupPricingZone', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dropoff Pricing Zone"><input type="text" value={form.extra?.DropoffPricingZone || ''} onChange={e => setExtraField('DropoffPricingZone', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="First Name"><input type="text" value={form.extra?.PassengerFirstName || ''} onChange={e => setExtraField('PassengerFirstName', e.target.value)} style={FIELD_STYLE} placeholder="e.g. John" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Last Name"><input type="text" value={form.extra?.PassengerLastName || ''} onChange={e => setExtraField('PassengerLastName', e.target.value)} style={FIELD_STYLE} placeholder="e.g. Doe" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Cell Phone"><input type="text" value={form.extra?.PassengerCellPhoneNumber || ''} onChange={e => setExtraField('PassengerCellPhoneNumber', e.target.value)} style={FIELD_STYLE} placeholder="+1..." /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Email Address"><input type="email" value={form.extra?.PassengerEmailAddress || ''} onChange={e => setExtraField('PassengerEmailAddress', e.target.value)} style={FIELD_STYLE} placeholder="email@example.com" /></FormField></div>
+
+              <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-dim)', paddingTop: '20px', marginTop: '4px', marginBottom: '20px' }}>
+                <div className="widget-subhead">Trip Details</div>
+              </div>
+
               <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Res Number"><input type="text" value={form.extra?.ResNumber || ''} onChange={e => setExtraField('ResNumber', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Customer Code"><input type="text" value={form.extra?.CustomerCode || ''} onChange={e => setExtraField('CustomerCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Customer Name"><input type="text" value={form.extra?.CustomerName || ''} onChange={e => setExtraField('CustomerName', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="On Location Date/Time"><input type="text" value={form.extra?.OnLocationDateTime || ''} onChange={e => setExtraField('OnLocationDateTime', e.target.value)} style={FIELD_STYLE} placeholder="YYYY-MM-DD HH:mm:ss" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Passenger On Board Date/Time"><input type="text" value={form.extra?.PassengerOnBoardDateTime || ''} onChange={e => setExtraField('PassengerOnBoardDateTime', e.target.value)} style={FIELD_STYLE} placeholder="YYYY-MM-DD HH:mm:ss" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Date"><input type="date" value={form.pickupDate || ''} onChange={e => setField('pickupDate', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Time"><input type="text" value={form.pickupTime || ''} onChange={e => setField('pickupTime', e.target.value)} style={FIELD_STYLE} placeholder="HH:MM AM/PM" /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Address"><input type="text" value={form.pickupAddress || ''} onChange={e => setField('pickupAddress', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dropoff Address"><input type="text" value={form.dropoffAddress || ''} onChange={e => setField('dropoffAddress', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Vehicle Type"><input type="text" value={form.extra?.DispatchVehicleTypeCode || ''} onChange={e => setExtraField('DispatchVehicleTypeCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+
+              <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-dim)', paddingTop: '20px', marginTop: '4px', marginBottom: '20px' }}>
+                <div className="widget-subhead">Dispatch & Status</div>
+              </div>
+
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Driver Name"><input type="text" value={form.extra?.DispatchDriverName || ''} onChange={e => setExtraField('DispatchDriverName', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Vehicle Code"><input type="text" value={form.extra?.DispatchVehicleCode || ''} onChange={e => setExtraField('DispatchVehicleCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
               <div style={FORM_FIELD_WRAP_STYLE}>
-                <FormField label="Segment Status Code">
+                <FormField label="Status">
                   <select
                     value={form.extra?.SegmentStatusCode || ''}
                     onChange={e => setExtraField('SegmentStatusCode', e.target.value)}
@@ -528,123 +553,58 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                     {SEGMENT_STATUS_OPTIONS.map((option) => (
                       <option key={option} value={option}>{option}</option>
                     ))}
-                    {form.extra?.SegmentStatusCode && !SEGMENT_STATUS_OPTIONS.includes(form.extra.SegmentStatusCode) && (
-                      <option value={form.extra.SegmentStatusCode}>{form.extra.SegmentStatusCode}</option>
-                    )}
                   </select>
                 </FormField>
               </div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Segment Total"><input type="text" value={form.extra?.SegmentTotal || ''} onChange={e => setExtraField('SegmentTotal', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-
-              <div style={{ gridColumn: '1 / -1', fontSize: '13px', fontWeight: '600', color: '#111827', margin: '4px 0 8px', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>
-                Dispatch Info
-              </div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dispatch Driver Code"><input type="text" value={form.extra?.DispatchDriverCode || ''} onChange={e => setExtraField('DispatchDriverCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dispatch Driver Name"><input type="text" value={form.extra?.DispatchDriverName || ''} onChange={e => setExtraField('DispatchDriverName', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dispatch Vehicle Code"><input type="text" value={form.extra?.DispatchVehicleCode || ''} onChange={e => setExtraField('DispatchVehicleCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dispatch Driver Phone"><input type="text" value={form.extra?.DispatchDriverPhoneNumber || ''} onChange={e => setExtraField('DispatchDriverPhoneNumber', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dispatch Vehicle Type Code"><input type="text" value={form.extra?.DispatchVehicleTypeCode || ''} onChange={e => setExtraField('DispatchVehicleTypeCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-
-              <div style={{ gridColumn: '1 / -1', fontSize: '13px', fontWeight: '600', color: '#111827', margin: '4px 0 8px', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px' }}>
-                Contact Info
-              </div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Contact First Name"><input type="text" value={form.extra?.ContactFirstName || ''} onChange={e => setExtraField('ContactFirstName', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Contact Last Name"><input type="text" value={form.extra?.ContactLastName || ''} onChange={e => setExtraField('ContactLastName', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Contact Email"><input type="email" value={form.extra?.ContactEmailAddress || ''} onChange={e => setExtraField('ContactEmailAddress', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Contact Phone"><input type="text" value={form.extra?.ContactPhoneNumber || ''} onChange={e => setExtraField('ContactPhoneNumber', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-
-              {modal.mode === 'edit' && Object.keys(form.extra || {}).length > 0 && (
-                <div style={{ ...FORM_FIELD_WRAP_STYLE, gridColumn: '1 / -1' }}>
-                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#6b7280', marginBottom: '10px', borderTop: '1px solid #e5e7eb', paddingTop: '14px' }}>
-                    Additional Fields
-                  </div>
-                  <div className="manifest-entry-grid manifest-entry-grid--nested">
-                    {Object.keys(form.extra).map(key => (
-                      <div key={key} style={FORM_FIELD_WRAP_STYLE}>
-                        <FormField label={key}>
-                          <input
-                            type="text"
-                            value={form.extra[key] || ''}
-                            onChange={e => setExtraField(key, e.target.value)}
-                            style={FIELD_STYLE}
-                          />
-                        </FormField>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {modalError && (
-                <div style={{ gridColumn: '1 / -1', color: '#dc2626', fontSize: '13px', marginBottom: '16px', padding: '8px 12px', background: '#fef2f2', borderRadius: '6px', border: '1px solid #fecaca' }}>
+                <div style={{ gridColumn: '1 / -1', color: 'var(--danger)', fontSize: '13px', marginBottom: '16px', padding: '12px', background: 'rgba(153, 27, 27, 0.1)', borderRadius: 'var(--radius-md)', border: '1px solid var(--danger)' }}>
                   {modalError}
                 </div>
               )}
             </div>
 
-            <div className="manifest-entry-inline-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '4px' }}>
+            <div className="manifest-entry-inline-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '20px', borderTop: '1px solid var(--border-dim)', marginTop: '20px' }}>
               <button
                 type="button"
                 onClick={closeModal}
                 disabled={modalLoading}
-                style={{ padding: '10px 18px', borderRadius: '6px', border: '1px solid #cfe1d4', background: '#f8fafc', color: '#374151', cursor: 'pointer', fontSize: '14px' }}
+                className="btn btn--secondary"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={modalLoading}
-                style={{ padding: '10px 20px', borderRadius: '6px', border: 'none', background: '#1d7149', color: '#fff', cursor: modalLoading ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '500', opacity: modalLoading ? 0.7 : 1 }}
+                className="btn btn--primary"
               >
-                {modalLoading ? 'Saving...' : (modal.mode === 'edit' ? 'Apply Changes' : 'Add Entry')}
+                {modalLoading ? 'Saving...' : (modal.mode === 'edit' ? 'Update Entry' : 'Create Entry')}
               </button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="card" style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <div className="card__header" style={{ padding: '16px 24px', borderBottom: '1px solid #e2ece3', fontWeight: '600', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>All Manifest Entries</span>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              onClick={handleDownload}
-              style={{
-                padding: '7px 16px', fontSize: '13px', fontWeight: '500',
-                borderRadius: '6px', border: '1px solid #cfe1d4',
-                background: '#fff', color: '#374151', cursor: 'pointer',
-              }}
-            >
-              Download Excel
-            </button>
-            {canManageEntries && (
-              <button
-                onClick={openCreateModal}
-                style={{
-                  padding: '7px 16px', fontSize: '13px', fontWeight: '500',
-                  borderRadius: '6px', border: 'none',
-                  background: '#1d7149', color: '#fff', cursor: 'pointer',
-                }}
-              >
-                + Add Entry
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2ece3', background: '#f8fafc' }}>
-          <div style={{ position: 'relative', width: '100%', maxWidth: '560px' }}>
+      <div className="card">
+        <div className="card__header" style={{ padding: '16px 24px' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '480px' }}>
             <input
               type="text"
               className="form-control"
-              placeholder="Search by name, phone, email, res#, code, etc..."
+              placeholder="Search trips (name, phone, email, res#)..."
               value={searchTerm}
               onChange={handleSearch}
-              style={{ paddingLeft: '36px', height: '40px', borderRadius: '6px', border: '1px solid #cfe1d4', width: '100%' }}
+              style={{
+                paddingLeft: '40px',
+                width: '100%',
+                height: '42px',
+                borderRadius: '8px',
+                background: 'var(--bg-deep)',
+                border: '1px solid var(--border-dim)'
+              }}
             />
-            <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#577162' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent)', opacity: 0.8 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
@@ -652,68 +612,57 @@ export default function ManifestEntriesView({ role = 'admin' }) {
           </div>
         </div>
 
-        {canManageEntries && (
-          <div style={{ padding: '12px 24px', borderBottom: '1px solid #e2ece3', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <span style={{ color: '#486050', fontSize: '14px', fontWeight: 500 }}>
-              {selectedIds.size > 0 ? `${selectedIds.size} selected` : 'Select entries to delete'}
+        {canManageEntries && selectedIds.size > 0 && (
+          <div style={{ padding: '12px 24px', borderBottom: '1px solid var(--border-dim)', background: 'rgba(201, 162, 74, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: 'var(--accent)', fontSize: '14px', fontWeight: 600 }}>
+              {selectedIds.size} entries selected
             </span>
-            {selectedIds.size > 0 && (
-              <button
-                onClick={() => { setBulkDeleteConfirmOpen(true); setModalError(''); }}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  border: '1px solid #fecaca',
-                  background: '#fef2f2',
-                  color: '#b91c1c',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  minWidth: '170px'
-                }}
-              >
-                Delete Selected ({selectedIds.size})
-              </button>
-            )}
+            <button
+              onClick={() => { setBulkDeleteConfirmOpen(true); setModalError(''); }}
+              className="btn btn--danger btn--sm"
+            >
+              Delete Selected
+            </button>
           </div>
         )}
 
         {/* Table */}
-        <div style={{ overflowX: 'auto' }} ref={tableWrapRef}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', whiteSpace: 'nowrap' }}>
+        <div className="table-wrap" ref={tableWrapRef}>
+          <table className="data-table">
             <thead>
-              <tr style={{ background: '#f4f8f4', color: '#486050', textAlign: 'left' }}>
-                <th style={{ padding: '12px 10px', fontWeight: '600', borderBottom: '1px solid #e2ece3', width: '56px', textAlign: 'center' }}>
+              <tr>
+                <th style={{ width: '56px', textAlign: 'center' }}>
                   <input
                     ref={selectAllRef}
                     type="checkbox"
                     checked={isAllVisibleSelected}
                     onChange={toggleSelectAllVisible}
                     disabled={!canManageEntries}
-                    aria-label="Select all visible rows"
-                    style={{ width: '16px', height: '16px', cursor: canManageEntries ? 'pointer' : 'not-allowed', accentColor: '#1d7149' }}
+                    style={{ cursor: canManageEntries ? 'pointer' : 'not-allowed', width: '18px', height: '18px' }}
                   />
                 </th>
-                <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2ece3', minWidth: '220px' }}>Actions</th>
+                <th>Actions</th>
                 {hasSegmentStatus && (
-                  <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2ece3' }}>SegmentStatusCode</th>
+                  <th>Status</th>
                 )}
-                <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2ece3', minWidth: '150px' }}>Passenger Name</th>
+                <th>Passenger</th>
                 {remainingExtras.map(col => (
-                  <th key={col} style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2ece3' }}>{col}</th>
+                  <th key={col}>{col === 'PickupDateTime' ? 'Pickup' : col}</th>
                 ))}
-                <th style={{ padding: '12px 16px', fontWeight: '600', borderBottom: '1px solid #e2ece3', minWidth: '150px' }}>Source (Manifest)</th>
+                <th>Source</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={totalCols} style={{ padding: '32px', textAlign: 'center', color: '#577162' }}>Loading entries...</td>
+                  <td colSpan={totalCols} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <div className="page-loader" style={{ position: 'static', background: 'none' }}>Loading trips...</div>
+                  </td>
                 </tr>
               ) : entries.length === 0 ? (
                 <tr>
-                  <td colSpan={totalCols} style={{ padding: '32px', textAlign: 'center', color: '#577162' }}>
-                    No entries found. Adjust filters and try again.
+                  <td colSpan={totalCols} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    No trip entries found matching your search.
                   </td>
                 </tr>
               ) : (
@@ -732,115 +681,94 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                   const disableEmail = !canManageEntries || isSending || hasMissingRequiredFields || noEmailOnFile || emailAlreadySent;
                   const disableSms = !canManageEntries || isSending || hasMissingRequiredFields || noPhoneOnFile;
                   const missingFieldsTitle = hasMissingRequiredFields
-                    ? `Missing required fields: ${missingRequiredFields.join(', ')}`
+                    ? `Missing: ${missingRequiredFields.join(', ')}`
                     : null;
-                  const roleTitle = !canManageEntries ? 'Only admin or active clients can perform this action' : null;
+
                   return (
                     <tr
                       key={reactKey}
-                      className={hasMissingRequiredFields ? 'review-request-row-invalid' : undefined}
+                      className={`${hasMissingRequiredFields ? 'row-invalid' : ''} ${isSelected ? 'row-selected' : ''}`}
                       onMouseEnter={hasMissingRequiredFields ? (e) => showMissingTooltip(e, missingRequiredFields) : undefined}
                       onMouseLeave={hasMissingRequiredFields ? hideMissingTooltip : undefined}
-                      onFocus={hasMissingRequiredFields ? (e) => showMissingTooltip(e, missingRequiredFields) : undefined}
-                      onBlur={hasMissingRequiredFields ? hideMissingTooltip : undefined}
-                      style={{
-                        borderBottom: '1px solid #e2ece3',
-                        background: isSelected ? '#f3fbf5' : undefined,
-                      }}
+                      style={{ background: isSelected ? 'rgba(201, 162, 74, 0.05)' : undefined }}
                     >
-                      {/* Actions column — first */}
-                      <td style={{ padding: '12px 10px', textAlign: 'center' }}>
+                      <td style={{ textAlign: 'center' }}>
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelectRow(entry._id)}
                           disabled={!canManageEntries}
-                          aria-label={`Select ${entry.name || 'entry'}`}
-                          style={{ width: '16px', height: '16px', cursor: canManageEntries ? 'pointer' : 'not-allowed', accentColor: '#1d7149' }}
+                          style={{ cursor: canManageEntries ? 'pointer' : 'not-allowed', width: '18px', height: '18px' }}
                         />
                       </td>
-                      <td className="admin-review-actions-cell">
-                        {status.error && (
-                          <div className="admin-review-actions-error">
-                            {status.error}
-                          </div>
-                        )}
-                        {status.info && (
-                          <div style={{ marginBottom: '6px', color: '#166534', fontSize: '12px' }}>
-                            {status.info}
-                          </div>
-                        )}
-                        <div className="admin-review-actions-grid">
-                          {/* Email */}
+                      <td className="actions-cell">
+                        <div className="flex gap-2">
                           <button
                             onClick={() => handleSendReview(entry, 'email')}
                             disabled={disableEmail}
-                            title={roleTitle || missingFieldsTitle || (noEmailOnFile ? 'No email on file' : 'Send review request via email')}
-                            className={`admin-review-action-btn admin-review-action-btn--primary${status.sent === 'email' ? ' admin-review-action-btn--sent' : ''}`}
+                            title={missingFieldsTitle || (noEmailOnFile ? 'No email' : 'Send Email')}
+                            className={`btn btn--sm ${status.sent === 'email' ? 'btn--secondary' : 'btn--primary'}`}
+                            style={{ minWidth: '70px' }}
                           >
-                            {status.sending === 'email' ? (
-                              <span className="admin-review-action-spinner" />
-                            ) : null}
-                            {status.sent === 'email' ? 'Sent' : 'Email'}
+                            {status.sending === 'email' ? '...' : (status.sent === 'email' ? 'Sent' : 'Email')}
                           </button>
-                          {/* SMS */}
                           <button
                             onClick={() => handleSendReview(entry, 'sms')}
                             disabled={disableSms}
-                            title={roleTitle || missingFieldsTitle || (noPhoneOnFile ? 'No phone on file' : 'Send review request via SMS')}
-                            className={`admin-review-action-btn admin-review-action-btn--primary${status.sent === 'sms' ? ' admin-review-action-btn--sent' : ''}`}
+                            title={missingFieldsTitle || (noPhoneOnFile ? 'No phone' : 'Send SMS')}
+                            className={`btn btn--sm ${status.sent === 'sms' ? 'btn--secondary' : 'btn--primary'}`}
+                            style={{ minWidth: '70px' }}
                           >
-                            {status.sending === 'sms' ? (
-                              <span className="admin-review-action-spinner" />
-                            ) : null}
-                            {status.sent === 'sms' ? 'Sent' : 'SMS'}
+                            {status.sending === 'sms' ? '...' : (status.sent === 'sms' ? 'Sent' : 'SMS')}
                           </button>
                           {canManageEntries && (
-                            <>
-                              {/* Edit */}
+                            <div className="flex gap-1 ml-2 border-l border-dim pl-2">
                               <button
                                 onClick={() => openEditModal(entry)}
                                 disabled={isSending}
-                                title="Edit entry"
-                                className="admin-review-action-btn"
+                                className="btn btn--secondary btn--sm"
+                                title="Edit"
+                                style={{ padding: '6px 10px', minWidth: 'auto' }}
                               >
                                 Edit
                               </button>
-                              {/* Delete */}
                               <button
                                 onClick={() => { setDeleteConfirmId(entry._id); setModalError(''); }}
                                 disabled={isSending || isDeleting}
-                                title="Delete entry"
-                                className="admin-review-action-btn admin-review-action-btn--danger"
+                                className="btn btn--secondary btn--sm"
+                                title="Delete"
+                                style={{ padding: '6px 10px', minWidth: 'auto', borderColor: 'rgba(220, 38, 38, 0.3)', color: 'var(--danger)' }}
                               >
                                 Delete
                               </button>
-                            </>
+                            </div>
                           )}
                         </div>
+                        {status.error && <div className="text-danger text-xs mt-1">{status.error}</div>}
                       </td>
-                      {/* SegmentStatusCode (pinned) */}
                       {hasSegmentStatus && (
-                        <td style={{ padding: '12px 16px' }}>{entry.extra?.SegmentStatusCode || ''}</td>
+                        <td>
+                          <span className={`badge ${entry.extra?.SegmentStatusCode === 'COMP' ? 'badge--green' : 'badge--gold'}`}>
+                            {entry.extra?.SegmentStatusCode || '-'}
+                          </span>
+                        </td>
                       )}
-                      {/* Passenger Name */}
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontWeight: '500' }}>{entry.name || 'Unknown'}</div>
+                      <td>
+                        <div className="font-medium">{entry.name || 'Unknown'}</div>
+                        <div className="text-xs text-muted">{entry.extra?.PassengerEmailAddress || entry.email || '-'}</div>
                       </td>
-                      {/* Remaining extra columns */}
                       {remainingExtras.map(col => {
                         const isPickupDateTime = col === 'PickupDateTime' || col === 'Pickup Date Time';
                         const rawValue = entry.extra?.[col];
                         const value = isPickupDateTime
                           ? (formatPickupDateTimeFromParts(entry.pickupDate, entry.pickupTime) || formatPickupDateTime(rawValue))
-                          : (rawValue || '');
+                          : (rawValue || '-');
 
                         return (
-                          <td key={col} style={{ padding: '12px 16px' }}>{value}</td>
+                          <td key={col} className={isPickupDateTime ? 'font-medium text-accent' : ''}>{value}</td>
                         );
                       })}
-                      {/* Source (Manifest) — last */}
-                      <td style={{ padding: '12px 16px', color: '#577162', fontSize: '13px' }}>
+                      <td className="text-xs text-muted">
                         {entry.manifestId?.name || 'Unknown'}
                       </td>
                     </tr>
@@ -853,32 +781,75 @@ export default function ManifestEntriesView({ role = 'admin' }) {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'center', gap: '8px', borderTop: '1px solid #e2ece3' }}>
+          <div className="card__footer" style={{ display: 'flex', justifyContent: 'center', gap: '12px', alignItems: 'center', background: 'rgba(255,255,255,0.01)' }}>
             <button
               onClick={() => changePage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cfe1d4', background: currentPage === 1 ? '#f4f8f4' : '#fff', color: currentPage === 1 ? '#94a3b8' : '#2f493b', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
-            >Previous</button>
-            <span style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: '#486050' }}>
-              Page {currentPage} of {totalPages}
-            </span>
+              className="btn btn--secondary btn--sm"
+            >
+              Previous
+            </button>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                const isCurrent = currentPage === pageNum;
+                if (
+                  pageNum === 1 ||
+                  pageNum === totalPages ||
+                  (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                ) {
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => changePage(pageNum)}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '8px',
+                        border: '1px solid',
+                        borderColor: isCurrent ? 'var(--accent)' : 'var(--border-dim)',
+                        background: isCurrent ? 'var(--accent)' : 'transparent',
+                        color: isCurrent ? '#000' : 'var(--text-main)',
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                } else if (
+                  pageNum === currentPage - 2 ||
+                  pageNum === currentPage + 2
+                ) {
+                  return <span key={pageNum} style={{ padding: '0 2px', color: 'var(--text-muted)' }}>...</span>;
+                }
+                return null;
+              })}
+            </div>
             <button
               onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
-              style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cfe1d4', background: currentPage === totalPages ? '#f4f8f4' : '#fff', color: currentPage === totalPages ? '#94a3b8' : '#2f493b', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
-            >Next</button>
+              className="btn btn--secondary btn--sm"
+            >
+              Next
+            </button>
           </div>
         )}
       </div>
 
       {missingTooltip.open && (
         <div
-          className="review-request-missing-tooltip-float"
+          className="tooltip-float"
           style={{ top: `${missingTooltip.top}px`, left: `${missingTooltip.left}px` }}
           role="tooltip"
         >
-          <div className="review-request-missing-tooltip__title">Missing required fields</div>
-          <ul className="review-request-missing-tooltip__list">
+          <div className="tooltip-title">Missing Fields</div>
+          <ul className="tooltip-list">
             {missingTooltip.fields.map((field) => (
               <li key={field}>{field}</li>
             ))}
@@ -886,140 +857,79 @@ export default function ManifestEntriesView({ role = 'admin' }) {
         </div>
       )}
 
-      {/* Delete confirmation modal */}
-      {canManageEntries && deleteConfirmId && (
-        <div style={OVERLAY_STYLE} onClick={() => { if (!modalLoading) setDeleteConfirmId(null); }}>
-          <div style={{ ...MODAL_STYLE, maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ margin: '0 0 12px', fontSize: '18px', fontWeight: '600', color: '#111827' }}>Delete Entry</h2>
-            <p style={{ margin: '0 0 20px', color: '#4b5563', fontSize: '14px' }}>
-              Are you sure you want to delete this entry? This action cannot be undone and will also remove any associated review requests.
+      {/* Modals handled via state - showing standardized versions */}
+      {(deleteConfirmId || bulkDeleteConfirmOpen) && (
+        <div style={OVERLAY_STYLE} onClick={() => { if (!modalLoading) { setDeleteConfirmId(null); setBulkDeleteConfirmOpen(false); } }}>
+          <div style={{ ...MODAL_STYLE, maxWidth: '420px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div style={{ color: 'var(--danger)', marginBottom: '16px', fontSize: '32px' }}>⚠️</div>
+            <h2 className="widget-header" style={{ border: 'none', justifyContent: 'center' }}>
+              {deleteConfirmId ? 'Delete Entry' : 'Delete Selected'}
+            </h2>
+            <p className="text-secondary mb-8">
+              {deleteConfirmId
+                ? 'Are you sure? This action cannot be undone and will remove associated review records.'
+                : `Are you sure you want to delete ${selectedIds.size} selected entries?`
+              }
             </p>
-            {modalError && (
-              <div style={{ color: '#dc2626', fontSize: '13px', marginBottom: '12px', padding: '8px 12px', background: '#fef2f2', borderRadius: '6px', border: '1px solid #fecaca' }}>
-                {modalError}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setDeleteConfirmId(null)}
-                disabled={modalLoading}
-                style={{ padding: '8px 18px', borderRadius: '6px', border: '1px solid #cfe1d4', background: '#f8fafc', color: '#374151', cursor: 'pointer', fontSize: '14px' }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                disabled={modalLoading}
-                style={{ padding: '8px 18px', borderRadius: '6px', border: 'none', background: '#dc2626', color: '#fff', cursor: modalLoading ? 'not-allowed' : 'pointer', fontSize: '14px', opacity: modalLoading ? 0.7 : 1 }}
-              >
-                {modalLoading ? 'Deleting...' : 'Delete'}
+            {modalError && <div className="text-danger mb-4 text-sm">{modalError}</div>}
+            <div className="flex gap-4 justify-center">
+              <button onClick={() => { setDeleteConfirmId(null); setBulkDeleteConfirmOpen(false); }} disabled={modalLoading} className="btn btn--secondary">Cancel</button>
+              <button onClick={deleteConfirmId ? handleDeleteConfirm : handleBulkDeleteConfirm} disabled={modalLoading} className="btn btn--danger">
+                {modalLoading ? 'Deleting...' : 'Delete Forever'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {canManageEntries && bulkDeleteConfirmOpen && (
-        <div style={OVERLAY_STYLE} onClick={() => { if (!modalLoading) setBulkDeleteConfirmOpen(false); }}>
-          <div style={{ ...MODAL_STYLE, maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ margin: '0 0 12px', fontSize: '18px', fontWeight: '600', color: '#111827' }}>Delete Selected Entries</h2>
-            <p style={{ margin: '0 0 20px', color: '#4b5563', fontSize: '14px' }}>
-              Are you sure you want to delete {selectedIds.size} selected entries?
-            </p>
-            {modalError && (
-              <div style={{ color: '#dc2626', fontSize: '13px', marginBottom: '12px', padding: '8px 12px', background: '#fef2f2', borderRadius: '6px', border: '1px solid #fecaca' }}>
-                {modalError}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setBulkDeleteConfirmOpen(false)}
-                disabled={modalLoading}
-                style={{ padding: '8px 18px', borderRadius: '6px', border: '1px solid #cfe1d4', background: '#f8fafc', color: '#374151', cursor: 'pointer', fontSize: '14px' }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleBulkDeleteConfirm}
-                disabled={modalLoading || selectedIds.size === 0}
-                style={{ padding: '8px 18px', borderRadius: '6px', border: 'none', background: '#dc2626', color: '#fff', cursor: modalLoading ? 'not-allowed' : 'pointer', fontSize: '14px', opacity: modalLoading ? 0.7 : 1 }}
-              >
-                {modalLoading ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Alert Modal */}
       {alertModal.open && (
         <div style={OVERLAY_STYLE} onClick={() => setAlertModal({ open: false, message: '' })}>
           <div style={{ ...MODAL_STYLE, maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-            <div style={{ marginBottom: '16px', color: '#f59e0b', display: 'flex', justifyContent: 'center' }}>
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" width="48" height="48">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <h2 style={{ margin: '0 0 12px', fontSize: '18px', fontWeight: '600', color: '#111827' }}>Notice</h2>
-            <p style={{ margin: '0 0 24px', color: '#4b5563', fontSize: '15px' }}>
-              {alertModal.message}
-            </p>
-            <button
-              onClick={() => setAlertModal({ open: false, message: '' })}
-              style={{
-                padding: '10px 24px', borderRadius: '6px', border: 'none',
-                background: '#1d7149', color: '#fff', cursor: 'pointer',
-                fontSize: '14px', fontWeight: '500'
-              }}
-            >
-              OK
-            </button>
+            <div style={{ color: 'var(--accent)', marginBottom: '16px', fontSize: '32px' }}>ⓘ</div>
+            <h2 className="widget-header" style={{ border: 'none', justifyContent: 'center' }}>Notice</h2>
+            <p className="text-secondary mb-8">{alertModal.message}</p>
+            <button onClick={() => setAlertModal({ open: false, message: '' })} className="btn btn--primary w-full">Got it</button>
           </div>
         </div>
       )}
 
       <style jsx global>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .manifest-entry-inline-card {
-          background: #e3f2e8 !important;
-          border-color: #bddbc7 !important;
-        }
-        .manifest-entry-inline-card__header {
-          background: #d7ebdf !important;
-          border-bottom-color: #bddbc7 !important;
-        }
-        .manifest-entry-inline-card__body {
-          background: #e3f2e8 !important;
-        }
         .manifest-entry-grid {
           display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          column-gap: 16px;
-          align-items: start;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 20px;
         }
-        .manifest-entry-grid--nested {
-          margin-top: 8px;
+        .row-invalid {
+          border-left: 2px solid var(--danger);
         }
-        @media (max-width: 1280px) {
-          .manifest-entry-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-          }
+        .tooltip-float {
+          position: fixed;
+          background: #1e1e1e;
+          border: 1px solid var(--danger);
+          padding: 12px;
+          border-radius: 8px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+          z-index: 10000;
+          pointer-events: none;
+          transform: translateY(-50%);
         }
-        @media (max-width: 1024px) {
-          .manifest-entry-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
+        .tooltip-title {
+          font-weight: 700;
+          color: var(--danger);
+          font-size: 11px;
+          text-transform: uppercase;
+          margin-bottom: 6px;
         }
-        @media (max-width: 768px) {
-          .manifest-entry-grid {
-            grid-template-columns: 1fr;
-          }
-          .manifest-entry-inline-actions {
-            flex-direction: column;
-          }
-          .manifest-entry-inline-actions button {
-            width: 100%;
-          }
+        .tooltip-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          font-size: 13px;
+          color: var(--text-secondary);
+        }
+        .tooltip-list li::before {
+          content: '• ';
+          color: var(--danger);
         }
       `}</style>
     </div>

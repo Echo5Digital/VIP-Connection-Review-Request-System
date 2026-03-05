@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { body, validationResult } from 'express-validator';
 import { requireAuth, requireRoles } from '../middleware/auth.js';
 import Admin from '../models/Admin.js';
-import Client from '../models/Client.js';
+import Staff from '../models/Staff.js';
 
 const router = Router();
 
@@ -11,14 +11,14 @@ router.use(requireAuth, requireRoles('admin'));
 // GET all users
 router.get('/', async (req, res, next) => {
     try {
-        const [admins, clients] = await Promise.all([
+        const [admins, staff] = await Promise.all([
             Admin.find({}, '-password'),
-            Client.find({}, '-password'),
+            Staff.find({}, '-password'),
         ]);
 
         const allUsers = [
             ...admins.map(a => ({ ...a.toObject(), role: 'admin' })),
-            ...clients.map(c => ({ ...c.toObject(), role: 'client' })),
+            ...staff.map(s => ({ ...s.toObject() })),
         ];
 
         res.json(allUsers);
@@ -32,7 +32,7 @@ router.post(
     '/',
     body('email').isEmail(),
     body('password').isLength({ min: 8 }),
-    body('role').isIn(['admin', 'client']),
+    body('role').isIn(['admin', 'manager', 'dispatcher']),
     async (req, res, next) => {
         try {
             const errors = validationResult(req);
@@ -46,11 +46,69 @@ router.post(
                 const user = await Admin.create({ email, password, name });
                 res.status(201).json({ ...user.toObject(), role: 'admin' });
             } else {
-                const existing = await Client.findOne({ email });
+                const existing = await Staff.findOne({ email });
                 if (existing) return res.status(409).json({ message: 'User already exists' });
-                const user = await Client.create({ email, password, name });
-                res.status(201).json({ ...user.toObject(), role: 'client' });
+                const user = await Staff.create({ email, password, name, role });
+                res.status(201).json({ ...user.toObject() });
             }
+        } catch (err) {
+            next(err);
+        }
+    }
+);
+
+// PUT update user
+router.put(
+    '/:role/:id',
+    body('email').optional().isEmail(),
+    body('password').optional().isLength({ min: 8 }),
+    body('role').optional().isIn(['admin', 'manager', 'dispatcher']),
+    async (req, res, next) => {
+        try {
+            const { role, id } = req.params;
+            const { email, password, name, active, role: newRole } = req.body;
+
+            let user;
+            if (role === 'admin') {
+                user = await Admin.findById(id).select('+password');
+            } else {
+                user = await Staff.findById(id).select('+password');
+            }
+
+            if (!user) return res.status(404).json({ message: 'User not found' });
+
+            if (email) user.email = email;
+            if (name !== undefined) user.name = name;
+            if (active !== undefined) user.active = active;
+            if (password) user.password = password;
+
+            // Handle role change
+            if (newRole && newRole !== role) {
+                // If moving from Admin to Staff or vice versa, we'd need to delete and recreate
+                // But for now, let's just update within the same group or handle Staff internal changes
+                if (role !== 'admin' && newRole !== 'admin') {
+                    user.role = newRole;
+                } else if (role === 'admin' && newRole !== 'admin') {
+                    // Move Admin to Staff
+                    const staffData = user.toObject();
+                    delete staffData._id;
+                    staffData.role = newRole;
+                    await Staff.create(staffData);
+                    await Admin.findByIdAndDelete(id);
+                    return res.json({ message: 'User updated and moved to Staff' });
+                } else if (role !== 'admin' && newRole === 'admin') {
+                    // Move Staff to Admin
+                    const adminData = user.toObject();
+                    delete adminData._id;
+                    delete adminData.role;
+                    await Admin.create(adminData);
+                    await Staff.findByIdAndDelete(id);
+                    return res.json({ message: 'User updated and moved to Admin' });
+                }
+            }
+
+            await user.save();
+            res.json({ message: 'User updated successfully' });
         } catch (err) {
             next(err);
         }
@@ -62,10 +120,9 @@ router.delete('/:role/:id', async (req, res, next) => {
     try {
         const { role, id } = req.params;
         if (role === 'admin') {
-            // Prevent deleting the last admin if needed
             await Admin.findByIdAndDelete(id);
         } else {
-            await Client.findByIdAndDelete(id);
+            await Staff.findByIdAndDelete(id);
         }
         res.json({ message: 'User removed' });
     } catch (err) {

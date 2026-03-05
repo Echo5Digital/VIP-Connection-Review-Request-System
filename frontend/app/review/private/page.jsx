@@ -39,7 +39,7 @@ function PrivateFeedbackContent() {
           setResNumber(String(data.resNumber));
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [token]);
 
   const hasNegativeRating =
@@ -77,23 +77,24 @@ function PrivateFeedbackContent() {
             width: '64px',
             height: '64px',
             borderRadius: '50%',
-            background: '#dbeafe',
+            background: 'rgba(201, 162, 74, 0.1)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 20px',
+            border: '1px solid rgba(201, 162, 74, 0.2)',
           }}>
-            <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#1d4ed8" strokeWidth="2.5">
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="var(--accent)" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', marginBottom: '12px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '12px' }}>
             Feedback Received
           </h1>
-          <p style={{ fontSize: '15px', color: '#475569', lineHeight: '1.6' }}>
+          <p style={{ fontSize: '15px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
             Thank you — your feedback has been received. We take all feedback seriously and will use it to improve our service.
           </p>
-          <p style={{ marginTop: '28px', fontSize: '13px', color: '#94a3b8' }}>
+          <p style={{ marginTop: '28px', fontSize: '13px', color: 'var(--text-muted)' }}>
             © {new Date().getFullYear()} VIP Connection Review System
           </p>
         </div>
@@ -105,10 +106,10 @@ function PrivateFeedbackContent() {
     <main style={pageStyle}>
       <div style={cardStyle}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#0f172a', marginBottom: '8px' }}>
+          <h1 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '8px' }}>
             We Value Your Feedback
           </h1>
-          <p style={{ fontSize: '15px', color: '#64748b' }}>
+          <p style={{ fontSize: '15px', color: 'var(--text-muted)' }}>
             Your honest feedback helps us improve. Please let us know how we can do better.
           </p>
         </div>
@@ -116,33 +117,33 @@ function PrivateFeedbackContent() {
         {/* Read-only Rating Summary */}
         {(driverRating > 0 || vehicleRating > 0) && (
           <div style={{
-            background: '#f8fafc',
-            border: '1px solid #e2e8f0',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid var(--border-dim)',
             borderRadius: '10px',
             padding: '16px 20px',
             marginBottom: '28px',
           }}>
-            <p style={{ fontSize: '13px', fontWeight: '600', color: '#64748b', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Your Ratings
             </p>
             <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
               {driverRating > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '22px' }}>{EMOJIS[driverRating]}</span>
                   <div>
-                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>Driver</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#334155' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Driver</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>
                       {driverRating}/5 — {LABELS[driverRating]}
                     </div>
                   </div>
                 </div>
               )}
               {vehicleRating > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '22px' }}>{EMOJIS[vehicleRating]}</span>
                   <div>
-                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>Vehicle</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#334155' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Vehicle</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-main)' }}>
                       {vehicleRating}/5 — {LABELS[vehicleRating]}
                     </div>
                   </div>
@@ -155,20 +156,23 @@ function PrivateFeedbackContent() {
         {/* Feedback Form */}
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '18px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)', marginBottom: '6px' }}>
               Name
             </label>
             <input
               type="text"
+              className="form-control"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
               style={{
                 width: '100%',
-                height: '40px',
-                borderRadius: '6px',
-                border: '1px solid #cbd5e1',
-                padding: '0 12px',
+                height: '42px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-dim)',
+                background: 'rgba(255,255,255,0.02)',
+                color: 'var(--text-main)',
+                padding: '0 14px',
                 fontSize: '14px',
                 boxSizing: 'border-box',
                 outline: 'none',
@@ -177,20 +181,23 @@ function PrivateFeedbackContent() {
           </div>
 
           <div style={{ marginBottom: '18px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)', marginBottom: '6px' }}>
               Email
             </label>
             <input
               type="email"
+              className="form-control"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
               style={{
                 width: '100%',
-                height: '40px',
-                borderRadius: '6px',
-                border: '1px solid #cbd5e1',
-                padding: '0 12px',
+                height: '42px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-dim)',
+                background: 'rgba(255,255,255,0.02)',
+                color: 'var(--text-main)',
+                padding: '0 14px',
                 fontSize: '14px',
                 boxSizing: 'border-box',
                 outline: 'none',
@@ -200,25 +207,26 @@ function PrivateFeedbackContent() {
 
           {hasNegativeRating && (
             <div style={{ marginBottom: '18px' }}>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)', marginBottom: '6px' }}>
                 ResNumber
               </label>
               <input
                 type="text"
+                className="form-control"
                 value={resNumber}
                 disabled
                 readOnly
                 style={{
                   width: '100%',
-                  height: '40px',
-                  borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
-                  padding: '0 12px',
+                  height: '42px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-dim)',
+                  padding: '0 14px',
                   fontSize: '14px',
                   boxSizing: 'border-box',
                   outline: 'none',
-                  background: '#f8fafc',
-                  color: '#475569',
+                  background: 'rgba(255,255,255,0.05)',
+                  color: 'var(--text-muted)',
                   cursor: 'not-allowed',
                 }}
               />
@@ -226,10 +234,11 @@ function PrivateFeedbackContent() {
           )}
 
           <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '6px' }}>
-              Comments <span style={{ color: '#dc2626' }}>*</span>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--text-main)', marginBottom: '6px' }}>
+              Comments <span style={{ color: 'var(--accent)' }}>*</span>
             </label>
             <textarea
+              className="form-control"
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               rows={5}
@@ -237,9 +246,11 @@ function PrivateFeedbackContent() {
               placeholder="Please share what we could have done better..."
               style={{
                 width: '100%',
-                borderRadius: '6px',
-                border: '1px solid #cbd5e1',
-                padding: '10px 12px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-dim)',
+                background: 'rgba(255,255,255,0.02)',
+                color: 'var(--text-main)',
+                padding: '12px 14px',
                 fontSize: '14px',
                 resize: 'vertical',
                 boxSizing: 'border-box',
@@ -260,22 +271,22 @@ function PrivateFeedbackContent() {
             disabled={submitting}
             style={{
               width: '100%',
-              padding: '13px',
-              borderRadius: '8px',
+              padding: '14px',
+              borderRadius: '10px',
               border: 'none',
-              background: submitting ? '#94a3b8' : '#1e40af',
-              color: '#fff',
+              background: submitting ? 'var(--border-dim)' : 'var(--accent)',
+              color: submitting ? 'var(--text-muted)' : '#000',
               fontSize: '16px',
-              fontWeight: '600',
+              fontWeight: '700',
               cursor: submitting ? 'not-allowed' : 'pointer',
-              transition: 'background 0.15s',
+              transition: 'all 0.2s',
             }}
           >
             {submitting ? 'Submitting…' : 'Submit Feedback'}
           </button>
         </form>
 
-        <p style={{ marginTop: '24px', fontSize: '13px', color: '#94a3b8', textAlign: 'center' }}>
+        <p style={{ marginTop: '24px', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center' }}>
           © {new Date().getFullYear()} VIP Connection Review System
         </p>
       </div>
@@ -289,13 +300,14 @@ const pageStyle = {
   alignItems: 'center',
   justifyContent: 'center',
   padding: '32px 20px',
-  background: 'var(--gray-100, #f1f5f9)',
+  background: 'var(--bg-deep)',
 };
 
 const cardStyle = {
-  background: '#fff',
+  background: 'var(--bg-surface)',
   borderRadius: '16px',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
+  border: '1px solid var(--border-dim)',
+  boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
   padding: '40px 36px',
   maxWidth: '520px',
   width: '100%',

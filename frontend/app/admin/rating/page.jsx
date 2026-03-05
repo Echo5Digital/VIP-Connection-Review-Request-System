@@ -17,7 +17,7 @@ export default async function RatingPageAdmin() {
       <h1 className="page-title">Rating Page Settings</h1>
       <p className="text-muted text-sm mb-4">
         Customize the copy shown on the public rating page. Each review link looks like:{' '}
-        <code style={{ background: 'var(--gray-200)', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>/r/[token]</code>
+        <code style={{ background: 'var(--bg-deep)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', border: '1px solid var(--border-dim)' }}>/r/[token]</code>
       </p>
       <p className="text-muted text-xs mb-6">Example: {exampleUrl}</p>
 

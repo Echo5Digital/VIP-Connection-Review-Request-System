@@ -41,19 +41,19 @@ export function ManifestUpload({ onUploadSuccess }) {
   return (
     <div className="card mb-6">
       <div className="card__header">Upload Manifest File</div>
-      <div style={{ padding: '24px' }}>
+      <div className="card__body">
         <p className="text-muted text-sm mb-6">
           Upload a .csv or .xlsx file. All columns and rows will be captured.
         </p>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div className="form-group" style={{ flex: '0 0 250px' }}>
+        <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-4">
+          <div className="form-group" style={{ flex: '1 1 280px', marginBottom: 0 }}>
             <input
               type="text"
               placeholder="Manifest name (optional)"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="form-input"
-              style={{ width: '100%' }}
+              className="form-control"
+              style={{ width: '100%', height: '42px', borderRadius: '8px' }}
             />
           </div>
 
@@ -65,23 +65,23 @@ export function ManifestUpload({ onUploadSuccess }) {
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
             />
-            <label
-              htmlFor="manifest-file"
-              className="btn btn--outline"
-              style={{ display: 'inline-block', cursor: 'pointer', borderRadius: '4px', background: '#f8f9fb' }}
+            <button
+              type="button"
+              className="btn btn--secondary"
+              style={{ pointerEvents: 'none' }}
             >
               Choose File
-            </label>
+            </button>
           </div>
-          <span style={{ fontSize: '13px', color: 'var(--gray-500)', margin: '0 12px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)', minWidth: '120px' }}>
             {file ? file.name : 'No file chosen'}
           </span>
 
-          <button type="submit" disabled={loading} className="btn btn--primary" style={{ borderRadius: '4px' }}>
-            {loading ? 'Uploading...' : 'Upload File'}
+          <button type="submit" disabled={loading} className="btn btn--primary">
+            {loading ? 'Uploading...' : 'Upload Manifest'}
           </button>
 
-          {error && <p className="form-error" style={{ width: '100%', marginTop: '8px' }}>{error}</p>}
+          {error && <p className="form-error" style={{ width: '100%', marginTop: '12px', marginBottom: 0 }}>{error}</p>}
         </form>
       </div>
     </div>
