@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import mongoose from 'mongoose';
 import { connectDb } from './config/db.js';
 import { config } from './config/index.js';
 
@@ -11,7 +10,6 @@ import ratingRoutes from './routes/rating.js';
 import feedbackRoutes from './routes/feedback.js';
 import redirectRoutes from './routes/redirects.js';
 import settingsRoutes from './routes/settings.js';
-import clientRoutes from './routes/client.js';
 import driverRoutes from './routes/drivers.js';
 import goRedirectRoute from './routes/go.js';
 import reviewRequestsRoutes from './routes/review-requests.js';
@@ -21,34 +19,11 @@ import affiliatesRoutes from './routes/affiliates.js';
 import restrictionsRoutes from './routes/restrictions.js';
 import usersRoutes from './routes/users.js';
 import Admin from './models/Admin.js';
-import Client from './models/Client.js';
 
 await connectDb();
 
-// Run migrations
-try {
-  const db = mongoose.connection.db;
-  if (db) {
-    const collections = await db.listCollections().toArray();
-    const hasCustomers = collections.some((c) => c.name === 'customers');
-    if (hasCustomers) {
-      await db.collection('customers').rename('clients');
-      console.log('Migrated customers collection to clients');
-    }
-
-    await db.collection('ratings').updateMany(
-      { source: 'customer' },
-      { $set: { source: 'client' }, $rename: { customerId: 'clientId' } }
-    );
-  }
-} catch (err) {
-  console.error('Migration error:', err);
-}
-
 const seedAdminEmail = process.env.SEED_ADMIN_EMAIL?.toLowerCase().trim();
 const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD;
-const seedClientEmail = process.env.SEED_CLIENT_EMAIL?.toLowerCase().trim();
-const seedClientPassword = process.env.SEED_CLIENT_PASSWORD;
 
 if (seedAdminEmail && seedAdminPassword) {
   const existing = await Admin.findOne({ email: seedAdminEmail }).select('+password');
@@ -59,19 +34,6 @@ if (seedAdminEmail && seedAdminPassword) {
       name: 'Admin',
     });
     console.log('Seeded admin:', seedAdminEmail);
-  }
-}
-
-if (seedClientEmail && seedClientPassword) {
-  const existing = await Client.findOne({ email: seedClientEmail }).select('+password');
-  if (!existing) {
-    await Client.create({
-      email: seedClientEmail,
-      password: seedClientPassword,
-      name: 'Test Client',
-      active: true,
-    });
-    console.log('Seeded client:', seedClientEmail);
   }
 }
 
@@ -103,7 +65,6 @@ app.use('/api/rating', ratingRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/redirects', redirectRoutes);
 app.use('/api/settings', settingsRoutes);
-app.use('/api/clients', clientRoutes);
 app.use('/api/drivers', driverRoutes);
 app.use('/api/review-requests', reviewRequestsRoutes);
 app.use('/api/test-email', testEmailRoutes);

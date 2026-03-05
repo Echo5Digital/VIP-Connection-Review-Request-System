@@ -11,12 +11,12 @@ function fmt(val) {
 }
 
 const REQUIRED_COLUMNS = [
-  'PickupDateTime', 'ResNumber', 'CustomerCode', 'CustomerName', 
+  'PickupDateTime', 'ResNumber', 'CustomerCode', 'CustomerName',
   'PassengerCellPhoneNumber', 'PassengerEmailAddress', 'PassengerFirstName', 'PassengerLastName',
-  'PickupAddress', 'PickupPricingZone', 'DropoffPricingZone', 'DropoffAddress', 
+  'PickupAddress', 'PickupPricingZone', 'DropoffPricingZone', 'DropoffAddress',
   'DispatchDriverCode', 'DispatchDriverName', 'DispatchVehicleCode', 'DispatchDriverPhoneNumber',
   'DispatchVehicleTypeCode', 'OnLocationDateTime', 'PassengerOnBoardDateTime',
-  'SegmentStatusCode', 'SegmentTotal', 
+  'SegmentStatusCode', 'SegmentTotal',
   'ContactEmailAddress', 'ContactFirstName', 'ContactLastName', 'ContactPhoneNumber'
 ];
 
@@ -27,7 +27,7 @@ export default function ManifestDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 50; // Increased limit for manifest as it can be large
+  const limit = 50;
 
   useEffect(() => {
     if (id) {
@@ -53,12 +53,8 @@ export default function ManifestDetailPage() {
 
   const { name, contacts, columns } = data;
 
-  // Determine which columns to show. 
-  // We prioritize the ones in REQUIRED_COLUMNS if they exist in the data.
-  // Then we add any other columns that were captured in the file.
   const displayColumns = columns && columns.length > 0 ? columns : [];
 
-  // Sort columns: put required ones first if they exist, then others
   const sortedColumns = [...displayColumns].sort((a, b) => {
     const aIdx = REQUIRED_COLUMNS.indexOf(a);
     const bIdx = REQUIRED_COLUMNS.indexOf(b);
@@ -78,7 +74,7 @@ export default function ManifestDetailPage() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <Link
-          href="/client/manifest"
+          href="/staff/manifest"
           className="btn btn--outline btn--sm"
           style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px' }}
         >
@@ -164,7 +160,6 @@ export default function ManifestDetailPage() {
           </table>
         </div>
 
-        {/* Pagination UI */}
         {totalPages > 1 && (
           <div style={{
             padding: '16px 24px',

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
@@ -202,18 +202,15 @@ export default function DriversPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Search and Selection State
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState(''); // New state for vehicle type filter
+  const [filterType, setFilterType] = useState('');
   const [selectedIds, setSelectedIds] = useState(new Set());
 
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const limit = 20;
 
-  // CRUD State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState(null);
   const [formData, setFormData] = useState({
@@ -236,7 +233,6 @@ export default function DriversPage() {
       setDrivers(data.drivers || []);
       setTotalPages(data.totalPages || 1);
       setTotalRecords(data.total || 0);
-      // Clear selection on refresh
       setSelectedIds(new Set());
     } catch (err) {
       setError(err.message);
@@ -256,8 +252,7 @@ export default function DriversPage() {
     }
   }
 
-  const filteredDrivers = drivers; // Server already filters
-
+  const filteredDrivers = drivers;
   const isAllSelected = filteredDrivers.length > 0 && filteredDrivers.every(d => selectedIds.has(d._id));
 
   function toggleSelectAll() {
@@ -316,14 +311,7 @@ export default function DriversPage() {
 
   function openAddModal() {
     setEditingDriver(null);
-    setFormData({
-      vipCarNum: '',
-      name: '',
-      carMake: '',
-      carModel: '',
-      carYear: '',
-      vehicleType: ''
-    });
+    setFormData({ vipCarNum: '', name: '', carMake: '', carModel: '', carYear: '', vehicleType: '' });
     setIsModalOpen(true);
   }
 
@@ -347,14 +335,11 @@ export default function DriversPage() {
 
     try {
       const url = editingDriver ? `/api/drivers/${editingDriver._id}` : '/api/drivers';
-
-      let result;
       if (editingDriver) {
-        result = await api.put(url, formData);
+        await api.put(url, formData);
       } else {
-        result = await api.post(url, formData);
+        await api.post(url, formData);
       }
-
       setSuccess(editingDriver ? 'Driver updated' : 'Driver added');
       setIsModalOpen(false);
       fetchDrivers();
@@ -374,17 +359,11 @@ export default function DriversPage() {
     }
   }
 
-  function handleDownload() {
-    window.location.href = '/api-backend/drivers/export';
-  }
-
   function changePage(nextPage) {
     setCurrentPage(nextPage);
     requestAnimationFrame(() => {
       document.querySelector('.admin-shell__main')?.scrollTo({ top: 0, behavior: 'auto' });
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
     });
   }
 
@@ -399,27 +378,19 @@ export default function DriversPage() {
         <h1 className="page-title" style={{ margin: 0 }}>Drivers</h1>
         <div style={{ display: 'flex', gap: '12px' }}>
           {selectedIds.size > 0 && (
-            <button
-              onClick={handleBulkDelete}
-              className="btn btn--danger btn--sm"
-            >
+            <button onClick={handleBulkDelete} className="btn btn--danger btn--sm">
               Delete Selected ({selectedIds.size})
             </button>
           )}
-          <button onClick={handleDownload} className="btn btn--secondary btn--sm">
-            Download Excel
-          </button>
           <button onClick={openAddModal} className="btn btn--primary btn--sm">
             + Add Driver
           </button>
         </div>
       </div>
 
-      {/* Messages */}
       {error && <div className="form-error mb-4">{error}</div>}
       {success && <div className="form-success mb-4">{success}</div>}
 
-      {/* Upload section */}
       <div className="card mb-6">
         <div className="card__header">Upload Drivers File</div>
         <div className="card__body">
@@ -437,12 +408,7 @@ export default function DriversPage() {
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
                 style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
               />
-              <label
-                htmlFor="driver-file"
-                className="btn btn--secondary"
-              >
-                Choose File
-              </label>
+              <label htmlFor="driver-file" className="btn btn--secondary">Choose File</label>
             </div>
             <span className="text-muted" style={{ fontSize: '13px', margin: '0 12px' }}>
               {file ? file.name : 'No file chosen'}
@@ -457,27 +423,16 @@ export default function DriversPage() {
       <div className="card">
         <div className="card__header">Drivers &amp; Vehicles</div>
 
-        {/* Filters Section */}
         <div className="card__filters" style={{ padding: '20px', borderBottom: '1px solid var(--border-dim)', background: 'rgba(255,255,255,0.02)' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: '16px',
-            flexWrap: 'wrap'
-          }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: '20px', flex: 1, minWidth: '300px', flexWrap: 'wrap', alignItems: 'center' }}>
-              {/* SearchBar */}
               <div style={{ flex: 1, maxWidth: '600px', position: 'relative' }}>
                 <input
                   type="text"
                   className="form-control"
                   placeholder="Search by VIP Car # or Name"
                   value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
+                  onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                   style={{ paddingLeft: '40px' }}
                 />
                 <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
@@ -488,15 +443,11 @@ export default function DriversPage() {
                 </span>
               </div>
 
-              {/* Vehicle Type Filter */}
               <div style={{ minWidth: '200px', position: 'relative' }}>
                 <select
                   className="form-control"
                   value={filterType}
-                  onChange={(e) => {
-                    setFilterType(e.target.value);
-                    setCurrentPage(1);
-                  }}
+                  onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }}
                 >
                   <option value="">All Vehicle Types</option>
                   <option value="Luxury SUV">Luxury SUV</option>
@@ -516,11 +467,7 @@ export default function DriversPage() {
 
               {(searchTerm || filterType) && (
                 <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setFilterType('');
-                    setCurrentPage(1);
-                  }}
+                  onClick={() => { setSearchTerm(''); setFilterType(''); setCurrentPage(1); }}
                   className="btn btn--text btn--sm"
                 >
                   Reset Filters
@@ -543,11 +490,7 @@ export default function DriversPage() {
                 <thead>
                   <tr>
                     <th style={{ width: '56px', textAlign: 'center' }}>
-                      <input
-                        type="checkbox"
-                        checked={isAllSelected}
-                        onChange={toggleSelectAll}
-                      />
+                      <input type="checkbox" checked={isAllSelected} onChange={toggleSelectAll} />
                     </th>
                     <th>VIP Car #</th>
                     <th>Name</th>
@@ -562,36 +505,18 @@ export default function DriversPage() {
                   {filteredDrivers.map((driver) => (
                     <tr key={driver._id} className={selectedIds.has(driver._id) ? 'row-selected' : ''}>
                       <td style={{ textAlign: 'center' }}>
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(driver._id)}
-                          onChange={() => toggleSelectRow(driver._id)}
-                        />
+                        <input type="checkbox" checked={selectedIds.has(driver._id)} onChange={() => toggleSelectRow(driver._id)} />
                       </td>
                       <td style={{ fontWeight: 600, color: 'var(--accent)' }}>{driver.vipCarNum}</td>
                       <td style={{ fontWeight: 600 }}>{driver.name}</td>
                       <td>{driver.carYear || '—'}</td>
                       <td>{driver.carMake || '—'}</td>
                       <td>{driver.carModel || '—'}</td>
-                      <td>
-                        <span className="badge badge--gold">{driver.vehicleType || '—'}</span>
-                      </td>
+                      <td><span className="badge badge--gold">{driver.vehicleType || '—'}</span></td>
                       <td style={{ textAlign: 'right', paddingRight: '24px' }}>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                          <button
-                            onClick={() => openEditModal(driver)}
-                            className="btn btn--icon"
-                            title="Edit"
-                          >
-                            ✎
-                          </button>
-                          <button
-                            onClick={() => handleDelete(driver._id)}
-                            className="btn btn--icon text-danger"
-                            title="Delete"
-                          >
-                            ✕
-                          </button>
+                          <button onClick={() => openEditModal(driver)} className="btn btn--icon" title="Edit">✎</button>
+                          <button onClick={() => handleDelete(driver._id)} className="btn btn--icon text-danger" title="Delete">✕</button>
                         </div>
                       </td>
                     </tr>
@@ -600,63 +525,29 @@ export default function DriversPage() {
               </table>
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
-              <div className="card__footer" style={{
-                padding: '16px 24px',
-                borderTop: '1px solid var(--border-dim)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-              }}>
+              <div className="card__footer" style={{ padding: '16px 24px', borderTop: '1px solid var(--border-dim)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div className="text-muted text-sm">
                   Showing <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{(currentPage - 1) * limit + 1}</span> to <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{Math.min(currentPage * limit, totalRecords)}</span> of <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{totalRecords}</span> records
                 </div>
-
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => changePage(Math.max(1, currentPage - 1))}
-                    className="btn btn--secondary btn--sm"
-                  >
-                    Previous
-                  </button>
-
+                  <button disabled={currentPage === 1} onClick={() => changePage(Math.max(1, currentPage - 1))} className="btn btn--secondary btn--sm">Previous</button>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     {[...Array(totalPages)].map((_, i) => {
                       const pageNum = i + 1;
-                      if (
-                        pageNum === 1 ||
-                        pageNum === totalPages ||
-                        (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                      ) {
+                      if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)) {
                         return (
-                          <button
-                            key={pageNum}
-                            onClick={() => changePage(pageNum)}
-                            className={`btn btn--sm ${currentPage === pageNum ? 'btn--primary' : 'btn--secondary'}`}
-                            style={{ minWidth: '32px', padding: 0 }}
-                          >
+                          <button key={pageNum} onClick={() => changePage(pageNum)} className={`btn btn--sm ${currentPage === pageNum ? 'btn--primary' : 'btn--secondary'}`} style={{ minWidth: '32px', padding: 0 }}>
                             {pageNum}
                           </button>
                         );
-                      } else if (
-                        pageNum === currentPage - 2 ||
-                        pageNum === currentPage + 2
-                      ) {
+                      } else if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
                         return <span key={pageNum} style={{ padding: '0 4px', color: 'var(--text-muted)' }}>...</span>;
                       }
                       return null;
                     })}
                   </div>
-
-                  <button
-                    disabled={currentPage === totalPages}
-                    onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
-                    className="btn btn--secondary btn--sm"
-                  >
-                    Next
-                  </button>
+                  <button disabled={currentPage === totalPages} onClick={() => changePage(Math.min(totalPages, currentPage + 1))} className="btn btn--secondary btn--sm">Next</button>
                 </div>
               </div>
             )}
@@ -664,14 +555,8 @@ export default function DriversPage() {
         )}
       </div>
 
-      {/* Add/Edit Modal */}
       {isModalOpen && (
-        <div className="modal-overlay" style={{
-          position: 'fixed', inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex',
-          alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-          backdropFilter: 'blur(8px)'
-        }}>
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(8px)' }}>
           <div className="card" style={{ width: '100%', maxWidth: '540px', margin: '16px', border: '1px solid var(--border-dim)' }}>
             <div className="card__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>{editingDriver ? 'Edit Driver' : 'Add New Driver'}</span>
@@ -680,61 +565,30 @@ export default function DriversPage() {
             <form onSubmit={handleFormSubmit} className="card__body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div className="form-group">
                 <label className="form-label">VIP Car #</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  required
-                  value={formData.vipCarNum}
-                  onChange={e => setFormData({ ...formData, vipCarNum: e.target.value })}
-                />
+                <input type="text" className="form-control" required value={formData.vipCarNum} onChange={e => setFormData({ ...formData, vipCarNum: e.target.value })} />
               </div>
               <div className="form-group">
                 <label className="form-label">Driver Name</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  required
-                  value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                />
+                <input type="text" className="form-control" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div className="form-group">
                   <label className="form-label">Car Make</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.carMake}
-                    onChange={e => setFormData({ ...formData, carMake: e.target.value })}
-                  />
+                  <input type="text" className="form-control" value={formData.carMake} onChange={e => setFormData({ ...formData, carMake: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Car Model</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.carModel}
-                    onChange={e => setFormData({ ...formData, carModel: e.target.value })}
-                  />
+                  <input type="text" className="form-control" value={formData.carModel} onChange={e => setFormData({ ...formData, carModel: e.target.value })} />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div className="form-group">
                   <label className="form-label">Car Year</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.carYear}
-                    onChange={e => setFormData({ ...formData, carYear: e.target.value })}
-                  />
+                  <input type="text" className="form-control" value={formData.carYear} onChange={e => setFormData({ ...formData, carYear: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Vehicle Type</label>
-                  <select
-                    className="form-control"
-                    value={formData.vehicleType}
-                    onChange={e => setFormData({ ...formData, vehicleType: e.target.value })}
-                  >
+                  <select className="form-control" value={formData.vehicleType} onChange={e => setFormData({ ...formData, vehicleType: e.target.value })}>
                     <option value="">Select Type</option>
                     <option value="Luxury SUV">Luxury SUV</option>
                     <option value="Sedan">Sedan</option>
@@ -750,12 +604,8 @@ export default function DriversPage() {
               {error && <div className="form-error">{error}</div>}
 
               <div style={{ marginTop: '12px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn--secondary">
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn--primary px-8">
-                  {editingDriver ? 'Update Driver' : 'Save Driver'}
-                </button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn--secondary">Cancel</button>
+                <button type="submit" className="btn btn--primary px-8">{editingDriver ? 'Update Driver' : 'Save Driver'}</button>
               </div>
             </form>
           </div>

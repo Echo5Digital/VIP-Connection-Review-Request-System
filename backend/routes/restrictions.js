@@ -5,7 +5,7 @@ import Restriction from '../models/Restriction.js';
 
 const router = Router();
 
-router.use(requireAuth, requireRoles('admin'));
+router.use(requireAuth, requireRoles('admin', 'manager'));
 
 // GET all restrictions
 router.get('/', async (req, res, next) => {

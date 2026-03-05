@@ -12,7 +12,7 @@ function getRoleFromToken(token) {
       .padEnd(Math.ceil(parts[1].length / 4) * 4, '=');
     const decoded = JSON.parse(atob(payload));
 
-    if (decoded.role === 'admin' || decoded.role === 'client') {
+    if (['admin', 'manager', 'dispatcher'].includes(decoded.role)) {
       return decoded.role;
     }
 
@@ -25,13 +25,15 @@ function getRoleFromToken(token) {
   }
 }
 
+const STAFF_ROLES = ['manager', 'dispatcher'];
+
 export function middleware(request) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('token')?.value;
   const role = getRoleFromToken(token);
 
-  if (pathname === '/clients' || pathname === '/clients/' || pathname === '/client/clients' || pathname === '/client/clients/') {
-    const target = role === 'admin' ? '/admin/clients' : role === 'client' ? '/client/dashboard' : '/';
+  if (pathname === '/clients' || pathname === '/clients/') {
+    const target = role === 'admin' ? '/admin/clients' : STAFF_ROLES.includes(role) ? '/staff/dashboard' : '/';
     return NextResponse.redirect(new URL(target, request.url));
   }
 
@@ -39,28 +41,28 @@ export function middleware(request) {
     if (role === 'admin') {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url));
     }
-    if (role === 'client') {
-      return NextResponse.redirect(new URL('/client/dashboard', request.url));
+    if (STAFF_ROLES.includes(role)) {
+      return NextResponse.redirect(new URL('/staff/dashboard', request.url));
     }
     return NextResponse.next();
   }
 
   if (pathname === '/admin' || pathname === '/admin/') {
-    const target = role === 'admin' ? '/admin/dashboard' : role === 'client' ? '/client/dashboard' : '/';
+    const target = role === 'admin' ? '/admin/dashboard' : STAFF_ROLES.includes(role) ? '/staff/dashboard' : '/';
     return NextResponse.redirect(new URL(target, request.url));
   }
 
   if (pathname.startsWith('/admin/') && role !== 'admin') {
-    const target = role === 'client' ? '/client/dashboard' : '/';
+    const target = STAFF_ROLES.includes(role) ? '/staff/dashboard' : '/';
     return NextResponse.redirect(new URL(target, request.url));
   }
 
-  if (pathname === '/client' || pathname === '/client/') {
-    const target = role === 'client' ? '/client/dashboard' : role === 'admin' ? '/admin/dashboard' : '/';
+  if (pathname === '/staff' || pathname === '/staff/') {
+    const target = STAFF_ROLES.includes(role) ? '/staff/dashboard' : role === 'admin' ? '/admin/dashboard' : '/';
     return NextResponse.redirect(new URL(target, request.url));
   }
 
-  if (pathname.startsWith('/client/') && role !== 'client') {
+  if (pathname.startsWith('/staff/') && !STAFF_ROLES.includes(role)) {
     const target = role === 'admin' ? '/admin/dashboard' : '/';
     return NextResponse.redirect(new URL(target, request.url));
   }
@@ -68,4 +70,4 @@ export function middleware(request) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ['/', '/clients', '/admin/:path*', '/client/:path*'] };
+export const config = { matcher: ['/', '/clients', '/admin/:path*', '/staff/:path*'] };

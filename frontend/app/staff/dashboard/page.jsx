@@ -2,11 +2,11 @@ import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-const ClientDashboardPage = () => {
+const StaffDashboardPage = () => {
   const quickNav = [
-    { label: 'Trips', href: '/client/manifest', icon: '🚗', description: 'Manage your review requests and trip logs' },
-    { label: 'Drivers', href: '/client/drivers', icon: '👤', description: 'View and manage driver information' },
-    { label: 'Feedback', href: '/client/feedback', icon: '💬', description: 'Monitor customer reviews and feedback' },
+    { label: 'Trips', href: '/staff/manifest', icon: '🚗', description: 'Manage review requests and trip logs' },
+    { label: 'Drivers', href: '/staff/drivers', icon: '👤', description: 'View and manage driver information' },
+    { label: 'Feedback', href: '/staff/feedback', icon: '💬', description: 'Monitor customer reviews and feedback' },
   ];
 
   return (
@@ -66,4 +66,4 @@ const ClientDashboardPage = () => {
   );
 };
 
-export default ClientDashboardPage;
+export default StaffDashboardPage;

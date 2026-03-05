@@ -6,13 +6,14 @@ import Staff from '../models/Staff.js';
 
 const router = Router();
 
-router.use(requireAuth, requireRoles('admin'));
+router.use(requireAuth, requireRoles('admin', 'manager'));
 
 // GET all users
 router.get('/', async (req, res, next) => {
     try {
+        const isManager = req.user.role === 'manager';
         const [admins, staff] = await Promise.all([
-            Admin.find({}, '-password'),
+            isManager ? Promise.resolve([]) : Admin.find({}, '-password'),
             Staff.find({}, '-password'),
         ]);
 
@@ -39,6 +40,10 @@ router.post(
             if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
             const { email, password, name, role } = req.body;
+
+            if (req.user.role === 'manager' && role === 'admin') {
+                return res.status(403).json({ message: 'Managers cannot create admin users.' });
+            }
 
             if (role === 'admin') {
                 const existing = await Admin.findOne({ email });
@@ -68,6 +73,10 @@ router.put(
             const { role, id } = req.params;
             const { email, password, name, active, role: newRole } = req.body;
 
+            if (req.user.role === 'manager' && (role === 'admin' || newRole === 'admin')) {
+                return res.status(403).json({ message: 'Managers cannot edit admin users.' });
+            }
+
             let user;
             if (role === 'admin') {
                 user = await Admin.findById(id).select('+password');
@@ -84,8 +93,6 @@ router.put(
 
             // Handle role change
             if (newRole && newRole !== role) {
-                // If moving from Admin to Staff or vice versa, we'd need to delete and recreate
-                // But for now, let's just update within the same group or handle Staff internal changes
                 if (role !== 'admin' && newRole !== 'admin') {
                     user.role = newRole;
                 } else if (role === 'admin' && newRole !== 'admin') {
@@ -119,6 +126,11 @@ router.put(
 router.delete('/:role/:id', async (req, res, next) => {
     try {
         const { role, id } = req.params;
+
+        if (req.user.role === 'manager' && role === 'admin') {
+            return res.status(403).json({ message: 'Managers cannot delete admin users.' });
+        }
+
         if (role === 'admin') {
             await Admin.findByIdAndDelete(id);
         } else {

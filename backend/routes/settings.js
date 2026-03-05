@@ -3,7 +3,7 @@ import { requireAuth, requireRoles } from '../middleware/auth.js';
 import { getSettings, setSettings } from '../models/Settings.js';
 
 const router = Router();
-router.use(requireAuth, requireRoles('admin', 'client'));
+router.use(requireAuth, requireRoles('admin', 'manager'));
 
 router.get('/', async (req, res, next) => {
   try {
@@ -20,13 +20,17 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.patch('/', requireRoles('admin'), async (req, res, next) => {
+router.patch('/', requireRoles('admin', 'manager'), async (req, res, next) => {
   try {
     const { ratingPage, reviewPlatforms, templates, branding } = req.body;
-    if (ratingPage) await setSettings('ratingPage', ratingPage);
-    if (reviewPlatforms) await setSettings('reviewPlatforms', reviewPlatforms);
+    const isAdmin = req.user.role === 'admin';
+    // Managers may only update templates; admin-level keys are restricted to admin
+    if (isAdmin) {
+      if (ratingPage) await setSettings('ratingPage', ratingPage);
+      if (reviewPlatforms) await setSettings('reviewPlatforms', reviewPlatforms);
+      if (branding) await setSettings('branding', branding);
+    }
     if (templates) await setSettings('templates', templates);
-    if (branding) await setSettings('branding', branding);
 
     res.json({ message: 'Settings updated' });
   } catch (err) {

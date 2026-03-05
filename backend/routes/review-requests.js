@@ -17,13 +17,13 @@ const router = Router();
 router.post(
   '/send',
   requireAuth,
-  requireRoles('admin', 'client'),
+  requireRoles('admin', 'manager', 'dispatcher'),
   body('contactId').notEmpty().withMessage('contactId is required'),
   body('channel').isIn(['email', 'sms']).withMessage('channel must be email or sms'),
   async (req, res, next) => {
     try {
-      if (req.user.role === 'client' && !req.user.active) {
-        return res.status(403).json({ message: 'Only active clients can send review requests.' });
+      if (req.user.role !== 'admin' && req.user.active === false) {
+        return res.status(403).json({ message: 'Your account is inactive. Contact an administrator.' });
       }
 
       const errors = validationResult(req);

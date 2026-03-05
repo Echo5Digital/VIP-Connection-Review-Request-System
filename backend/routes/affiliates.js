@@ -7,7 +7,7 @@ import Contact from '../models/Contact.js';
 
 const router = Router();
 
-router.use(requireAuth, requireRoles('admin'));
+router.use(requireAuth, requireRoles('admin', 'manager'));
 
 // GET all affiliates
 router.get('/', async (req, res, next) => {

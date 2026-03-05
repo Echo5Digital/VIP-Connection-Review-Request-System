@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx';
 import Restriction from '../models/Restriction.js';
 
 const router = Router();
-router.use(requireAuth, requireRoles('admin', 'client'));
+router.use(requireAuth, requireRoles('admin', 'manager', 'dispatcher'));
 
 async function checkRestricted(data) {
   const { customerCode, name, email, phone } = data;
@@ -25,7 +25,7 @@ async function checkRestricted(data) {
 
   return await Restriction.findOne(query);
 }
-router.use(requireAuth, requireRoles('admin', 'client'));
+router.use(requireAuth, requireRoles('admin', 'manager', 'dispatcher'));
 
 function getManifestAccessFilter() {
   return {};
@@ -50,9 +50,9 @@ function ensureAdmin(req, res) {
 
 function ensureEntryOperator(req, res) {
   const isAdmin = req.user?.role === 'admin';
-  const isActiveClient = req.user?.role === 'client' && req.user?.active === true;
-  if (!isAdmin && !isActiveClient) {
-    res.status(403).json({ message: 'Only admin or active clients can edit/delete manifest entries' });
+  const isActiveStaff = ['manager', 'dispatcher'].includes(req.user?.role) && req.user?.active !== false;
+  if (!isAdmin && !isActiveStaff) {
+    res.status(403).json({ message: 'Only admin or active staff can edit/delete manifest entries' });
     return false;
   }
   return true;
@@ -60,9 +60,9 @@ function ensureEntryOperator(req, res) {
 
 function ensureUploadAllowed(req, res) {
   const isAdmin = req.user?.role === 'admin';
-  const isActiveClient = req.user?.role === 'client' && req.user?.active === true;
-  if (!isAdmin && !isActiveClient) {
-    res.status(403).json({ message: 'Only admin or active clients can upload manifests' });
+  const isActiveStaff = ['manager', 'dispatcher'].includes(req.user?.role) && req.user?.active !== false;
+  if (!isAdmin && !isActiveStaff) {
+    res.status(403).json({ message: 'Only admin or active staff can upload manifests' });
     return false;
   }
   return true;
@@ -456,7 +456,7 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
     }
 
     const allColumns = Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
-    const uploadedByModel = req.user.role === 'client' ? 'Client' : 'Admin';
+    const uploadedByModel = 'Admin';
 
     const manifest = await Manifest.create({
       name,

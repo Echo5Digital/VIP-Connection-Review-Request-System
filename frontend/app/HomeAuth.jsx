@@ -14,7 +14,9 @@ export function HomeAuth() {
   const [loading, setLoading] = useState(false);
 
   function getRedirectPath(role) {
-    return role === 'client' ? '/client/dashboard' : '/admin/dashboard';
+    if (role === 'admin') return '/admin/dashboard';
+    if (role === 'manager' || role === 'dispatcher') return '/staff/dashboard';
+    return '/';
   }
 
   async function handleSubmit(event) {

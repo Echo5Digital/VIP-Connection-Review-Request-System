@@ -686,8 +686,7 @@ button {
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border-dim);
   padding: 12px 24px;
-  display: grid;
-  grid-template-columns: auto auto 1fr auto;
+  display: flex;
   align-items: center;
   gap: 12px;
 }
@@ -715,7 +714,7 @@ button {
 }
 
 .admin-shell__spacer {
-  width: 100%;
+  flex: 1;
 }
 
 .admin-shell__profile-menu {
