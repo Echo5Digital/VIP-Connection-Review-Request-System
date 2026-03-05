@@ -7,28 +7,37 @@ router.use(requireAuth, requireRoles('admin', 'client'));
 
 router.get('/', async (req, res, next) => {
   try {
-    const ratingPage = await getSettings('ratingPage');
-    res.json({ ratingPage: ratingPage || {} });
+    const keys = ['ratingPage', 'reviewPlatforms', 'templates', 'branding', 'platformUrls'];
+    const results = {};
+    for (const key of keys) {
+      results[key] = await getSettings(key);
+    }
+    // Backward compatibility merge
+    results.reviewPlatforms = results.reviewPlatforms || results.platformUrls || {};
+    res.json(results);
   } catch (err) {
     next(err);
   }
 });
 
-router.patch('/', async (req, res, next) => {
+router.patch('/', requireRoles('admin'), async (req, res, next) => {
   try {
-    const { ratingPage } = req.body;
+    const { ratingPage, reviewPlatforms, templates, branding } = req.body;
     if (ratingPage) await setSettings('ratingPage', ratingPage);
-    const updated = await getSettings('ratingPage');
-    res.json({ ratingPage: updated || {} });
+    if (reviewPlatforms) await setSettings('reviewPlatforms', reviewPlatforms);
+    if (templates) await setSettings('templates', templates);
+    if (branding) await setSettings('branding', branding);
+
+    res.json({ message: 'Settings updated' });
   } catch (err) {
     next(err);
   }
 });
 
-// Platform review URLs settings (Google, Yelp, TripAdvisor)
+// Keep existing platform endpoints for now just in case
 router.get('/platforms', async (req, res, next) => {
   try {
-    const platformUrls = await getSettings('platformUrls');
+    const platformUrls = await getSettings('reviewPlatforms') || await getSettings('platformUrls');
     res.json({ platformUrls: platformUrls || { google: '', yelp: '', tripAdvisor: '' } });
   } catch (err) {
     next(err);
@@ -38,8 +47,8 @@ router.get('/platforms', async (req, res, next) => {
 router.patch('/platforms', requireRoles('admin'), async (req, res, next) => {
   try {
     const { platformUrls } = req.body;
-    if (platformUrls) await setSettings('platformUrls', platformUrls);
-    const updated = await getSettings('platformUrls');
+    if (platformUrls) await setSettings('reviewPlatforms', platformUrls);
+    const updated = await getSettings('reviewPlatforms');
     res.json({ platformUrls: updated || {} });
   } catch (err) {
     next(err);

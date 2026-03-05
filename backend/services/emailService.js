@@ -256,14 +256,32 @@ function escapeHtml(value = '') {
     .replace(/'/g, '&#39;');
 }
 
-export async function sendReviewRequestEmail(clientEmail, token, passengerName = 'Valued Customer', resNumber = '') {
+export async function sendReviewRequestEmail(clientEmail, token, passengerName = 'Valued Customer', resNumber = '', driverName = '') {
+  const { getSettings } = await import('../models/Settings.js');
+  const templates = await getSettings('templates') || {
+    emailSubject: 'Your recent VIP Connection ride - quick feedback request',
+    emailBody: 'Hi {PassengerName}, thank you for riding with us. Please share your feedback here: {ReviewLink}',
+  };
+
   const safeName = escapeHtml(passengerName);
   const safeResNumber = escapeHtml(resNumber || '');
   const baseUrl = String(config.nextAppUrl || 'http://localhost:3000').replace(/\/$/, '');
   const reviewUrl = `${baseUrl}/r/${encodeURIComponent(token)}`;
 
-  // Keep subject clear and neutral to reduce spam heuristics and increase open rates.
-  const subject = 'Your recent VIP Connection ride - quick feedback request';
+  let subject = templates.emailSubject || 'Your recent VIP Connection ride - quick feedback request';
+  let body = templates.emailBody || 'Hi {PassengerName}, thank you for riding with us. Please share your feedback here: {ReviewLink}';
+
+  const replacements = {
+    '{PassengerName}': passengerName,
+    '{DriverName}': driverName || 'your driver',
+    '{ReviewLink}': reviewUrl,
+  };
+
+  Object.entries(replacements).forEach(([key, val]) => {
+    subject = subject.replaceAll(key, val);
+    body = body.replaceAll(key, val);
+  });
+
   const html = `
 <!doctype html>
 <html lang="en">
@@ -286,13 +304,8 @@ export async function sendReviewRequestEmail(clientEmail, token, passengerName =
             </tr>
             <tr>
               <td style="padding:0 28px 10px 28px;text-align:center;">
-                <h1 style="margin:0 0 10px 0;font-size:28px;line-height:1.25;color:#111827;">Rate Your Service</h1>
-                <p style="margin:0;font-size:16px;line-height:1.6;color:#374151;">
-                  Hi ${safeName}, thank you for riding with us. Your feedback helps us keep every trip exceptional.
-                </p>
-                <p style="margin:10px 0 0 0;font-size:14px;line-height:1.5;color:#1f2937;font-weight:600;">
-                  Reservation Number: ${safeResNumber || 'N/A'}
-                </p>
+                <p style="margin:0;font-size:16px;line-height:1.6;color:#374151;white-space:pre-wrap;">${body.replace(reviewUrl, `<a href="${reviewUrl}" style="color:#22c55e;text-decoration:underline;">${reviewUrl}</a>`)}</p>
+                ${resNumber ? `<p style="margin:10px 0 0 0;font-size:14px;line-height:1.5;color:#1f2937;font-weight:600;">Reservation Number: ${safeResNumber}</p>` : ''}
               </td>
             </tr>
             <tr>
@@ -303,23 +316,9 @@ export async function sendReviewRequestEmail(clientEmail, token, passengerName =
               </td>
             </tr>
             <tr>
-              <td style="padding:4px 28px 24px 28px;text-align:center;">
-                <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">
-                  If the button does not work, copy and paste this link into your browser:
-                </p>
-                <p style="margin:8px 0 0 0;font-size:13px;color:#15803d;word-break:break-all;">
-                  <a href="${reviewUrl}" style="color:#15803d;text-decoration:underline;">${reviewUrl}</a>
-                </p>
-              </td>
-            </tr>
-            <tr>
               <td style="padding:16px 20px;background:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;">
-                <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6;">
-                  VIP Connection
-                </p>
-                <p style="margin:2px 0 0 0;font-size:12px;color:#9ca3af;">
-                  © ${new Date().getFullYear()} VIP Connection. All rights reserved.
-                </p>
+                <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.6;">VIP Connection</p>
+                <p style="margin:2px 0 0 0;font-size:12px;color:#9ca3af;">© ${new Date().getFullYear()} VIP Connection. All rights reserved.</p>
               </td>
             </tr>
           </table>
@@ -329,6 +328,6 @@ export async function sendReviewRequestEmail(clientEmail, token, passengerName =
   </body>
 </html>`;
 
-  const text = `VIP Connection\n\nHi ${passengerName}, thank you for riding with us.\nReservation Number: ${resNumber || 'N/A'}\nPlease share your feedback here: ${reviewUrl}`;
+  const text = body.replace(/<[^>]+>/g, '');
   return sendEmailWithDiagnostics({ to: clientEmail, subject, html, text });
 }

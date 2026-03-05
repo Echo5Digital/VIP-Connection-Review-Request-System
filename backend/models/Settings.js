@@ -11,10 +11,23 @@ const DEFAULTS = {
     subtitle: 'Your feedback helps us improve.',
     thankYouMessage: 'Thank you for your feedback!',
   },
-  platformUrls: {
+  reviewPlatforms: {
     google: '',
     yelp: '',
     tripAdvisor: '',
+  },
+  templates: {
+    sms: 'VIP Connection thanks you for riding with us. Please rate your experience: {ReviewLink}',
+    emailSubject: 'Thank you for your ride with VIP Connection',
+    emailBody: 'Dear {PassengerName},\n\nVIP Connection thanks you for riding with us. Please rate your experience: {ReviewLink}\n\nBest regards,\nVIP Connection',
+    reminder: 'A friendly reminder to rate your experience: {ReviewLink}',
+  },
+  branding: {
+    companyName: 'VIP Connection',
+    logo: '',
+    themeColors: {
+      primary: '#22c55e',
+    },
   },
 };
 

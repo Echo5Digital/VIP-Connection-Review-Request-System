@@ -7,8 +7,24 @@ import Manifest from '../models/Manifest.js';
 import Contact from '../models/Contact.js';
 import ReviewRequest from '../models/ReviewRequest.js';
 import * as XLSX from 'xlsx';
+import Restriction from '../models/Restriction.js';
 
 const router = Router();
+router.use(requireAuth, requireRoles('admin', 'client'));
+
+async function checkRestricted(data) {
+  const { customerCode, name, email, phone } = data;
+  const query = { $or: [] };
+
+  if (customerCode) query.$or.push({ customerCode });
+  if (name) query.$or.push({ passengerName: new RegExp(`^${name}$`, 'i') });
+  if (email) query.$or.push({ email: email.toLowerCase() });
+  if (phone) query.$or.push({ phone });
+
+  if (query.$or.length === 0) return null;
+
+  return await Restriction.findOne(query);
+}
 router.use(requireAuth, requireRoles('admin', 'client'));
 
 function getManifestAccessFilter() {
@@ -321,6 +337,9 @@ router.post('/entries', async (req, res, next) => {
     const manifest = await Manifest.findOne({ ...getManifestAccessFilter(), _id: manifestId });
     if (!manifest) return res.status(404).json({ message: 'Manifest not found' });
 
+    const customerCode = extra?.CustomerCode || extra?.['Customer Code'] || '';
+    const restricted = await checkRestricted({ customerCode, name, email, phone });
+
     const contact = await Contact.create({
       manifestId,
       name: name || '',
@@ -331,6 +350,7 @@ router.post('/entries', async (req, res, next) => {
       pickupAddress: pickupAddress || '',
       dropoffAddress: dropoffAddress || '',
       status: status || 'Pending',
+      isRestricted: !!restricted,
       extra: extra || {},
     });
     const populated = await contact.populate('manifestId', 'name');
@@ -445,7 +465,7 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
       uploadedByModel,
     });
 
-    const contacts = rows.map((row) => {
+    const contacts = await Promise.all(rows.map(async (row) => {
       const firstName = row.PassengerFirstName || row['Passenger First Name'] || '';
       const lastName = row.PassengerLastName || row['Passenger Last Name'] || '';
       const passengerName = (firstName || lastName)
@@ -459,6 +479,8 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
       const email = row.PassengerEmailAddress || row['Passenger Email Address']
         || row.ContactEmailAddress || row['Contact Email Address']
         || row.email || row.Email || row.EMAIL || '';
+
+      const customerCode = row.CustomerCode || row['Customer Code'] || '';
 
       let pickupDate = null;
       let pickupTime = '';
@@ -498,8 +520,7 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
         }
       }
 
-      const pickupAddress = row.PickupAddress || row['Pickup Address'] || row.From || row.FROM || '';
-      const dropoffAddress = row.DropoffAddress || row['Dropoff Address'] || row.To || row.TO || '';
+      const restricted = await checkRestricted({ customerCode, name: passengerName, email, phone });
 
       return {
         manifestId: manifest._id,
@@ -508,14 +529,15 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
         email,
         pickupDate,
         pickupTime,
-        pickupAddress,
-        dropoffAddress,
+        pickupAddress: row.PickupAddress || row['Pickup Address'] || row.From || row.FROM || '',
+        dropoffAddress: row.DropoffAddress || row['Dropoff Address'] || row.To || row.TO || '',
+        isRestricted: !!restricted,
         extra: { ...row },
       };
-    });
+    }));
 
     await Contact.insertMany(contacts);
-    await fs.unlink(req.file.path).catch(() => {});
+    await fs.unlink(req.file.path).catch(() => { });
     res.status(201).json(manifest);
   } catch (err) {
     next(err);

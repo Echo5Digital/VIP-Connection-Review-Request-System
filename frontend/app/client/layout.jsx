@@ -20,7 +20,7 @@ const nav = [
   },
   {
     href: '/client/manifest',
-    label: 'Review Request',
+    label: 'Trips',
     icon: (
       <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
@@ -76,9 +76,26 @@ export default function ClientLayout({ children }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isProfileMenuOpen]);
 
+  // Apply dynamic branding
+  useEffect(() => {
+    async function applyBranding() {
+      try {
+        const settings = await api.get('/api/settings');
+        if (settings?.branding?.themeColors?.primary) {
+          const primaryColor = settings.branding.themeColors.primary;
+          document.documentElement.style.setProperty('--blue-500', primaryColor);
+          document.documentElement.style.setProperty('--primary-600', primaryColor);
+        }
+      } catch (err) {
+        console.error('Failed to apply branding', err);
+      }
+    }
+    applyBranding();
+  }, []);
+
   const pageTitle = useMemo(() => {
     if (pathname?.startsWith('/client/dashboard')) return 'Dashboard';
-    if (pathname?.startsWith('/client/manifest')) return 'Review Request';
+    if (pathname?.startsWith('/client/manifest')) return 'Trips';
     if (pathname?.startsWith('/client/drivers')) return 'Drivers';
     if (pathname?.startsWith('/client/feedback')) return 'Feedback';
     return 'Dashboard';

@@ -459,7 +459,7 @@ export default function ManifestEntriesView({ role = 'admin' }) {
   return (
     <div style={{ maxWidth: '100%', margin: '0 auto', padding: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 className="page-title" style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Manifest Entries</h1>
+        <h1 className="page-title" style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Trips</h1>
       </div>
 
       {canUpload && <ManifestUpload onUploadSuccess={handleUploadSuccess} />}

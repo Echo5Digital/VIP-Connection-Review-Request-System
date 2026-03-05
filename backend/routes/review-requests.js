@@ -38,6 +38,10 @@ router.post(
       const contact = await Contact.findById(contactId).populate('manifestId', 'name');
       if (!contact) return res.status(404).json({ message: 'Contact not found' });
 
+      if (contact.isRestricted) {
+        return res.status(403).json({ message: 'Review requests are disabled for this contact (Restricted List).' });
+      }
+
       // Email requests must use the manifest PassengerEmailAddress value.
       const targetEmail = String(
         contact.extra?.PassengerEmailAddress ||
@@ -53,8 +57,16 @@ router.post(
         return res.status(400).json({ message: 'This contact does not have a phone number.' });
       }
 
+      const { getSettings } = await import('../models/Settings.js');
+      const templates = await getSettings('templates') || {
+        sms: 'VIP Connection thanks you for riding with us. Please rate your experience: {ReviewLink}',
+        emailSubject: 'Thank you for your ride with VIP Connection',
+        emailBody: 'Dear {PassengerName},\n\nVIP Connection thanks you for riding with us. Please rate your experience: {ReviewLink}\n\nBest regards,\nVIP Connection',
+      };
+
       const token = generateToken();
       const passengerName = contact.extra?.PassengerFirstName || contact.name || 'Valued Customer';
+      const driverName = contact.extra?.DispatchDriverName || contact.extra?.['Dispatch Driver Name'] || '';
       const resNumber = String(
         contact.extra?.ResNumber ||
         contact.extra?.['Res Number'] ||
@@ -75,7 +87,7 @@ router.post(
       const link = `${config.nextAppUrl}/r/${token}`;
 
       if (channel === 'email') {
-        const emailResult = await sendReviewRequestEmail(targetEmail, token, passengerName, resNumber);
+        const emailResult = await sendReviewRequestEmail(targetEmail, token, passengerName, resNumber, driverName);
         if (emailResult.success) {
           reviewRequest.status = 'sent';
           reviewRequest.sentAt = new Date();
@@ -87,24 +99,30 @@ router.post(
           success: emailResult.success,
           channel: 'email',
           sentTo: targetEmail,
-          messageId: emailResult?.messageId || null,
-          accepted: emailResult?.accepted || [],
-          rejected: emailResult?.rejected || [],
-          pending: emailResult?.pending || [],
-          response: emailResult?.response || null,
-          envelope: emailResult?.envelope || null,
-          warnings: emailResult?.warnings || [],
-          error: emailResult?.error || null,
+          message: emailResult.success ? 'Email sent successfully' : 'Failed to send email',
         });
       }
 
       if (channel === 'sms') {
-        const body = `Hi ${passengerName}, thank you for riding with VIP Connection! Please take a moment to rate your experience: ${link}`;
-        await sendSms(targetPhone, body);
-        reviewRequest.status = 'sent';
-        reviewRequest.sentAt = new Date();
-        await reviewRequest.save();
-        return res.json({ success: true, channel: 'sms', sentTo: targetPhone });
+        let smsBody = templates.sms || 'VIP Connection thanks you for riding with us. Please rate your experience: {ReviewLink}';
+        const replacements = {
+          '{PassengerName}': passengerName,
+          '{DriverName}': driverName || 'your driver',
+          '{ReviewLink}': link,
+        };
+        Object.entries(replacements).forEach(([key, val]) => {
+          smsBody = smsBody.replaceAll(key, val);
+        });
+
+        const smsResult = await sendSms(targetPhone, smsBody);
+        if (smsResult.success) {
+          reviewRequest.status = 'sent';
+          reviewRequest.sentAt = new Date();
+          await reviewRequest.save();
+          return res.json({ success: true, channel: 'sms', sentTo: targetPhone });
+        } else {
+          return res.status(502).json({ success: false, message: 'Failed to send SMS' });
+        }
       }
     } catch (err) {
       next(err);

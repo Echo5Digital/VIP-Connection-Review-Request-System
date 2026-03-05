@@ -10,6 +10,7 @@ const contactSchema = new mongoose.Schema({
   pickupAddress: { type: String, default: '' },
   dropoffAddress: { type: String, default: '' },
   status: { type: String, default: 'Pending' },
+  isRestricted: { type: Boolean, default: false },
   extra: { type: mongoose.Schema.Types.Mixed, default: {} },
 }, { timestamps: true });
 

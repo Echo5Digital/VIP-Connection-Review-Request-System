@@ -138,6 +138,7 @@ router.post('/logout', (req, res) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
+    path: '/',
   });
   res.json({ ok: true });
 });
