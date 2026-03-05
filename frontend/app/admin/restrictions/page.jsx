@@ -93,15 +93,17 @@ export default function RestrictionsPage() {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h1 className="page-title" style={{ margin: 0 }}>Restriction List</h1>
-                <button onClick={openAddModal} className="btn btn--primary">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div>
+                    <h1 className="page-title" style={{ margin: 0 }}>Restriction List</h1>
+                    <p className="text-secondary text-sm" style={{ marginTop: '4px' }}>
+                        Customers or passengers in this list will not receive review requests.
+                    </p>
+                </div>
+                <button onClick={openAddModal} className="btn btn--primary btn--sm">
                     Add Restriction
                 </button>
             </div>
-            <p className="text-muted text-sm mb-6">
-                Customers or passengers in this list will not receive review requests.
-            </p>
 
             {error && <div className="form-error mb-4">{error}</div>}
             {success && <div className="form-success mb-4">{success}</div>}
@@ -129,11 +131,11 @@ export default function RestrictionsPage() {
                             <tbody>
                                 {restrictions.map((item) => (
                                     <tr key={item._id}>
-                                        <td style={{ fontWeight: 600, fontFamily: 'monospace', color: 'var(--accent)' }}>{item.customerCode || '—'}</td>
-                                        <td style={{ fontWeight: 500 }}>{item.passengerName || '—'}</td>
+                                        <td style={{ fontWeight: 600, fontFamily: 'monospace', color: 'var(--accent)', fontSize: '13px' }}>{item.customerCode || '—'}</td>
+                                        <td style={{ fontWeight: 500, color: 'var(--text-main)' }}>{item.passengerName || '—'}</td>
                                         <td>{item.email || '—'}</td>
                                         <td>{item.phone || '—'}</td>
-                                        <td className="text-muted text-sm">{item.reason || '—'}</td>
+                                        <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{item.reason || '—'}</td>
                                         <td style={{ textAlign: 'right' }}>
                                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                 <button onClick={() => openEditModal(item)} className="btn btn--secondary btn--sm" title="Edit" style={{ padding: '6px 10px', minWidth: 'auto' }}>Edit</button>
@@ -153,13 +155,15 @@ export default function RestrictionsPage() {
                     position: 'fixed', inset: 0, zIndex: 2000,
                     background: 'rgba(0,0,0,0.85)', display: 'flex',
                     alignItems: 'center', justifyContent: 'center',
-                    padding: '16px', backdropFilter: 'blur(10px)'
+                    padding: '16px', backdropFilter: 'blur(8px)'
                 }}>
-                    <div className="card" style={{ width: '100%', maxWidth: '480px', marginBottom: 0, border: '1px solid var(--border-dim)' }}>
-                        <div className="card__header" style={{ borderBottom: '1px solid var(--border-dim)' }}>{editingEntry ? 'Edit Restriction' : 'New Restriction'}</div>
+                    <div className="card" style={{ width: '100%', maxWidth: '440px', marginBottom: 0, border: '1px solid var(--border-dim)', borderRadius: '10px' }}>
+                        <div className="card__header" style={{ borderBottom: '1px solid var(--border-dim)', marginBottom: '16px' }}>
+                            <h3 className="card__title">{editingEntry ? 'Edit Restriction' : 'New Restriction'}</h3>
+                        </div>
                         <div className="card__body">
                             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                <p className="text-muted text-sm">Fill in any combination of fields. A match on any field will block the review request.</p>
+                                <p className="text-secondary text-sm" style={{ marginBottom: '4px' }}>Fill in any field. A match will block the request.</p>
                                 <div className="form-group">
                                     <label className="form-label">Customer Code</label>
                                     <input
@@ -198,17 +202,20 @@ export default function RestrictionsPage() {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Reason</label>
+                                    <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>Reason</label>
                                     <textarea
                                         className="form-control"
-                                        style={{ height: '80px' }}
+                                        style={{ height: '80px', background: '#141414', borderRadius: '6px', padding: '10px' }}
                                         value={formData.reason}
                                         onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                                        placeholder="Internal note..."
                                     ></textarea>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
                                     <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn--secondary flex-1">Cancel</button>
-                                    <button type="submit" className="btn btn--primary flex-1">{editingEntry ? 'Save Changes' : 'Add to List'}</button>
+                                    <button type="submit" className="btn btn--primary flex-1">
+                                        {editingEntry ? 'Save Changes' : 'Add to List'}
+                                    </button>
                                 </div>
                             </form>
                         </div>

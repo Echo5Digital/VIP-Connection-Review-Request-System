@@ -51,15 +51,17 @@ export default function TemplatesPage() {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h1 className="page-title" style={{ margin: 0 }}>Review Templates</h1>
-                <button onClick={handleSave} disabled={saving} className="btn btn--primary">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div>
+                    <h1 className="page-title" style={{ margin: 0 }}>Review Templates</h1>
+                    <p className="text-secondary text-sm" style={{ marginTop: '4px' }}>
+                        Customize the messages sent to your customers.
+                    </p>
+                </div>
+                <button onClick={handleSave} disabled={saving} className="btn btn--primary btn--sm">
                     {saving ? 'Saving...' : 'Save Templates'}
                 </button>
             </div>
-            <p className="text-muted text-sm mb-8">
-                Customize the messages sent to your customers.
-            </p>
 
             {status.message && (
                 <div className={status.type === 'success' ? 'form-success mb-6' : 'form-error mb-6'}>
@@ -69,26 +71,26 @@ export default function TemplatesPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 320px) 1fr', gap: '32px' }}>
                 <aside>
-                    <div className="card" style={{ border: '1px dashed var(--accent)', background: 'rgba(201, 162, 74, 0.05)', height: 'fit-content' }}>
-                        <div className="card__body" style={{ padding: '24px' }}>
-                            <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--accent)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ fontSize: '18px' }}>💡</span> Variables
+                    <div className="card" style={{ border: '1px solid var(--border-dim)', background: 'rgba(255,255,255,0.01)', height: 'fit-content' }}>
+                        <div className="card__body" style={{ padding: '20px' }}>
+                            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                                Variables
                             </h3>
-                            <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '20px' }}>
-                                Copy and paste these tags into your templates. They will be replaced with real data when sending.
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: '16px' }}>
+                                Use these tags in your templates. They will be replaced automatically.
                             </p>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-dim)' }}>
-                                    <code style={{ fontSize: '14px', color: 'var(--accent)', fontWeight: 700 }}>{'{PassengerName}'}</code>
-                                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>First name or full name</p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                <div style={{ background: '#141414', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-dim)' }}>
+                                    <code style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: 600 }}>{'{PassengerName}'}</code>
+                                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>First or full name</p>
                                 </div>
-                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-dim)' }}>
-                                    <code style={{ fontSize: '14px', color: 'var(--accent)', fontWeight: 700 }}>{'{DriverName}'}</code>
-                                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Name of the assigned driver</p>
+                                <div style={{ background: '#141414', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-dim)' }}>
+                                    <code style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: 600 }}>{'{DriverName}'}</code>
+                                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>Assigned driver name</p>
                                 </div>
-                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '14px', borderRadius: '10px', border: '1px solid var(--border-dim)' }}>
-                                    <code style={{ fontSize: '14px', color: 'var(--accent)', fontWeight: 700 }}>{'{ReviewLink}'}</code>
-                                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>The rating link (REQUIRED)</p>
+                                <div style={{ background: '#141414', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-dim)' }}>
+                                    <code style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: 600 }}>{'{ReviewLink}'}</code>
+                                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>Rating link (REQUIRED)</p>
                                 </div>
                             </div>
                         </div>
@@ -98,42 +100,42 @@ export default function TemplatesPage() {
                 <main style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     {/* SMS */}
                     <section className="card">
-                        <div className="card__header" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ fontSize: '18px' }}>💬</span> SMS Template
+                        <div className="card__header">
+                            <h3 className="card__title">SMS Template</h3>
                         </div>
                         <div className="card__body">
                             <textarea
                                 className="form-control"
-                                style={{ height: '120px', padding: '16px', fontSize: '14px', lineHeight: '1.6', background: 'var(--bg-deep)', borderRadius: '10px' }}
+                                style={{ height: '100px', padding: '14px', fontSize: '14px', lineHeight: '1.6', background: '#141414', borderRadius: '8px', width: '100%', border: '1px solid var(--border-dim)' }}
                                 value={templates.sms}
                                 onChange={(e) => setTemplates({ ...templates, sms: e.target.value })}
                                 placeholder="Hi {PassengerName}, thank you for riding with us..."
                             ></textarea>
-                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '10px' }}>Avoid exceeding 160 characters for optimal delivery.</p>
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>Recommended length: under 160 characters.</p>
                         </div>
                     </section>
 
                     {/* Email */}
                     <section className="card">
-                        <div className="card__header" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ fontSize: '18px' }}>✉️</span> Email Template
+                        <div className="card__header">
+                            <h3 className="card__title">Email Template</h3>
                         </div>
-                        <div className="card__body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div className="card__body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div className="form-group">
-                                <label className="form-label" style={{ fontWeight: 600 }}>Subject Line</label>
+                                <label className="form-label" style={{ fontWeight: 500, fontSize: '13px' }}>Subject Line</label>
                                 <input
                                     type="text"
                                     className="form-control"
-                                    style={{ background: 'var(--bg-deep)', height: '42px', borderRadius: '8px' }}
+                                    style={{ background: '#141414', height: '36px', borderRadius: '6px' }}
                                     value={templates.emailSubject}
                                     onChange={(e) => setTemplates({ ...templates, emailSubject: e.target.value })}
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label" style={{ fontWeight: 600 }}>Message Body</label>
+                                <label className="form-label" style={{ fontWeight: 500, fontSize: '13px' }}>Message Body</label>
                                 <textarea
                                     className="form-control"
-                                    style={{ height: '320px', padding: '16px', fontSize: '14px', lineHeight: '1.7', whiteSpace: 'pre-wrap', background: 'var(--bg-deep)', borderRadius: '12px' }}
+                                    style={{ height: '280px', padding: '14px', fontSize: '14px', lineHeight: '1.6', whiteSpace: 'pre-wrap', background: '#141414', borderRadius: '8px', width: '100%', border: '1px solid var(--border-dim)' }}
                                     value={templates.emailBody}
                                     onChange={(e) => setTemplates({ ...templates, emailBody: e.target.value })}
                                 ></textarea>
@@ -143,13 +145,13 @@ export default function TemplatesPage() {
 
                     {/* Reminder */}
                     <section className="card">
-                        <div className="card__header" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ fontSize: '18px' }}>🔔</span> Reminder Message (SMS)
+                        <div className="card__header">
+                            <h3 className="card__title">Reminder Message (SMS)</h3>
                         </div>
                         <div className="card__body">
                             <textarea
                                 className="form-control"
-                                style={{ height: '100px', padding: '16px', fontSize: '14px', lineHeight: '1.6', background: 'var(--bg-deep)', borderRadius: '10px' }}
+                                style={{ height: '80px', padding: '14px', fontSize: '14px', lineHeight: '1.6', background: '#141414', borderRadius: '8px', width: '100%', border: '1px solid var(--border-dim)' }}
                                 value={templates.reminder}
                                 onChange={(e) => setTemplates({ ...templates, reminder: e.target.value })}
                                 placeholder="We noticed you haven't rated us yet..."

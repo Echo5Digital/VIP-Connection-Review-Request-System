@@ -11,11 +11,12 @@ export default async function RedirectsPage({ searchParams }) {
 
   return (
     <div>
-      <h1 className="page-title">Redirect Tracking</h1>
-      <p className="text-muted text-sm mb-6">
-        Clicks on tracking links (when &quot;Track redirects&quot; is enabled when sending reviews).
-        Each hit is logged before redirecting to the rating page.
-      </p>
+      <div style={{ marginBottom: '24px' }}>
+        <h1 className="page-title" style={{ margin: 0 }}>Redirect Tracking</h1>
+        <p className="text-secondary text-sm" style={{ marginTop: '4px' }}>
+          Monitor clicks on tracking links sent to passengers.
+        </p>
+      </div>
 
       <div className="card">
         {events.length === 0 ? (
@@ -35,17 +36,17 @@ export default async function RedirectsPage({ searchParams }) {
               <tbody>
                 {events.map((e) => (
                   <tr key={e._id}>
-                    <td style={{ fontFamily: 'monospace', color: 'var(--accent)' }}>{e.redirectId}</td>
-                    <td className="text-muted text-sm">
+                    <td style={{ fontFamily: 'monospace', color: 'var(--accent)', fontSize: '13px', fontWeight: 600 }}>{e.redirectId}</td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
                       {new Date(e.hitAt).toLocaleString('en-US', {
-                        month: '2-digit',
+                        month: 'short',
                         day: '2-digit',
                         year: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
                     </td>
-                    <td>{e.ip || '—'}</td>
+                    <td style={{ color: 'var(--text-main)' }}>{e.ip || '—'}</td>
                   </tr>
                 ))}
               </tbody>

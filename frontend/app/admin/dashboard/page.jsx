@@ -30,13 +30,13 @@ export default async function DashboardPage() {
   return (
     <div className="dashboard-container">
       {/* Quick Navigation */}
-      <div className="widget-grid widget-grid-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: '24px' }}>
+      <div className="widget-grid widget-grid-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         {quickNav.map((item) => (
-          <Link key={item.href} href={item.href} className="card stat-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', textDecoration: 'none' }}>
+          <Link key={item.href} href={item.href} className="card stat-card" style={{ padding: '18px', display: 'flex', alignItems: 'center', gap: '16px', textDecoration: 'none', marginBottom: 0 }}>
             <div style={{ fontSize: '24px', background: 'rgba(201, 162, 74, 0.1)', padding: '12px', borderRadius: '12px', color: 'var(--accent)' }}>{item.icon}</div>
             <div>
-              <div className="stat-card__label" style={{ marginBottom: '4px' }}>{item.label}</div>
-              <div className="text-accent" style={{ fontSize: '12px', fontWeight: '600' }}>Manage →</div>
+              <div className="stat-card__label" style={{ marginBottom: '2px', color: 'var(--text-main)', fontWeight: '500' }}>{item.label}</div>
+              <div className="text-accent" style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent)' }}>Manage →</div>
             </div>
           </Link>
         ))}

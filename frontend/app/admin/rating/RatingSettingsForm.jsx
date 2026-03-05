@@ -38,6 +38,7 @@ export function RatingSettingsForm({ initial }) {
           onChange={(e) => setTitle(e.target.value)}
           className="form-control"
           placeholder="How was your experience?"
+          style={{ background: '#141414', height: '36px', borderRadius: '6px' }}
         />
       </div>
 
@@ -48,6 +49,7 @@ export function RatingSettingsForm({ initial }) {
           onChange={(e) => setSubtitle(e.target.value)}
           className="form-control"
           placeholder="Your feedback helps us improve."
+          style={{ background: '#141414', height: '36px', borderRadius: '6px' }}
         />
       </div>
 
@@ -58,6 +60,7 @@ export function RatingSettingsForm({ initial }) {
           onChange={(e) => setThankYouMessage(e.target.value)}
           className="form-control"
           placeholder="Thank you for your feedback!"
+          style={{ background: '#141414', height: '36px', borderRadius: '6px' }}
         />
       </div>
 
@@ -68,14 +71,15 @@ export function RatingSettingsForm({ initial }) {
           onChange={(e) => setGoogleReviewUrl(e.target.value)}
           className="form-control"
           placeholder="https://search.google.com/local/writereview?placeid=..."
+          style={{ background: '#141414', height: '36px', borderRadius: '6px' }}
         />
       </div>
 
       {error && <p className="form-error">{error}</p>}
 
-      <div style={{ marginTop: '8px' }}>
-        <button type="submit" disabled={loading} className="btn btn--primary" style={{ padding: '0 40px', height: '48px', fontSize: '15px', borderRadius: '12px' }}>
-          {loading ? 'Saving…' : 'Save Settings'}
+      <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+        <button type="submit" disabled={loading} className="btn btn--primary btn--sm" style={{ padding: '0 32px' }}>
+          {loading ? 'Saving…' : 'Save Copy Settings'}
         </button>
       </div>
     </form>

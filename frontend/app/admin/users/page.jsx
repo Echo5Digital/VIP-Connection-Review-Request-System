@@ -101,8 +101,8 @@ export default function UsersPage() {
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h1 className="page-title" style={{ margin: 0 }}>User Management</h1>
-                <button onClick={openAddModal} className="btn btn--primary">
+                <h1 className="page-title" style={{ margin: 0, fontSize: '24px', fontWeight: '600', color: 'var(--text-main)' }}>Users</h1>
+                <button onClick={openAddModal} className="btn btn--primary btn--sm">
                     Add New User
                 </button>
             </div>
@@ -131,7 +131,7 @@ export default function UsersPage() {
                             <tbody>
                                 {users.map((user) => (
                                     <tr key={user._id} style={{ opacity: user.active === false ? 0.5 : 1 }}>
-                                        <td style={{ fontWeight: 500 }}>{user.name}</td>
+                                        <td style={{ fontWeight: 500, color: 'var(--text-main)' }}>{user.name}</td>
                                         <td>{user.email}</td>
                                         <td>
                                             <span className={`badge ${getRoleBadgeClass(user.role)}`} style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -143,7 +143,7 @@ export default function UsersPage() {
                                                 {user.active !== false ? 'Active' : 'Disabled'}
                                             </span>
                                         </td>
-                                        <td className="text-muted text-sm">
+                                        <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
                                             {new Date(user.createdAt).toLocaleDateString()}
                                         </td>
                                         <td style={{ textAlign: 'right' }}>
@@ -165,10 +165,12 @@ export default function UsersPage() {
                     position: 'fixed', inset: 0, zIndex: 2000,
                     background: 'rgba(0,0,0,0.85)', display: 'flex',
                     alignItems: 'center', justifyContent: 'center',
-                    padding: '16px', backdropFilter: 'blur(10px)'
+                    padding: '16px', backdropFilter: 'blur(8px)'
                 }}>
-                    <div className="card" style={{ width: '100%', maxWidth: '440px', marginBottom: 0, border: '1px solid var(--border-dim)' }}>
-                        <div className="card__header" style={{ borderBottom: '1px solid var(--border-dim)' }}>{editingUser ? 'Edit User' : 'Add New User'}</div>
+                    <div className="card" style={{ width: '100%', maxWidth: '440px', marginBottom: 0, border: '1px solid var(--border-dim)', borderRadius: '10px' }}>
+                        <div className="card__header" style={{ borderBottom: '1px solid var(--border-dim)', marginBottom: '16px' }}>
+                            <h3 className="card__title">{editingUser ? 'Edit User' : 'Add New User'}</h3>
+                        </div>
                         <div className="card__body">
                             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <div className="form-group">

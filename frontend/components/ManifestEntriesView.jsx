@@ -11,22 +11,22 @@ const OVERLAY_STYLE = {
   backdropFilter: 'blur(8px)',
 };
 const MODAL_STYLE = {
-  background: 'var(--bg-section)', borderRadius: 'var(--radius-lg)', padding: '32px',
+  background: 'var(--bg-surface)', borderRadius: '10px', padding: '24px',
   width: '100%', maxWidth: '1000px', maxHeight: '95vh', overflowY: 'auto',
   border: '1px solid var(--border-dim)',
   boxShadow: 'var(--shadow-lg)',
 };
 const FIELD_STYLE = {
-  width: '100%', height: '42px', borderRadius: 'var(--radius-md)',
-  border: '1px solid var(--border-dim)', padding: '0 12px', fontSize: '14px',
+  width: '100%', height: '36px', borderRadius: '6px',
+  border: '1px solid var(--border-dim)', padding: '0 10px', fontSize: '14px',
   boxSizing: 'border-box',
-  background: 'var(--bg-deep)',
+  background: '#141414',
   color: 'var(--text-main)',
   outline: 'none',
   transition: 'border-color 0.2s ease',
 };
-const LABEL_STYLE = { display: 'block', fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' };
-const FORM_FIELD_WRAP_STYLE = { marginBottom: '20px' };
+const LABEL_STYLE = { display: 'block', fontSize: '13px', fontWeight: '500', color: 'var(--text-secondary)', marginBottom: '6px' };
+const FORM_FIELD_WRAP_STYLE = { marginBottom: '16px' };
 
 const REQUIRED_REVIEW_FIELDS = [
   'ResNumber',
@@ -564,7 +564,7 @@ export default function ManifestEntriesView({ role = 'admin' }) {
               )}
             </div>
 
-            <div className="manifest-entry-inline-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '20px', borderTop: '1px solid var(--border-dim)', marginTop: '20px' }}>
+            <div className="manifest-entry-inline-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', paddingTop: '16px', borderTop: '1px solid var(--border-dim)', marginTop: '16px' }}>
               <button
                 type="button"
                 onClick={closeModal}
@@ -587,7 +587,7 @@ export default function ManifestEntriesView({ role = 'admin' }) {
 
       <div className="card">
         <div className="card__header" style={{ padding: '16px 24px' }}>
-          <div style={{ position: 'relative', width: '100%', maxWidth: '480px' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
             <input
               type="text"
               className="form-control"
@@ -595,16 +595,12 @@ export default function ManifestEntriesView({ role = 'admin' }) {
               value={searchTerm}
               onChange={handleSearch}
               style={{
-                paddingLeft: '40px',
+                paddingLeft: '36px',
                 width: '100%',
-                height: '42px',
-                borderRadius: '8px',
-                background: 'var(--bg-deep)',
-                border: '1px solid var(--border-dim)'
               }}
             />
-            <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent)', opacity: 0.8 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent)', opacity: 0.8 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>

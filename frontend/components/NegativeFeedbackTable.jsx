@@ -18,7 +18,7 @@ function RatingBadge({ value }) {
 function formatDate(value) {
   if (!value) return '-';
   return new Date(value).toLocaleDateString('en-US', {
-    month: '2-digit',
+    month: 'short',
     day: '2-digit',
     year: 'numeric',
   });
@@ -68,18 +68,19 @@ export default function NegativeFeedbackTable({ title = 'Feedback' }) {
 
   return (
     <div>
-      <h1 className="page-title">{title}</h1>
-      <p className="text-muted text-sm mb-6">
-        Displays private feedback submitted by passengers after their ride.
-      </p>
-
-      <div style={{ marginBottom: '24px' }}>
-        <span className="badge badge--gold" style={{ padding: '8px 20px', fontSize: '13px', fontWeight: 700, borderRadius: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div>
+          <h1 className="page-title" style={{ margin: 0 }}>{title}</h1>
+          <p className="text-secondary text-sm" style={{ marginTop: '4px' }}>
+            Private feedback submitted by passengers after their ride.
+          </p>
+        </div>
+        <div className="badge badge--gold" style={{ padding: '8px 16px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
           Negative Feedback
           {list.length > 0 && (
-            <span style={{ marginLeft: '10px', opacity: 0.8, background: 'rgba(0,0,0,0.2)', padding: '2px 8px', borderRadius: '10px' }}>{list.length}</span>
+            <span style={{ opacity: 0.8, background: 'rgba(0,0,0,0.15)', padding: '1px 6px', borderRadius: '4px', fontSize: '11px' }}>{list.length}</span>
           )}
-        </span>
+        </div>
       </div>
 
       <div className="card" ref={tableTopRef}>
@@ -133,28 +134,28 @@ export default function NegativeFeedbackTable({ title = 'Feedback' }) {
                           background: isExpanded ? 'rgba(201, 162, 74, 0.03)' : 'transparent'
                         }}
                       >
-                        <td data-label="ResNumber" style={{ fontWeight: 700, color: 'var(--accent)', paddingLeft: '24px' }}>{resNumber}</td>
-                        <td data-label="Contact" className="text-muted">{contactLabel}</td>
+                        <td data-label="ResNumber" style={{ fontWeight: 600, color: 'var(--accent)', paddingLeft: '24px' }}>{resNumber}</td>
+                        <td data-label="Contact" style={{ color: 'var(--text-secondary)' }}>{contactLabel}</td>
                         <td data-label="Driver Rating"><RatingBadge value={f.driverRating} /></td>
                         <td data-label="Vehicle Rating"><RatingBadge value={f.vehicleRating} /></td>
-                        <td data-label="Date" className="text-muted text-sm" style={{ paddingRight: '24px' }}>{formatDate(f.submittedAt)}</td>
+                        <td data-label="Date" style={{ color: 'var(--text-secondary)', fontSize: '13px', paddingRight: '24px', textAlign: 'right' }}>{formatDate(f.submittedAt)}</td>
                       </tr>
                       <tr className={`feedback-row-details ${isExpanded ? 'feedback-row-details--open' : ''}`}>
                         <td colSpan={5} style={{ padding: 0 }}>
-                          <div className="feedback-row-details__content" style={{ padding: '24px', background: 'rgba(201, 162, 74, 0.02)', borderBottom: isExpanded ? '1px solid var(--border-dim)' : 'none' }}>
-                            <div className="feedback-row-details__grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px', marginBottom: '24px' }}>
+                          <div className="feedback-row-details__content" style={{ padding: '24px', background: 'rgba(255,255,255,0.01)', borderBottom: isExpanded ? '1px solid var(--border-dim)' : 'none' }}>
+                            <div className="feedback-row-details__grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '24px', marginBottom: '24px' }}>
                               <div>
-                                <div className="feedback-row-details__label" style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '8px', letterSpacing: '0.05em' }}>Dispatch Driver</div>
-                                <div className="feedback-row-details__value" style={{ fontWeight: 600, color: 'var(--text-main)' }}>{dispatchDriverName}</div>
+                                <div className="feedback-row-details__label" style={{ fontSize: '11px', fontWeight: '500', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '4px', letterSpacing: '0.05em' }}>Driver Name</div>
+                                <div className="feedback-row-details__value" style={{ fontWeight: 500, color: 'var(--text-main)' }}>{dispatchDriverName}</div>
                               </div>
                               <div>
-                                <div className="feedback-row-details__label" style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '8px', letterSpacing: '0.05em' }}>Vehicle Type</div>
-                                <div className="feedback-row-details__value" style={{ fontWeight: 600, color: 'var(--text-main)' }}>{dispatchVehicleTypeCode}</div>
+                                <div className="feedback-row-details__label" style={{ fontSize: '11px', fontWeight: '500', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '4px', letterSpacing: '0.05em' }}>Vehicle Type</div>
+                                <div className="feedback-row-details__value" style={{ fontWeight: 500, color: 'var(--text-main)' }}>{dispatchVehicleTypeCode}</div>
                               </div>
                             </div>
-                            <div className="feedback-row-details__comment" style={{ padding: '20px', background: 'var(--bg-deep)', borderRadius: '12px', border: '1px solid var(--border-dim)' }}>
-                              <div className="feedback-row-details__label" style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px', letterSpacing: '0.05em' }}>Full Comment</div>
-                              <p className="feedback-row-details__value" style={{ color: 'var(--text-main)', lineHeight: '1.6', margin: 0 }}>{fullComment}</p>
+                            <div className="feedback-row-details__comment" style={{ padding: '18px', background: '#141414', borderRadius: '10px', border: '1px solid var(--border-dim)' }}>
+                              <div className="feedback-row-details__label" style={{ fontSize: '11px', fontWeight: '500', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '8px', letterSpacing: '0.05em' }}>Feedback Comment</div>
+                              <p className="feedback-row-details__value" style={{ color: 'var(--text-main)', lineHeight: '1.6', margin: 0, fontSize: '14px' }}>{fullComment}</p>
                             </div>
                           </div>
                         </td>
@@ -168,30 +169,33 @@ export default function NegativeFeedbackTable({ title = 'Feedback' }) {
         )}
 
         {totalPages > 1 && (
-          <div className="card__footer" style={{
+          <div style={{
             display: 'flex',
-            justifyContent: 'center',
+            justifyContent: 'space-between',
             alignItems: 'center',
-            gap: '16px',
-            borderTop: '1px solid var(--border-dim)'
+            padding: '16px 24px',
+            borderTop: '1px solid var(--border-dim)',
+            background: 'rgba(255,255,255,0.01)'
           }}>
-            <button
-              onClick={() => changePage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="btn btn--secondary btn--sm"
-            >
-              ← Previous
-            </button>
-            <span className="text-sm font-medium">
-              Page <span className="text-accent">{currentPage}</span> of {totalPages}
-            </span>
-            <button
-              onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="btn btn--secondary btn--sm"
-            >
-              Next →
-            </button>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              Page <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{currentPage}</span> of {totalPages}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => changePage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="btn btn--secondary btn--sm"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => changePage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="btn btn--secondary btn--sm"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

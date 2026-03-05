@@ -95,7 +95,7 @@ export default function AffiliatesPage() {
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <h1 className="page-title" style={{ margin: 0 }}>Affiliates</h1>
-                <button onClick={openAddModal} className="btn btn--primary">
+                <button onClick={openAddModal} className="btn btn--primary btn--sm">
                     Add Affiliate
                 </button>
             </div>
@@ -128,17 +128,17 @@ export default function AffiliatesPage() {
                             <tbody>
                                 {affiliates.map((aff) => (
                                     <tr key={aff._id}>
-                                        <td style={{ fontWeight: 600, color: 'var(--accent)' }}>{aff.code}</td>
-                                        <td style={{ fontWeight: 500 }}>{aff.name}</td>
+                                        <td style={{ fontWeight: 600, color: 'var(--accent)', fontSize: '13px' }}>{aff.code}</td>
+                                        <td style={{ fontWeight: 500, color: 'var(--text-main)' }}>{aff.name}</td>
                                         <td>{aff.contactPerson || '—'}</td>
                                         <td>{aff.email || '—'}</td>
                                         <td>{aff.phone || '—'}</td>
                                         <td>
-                                            <span className="badge badge--gold">
+                                            <span className="badge badge--gold" style={{ padding: '4px 10px', fontSize: '12px' }}>
                                                 {aff.avgRating?.toFixed(1) || '0.0'} ★
                                             </span>
                                         </td>
-                                        <td>{aff.tripsCount || 0}</td>
+                                        <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{aff.tripsCount || 0}</td>
                                         <td style={{ textAlign: 'right' }}>
                                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                 <button onClick={() => openEditModal(aff)} className="btn btn--secondary btn--sm" title="Edit" style={{ padding: '6px 10px', minWidth: 'auto' }}>Edit</button>
@@ -160,9 +160,9 @@ export default function AffiliatesPage() {
                     alignItems: 'center', justifyContent: 'center',
                     padding: '16px', backdropFilter: 'blur(8px)'
                 }}>
-                    <div className="card" style={{ width: '100%', maxWidth: '480px', marginBottom: 0, border: '1px solid var(--border-dim)' }}>
-                        <div className="card__header" style={{ borderBottom: '1px solid var(--border-dim)' }}>
-                            {editingAffiliate ? 'Edit Affiliate' : 'Add New Affiliate'}
+                    <div className="card" style={{ width: '100%', maxWidth: '440px', marginBottom: 0, border: '1px solid var(--border-dim)', borderRadius: '10px' }}>
+                        <div className="card__header" style={{ borderBottom: '1px solid var(--border-dim)', marginBottom: '16px' }}>
+                            <h3 className="card__title">{editingAffiliate ? 'Edit Affiliate' : 'Add New Affiliate'}</h3>
                         </div>
                         <div className="card__body">
                             <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -214,9 +214,11 @@ export default function AffiliatesPage() {
                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                     />
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
                                     <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn--secondary flex-1">Cancel</button>
-                                    <button type="submit" className="btn btn--primary flex-1">{editingAffiliate ? 'Save Changes' : 'Create Affiliate'}</button>
+                                    <button type="submit" className="btn btn--primary flex-1">
+                                        {editingAffiliate ? 'Save Changes' : 'Create Affiliate'}
+                                    </button>
                                 </div>
                             </form>
                         </div>

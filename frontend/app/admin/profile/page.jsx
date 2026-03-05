@@ -63,7 +63,12 @@ export default function SettingsPage() {
 
     return (
         <div>
-            <h1 className="page-title">Profile Settings</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h1 className="page-title" style={{ margin: 0 }}>Profile Settings</h1>
+                <button type="submit" form="profile-form" disabled={saving} className="btn btn--primary btn--sm">
+                    {saving ? 'Saving...' : 'Save Settings'}
+                </button>
+            </div>
 
             {status.message && (
                 <div className={status.type === 'success' ? 'form-success mb-6' : 'form-error mb-6'}>
@@ -71,13 +76,15 @@ export default function SettingsPage() {
                 </div>
             )}
 
-            <form onSubmit={handleSettingsSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <form id="profile-form" onSubmit={handleSettingsSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 {/* Review Platforms */}
                 <section className="card">
-                    <div className="card__header">Review Platform Settings</div>
-                    <div className="card__body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div className="card__header" style={{ marginBottom: '16px' }}>
+                        <h3 className="card__title">Review Platform Settings</h3>
+                    </div>
+                    <div className="card__body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div className="form-group">
-                            <label className="form-label">Google Review URL</label>
+                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>Google Review URL</label>
                             <input
                                 type="url"
                                 className="form-control"
@@ -87,10 +94,11 @@ export default function SettingsPage() {
                                     reviewPlatforms: { ...settings.reviewPlatforms, google: e.target.value }
                                 })}
                                 placeholder="https://g.page/r/..."
+                                style={{ background: '#141414', height: '36px', borderRadius: '6px' }}
                             />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Yelp Review URL</label>
+                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>Yelp Review URL</label>
                             <input
                                 type="url"
                                 className="form-control"
@@ -100,10 +108,11 @@ export default function SettingsPage() {
                                     reviewPlatforms: { ...settings.reviewPlatforms, yelp: e.target.value }
                                 })}
                                 placeholder="https://www.yelp.com/biz/..."
+                                style={{ background: '#141414', height: '36px', borderRadius: '6px' }}
                             />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">TripAdvisor Review URL</label>
+                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>TripAdvisor Review URL</label>
                             <input
                                 type="url"
                                 className="form-control"
@@ -113,6 +122,7 @@ export default function SettingsPage() {
                                     reviewPlatforms: { ...settings.reviewPlatforms, tripAdvisor: e.target.value }
                                 })}
                                 placeholder="https://www.tripadvisor.com/..."
+                                style={{ background: '#141414', height: '36px', borderRadius: '6px' }}
                             />
                         </div>
                     </div>
@@ -120,10 +130,12 @@ export default function SettingsPage() {
 
                 {/* Branding */}
                 <section className="card">
-                    <div className="card__header">Branding</div>
-                    <div className="card__body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div className="card__header" style={{ marginBottom: '16px' }}>
+                        <h3 className="card__title">Branding</h3>
+                    </div>
+                    <div className="card__body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div className="form-group">
-                            <label className="form-label">Company Name</label>
+                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>Company Name</label>
                             <input
                                 type="text"
                                 className="form-control"
@@ -132,17 +144,18 @@ export default function SettingsPage() {
                                     ...settings,
                                     branding: { ...settings.branding, companyName: e.target.value }
                                 })}
+                                style={{ background: '#141414', height: '36px', borderRadius: '6px' }}
                             />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Theme Primary Color</label>
+                            <label className="form-label" style={{ fontSize: '13px', fontWeight: 500 }}>Theme Primary Color</label>
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                                 <input
                                     type="color"
                                     style={{
-                                        width: '60px', height: '40px', padding: '2px',
-                                        borderRadius: '8px', border: '1px solid var(--border-dim)',
-                                        background: 'var(--bg-deep)', cursor: 'pointer'
+                                        width: '42px', height: '36px', padding: '2px',
+                                        borderRadius: '6px', border: '1px solid var(--border-dim)',
+                                        background: '#141414', cursor: 'pointer'
                                     }}
                                     value={settings.branding.themeColors.primary}
                                     onChange={(e) => setSettings({
@@ -156,7 +169,7 @@ export default function SettingsPage() {
                                 <input
                                     type="text"
                                     className="form-control"
-                                    style={{ maxWidth: '140px' }}
+                                    style={{ maxWidth: '120px', background: '#141414', height: '36px', borderRadius: '6px' }}
                                     value={settings.branding.themeColors.primary}
                                     onChange={(e) => setSettings({
                                         ...settings,
@@ -171,8 +184,8 @@ export default function SettingsPage() {
                     </div>
                 </section>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
-                    <button type="submit" disabled={saving} className="btn btn--primary" style={{ padding: '0 40px', height: '48px', fontSize: '15px', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '40px' }}>
+                    <button type="submit" disabled={saving} className="btn btn--primary" style={{ padding: '0 32px' }}>
                         {saving ? 'Saving...' : 'Save All Settings'}
                     </button>
                 </div>

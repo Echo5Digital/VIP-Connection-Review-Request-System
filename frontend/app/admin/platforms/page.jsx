@@ -46,20 +46,27 @@ export default function PlatformsSettingsPage() {
 
   return (
     <div>
-      <h1 className="page-title">Platform Review URLs</h1>
-      <p className="text-muted text-sm mb-6">
-        Configure the links customers are directed to when leaving a public review after a 5-star rating.
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div>
+          <h1 className="page-title" style={{ margin: 0 }}>Platform Review URLs</h1>
+          <p className="text-secondary text-sm" style={{ marginTop: '4px' }}>
+            Configure the links customers are directed to for public reviews.
+          </p>
+        </div>
+        <button type="submit" form="platforms-form" disabled={saving} className="btn btn--primary btn--sm">
+          {saving ? 'Saving...' : 'Save Links'}
+        </button>
+      </div>
 
       {loading ? (
         <p className="card__empty">Loading...</p>
       ) : (
         <div className="card" style={{ maxWidth: '640px' }}>
-          <div className="card__header">
-            Review Platform Links
+          <div className="card__header" style={{ marginBottom: '16px' }}>
+            <h3 className="card__title">Review Platform Links</h3>
           </div>
           <div className="card__body">
-            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <form id="platforms-form" onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* Google */}
               <div className="form-group">
                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -74,9 +81,10 @@ export default function PlatformsSettingsPage() {
                 <input
                   type="url"
                   className="form-control"
+                  style={{ background: '#141414', height: '36px', borderRadius: '6px' }}
                   value={google}
                   onChange={(e) => setGoogle(e.target.value)}
-                  placeholder="https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID"
+                  placeholder="https://search.google.com/local/writereview?placeid=..."
                 />
                 <p className="text-muted text-xs mt-1">
                   Find your Place ID at <a href="https://developers.google.com/maps/documentation/places" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>developers.google.com</a>
@@ -94,9 +102,10 @@ export default function PlatformsSettingsPage() {
                 <input
                   type="url"
                   className="form-control"
+                  style={{ background: '#141414', height: '36px', borderRadius: '6px' }}
                   value={yelp}
                   onChange={(e) => setYelp(e.target.value)}
-                  placeholder="https://www.yelp.com/biz/your-business-name"
+                  placeholder="https://www.yelp.com/biz/..."
                 />
               </div>
 
@@ -112,9 +121,10 @@ export default function PlatformsSettingsPage() {
                 <input
                   type="url"
                   className="form-control"
+                  style={{ background: '#141414', height: '36px', borderRadius: '6px' }}
                   value={tripAdvisor}
                   onChange={(e) => setTripAdvisor(e.target.value)}
-                  placeholder="https://www.tripadvisor.com/UserReviewEdit-g..."
+                  placeholder="https://www.tripadvisor.com/UserReviewEdit..."
                 />
               </div>
 
@@ -128,14 +138,14 @@ export default function PlatformsSettingsPage() {
                 </p>
               )}
 
-              <div style={{ marginTop: '8px' }}>
+              <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-dim)', paddingTop: '20px' }}>
                 <button
                   type="submit"
                   disabled={saving}
                   className="btn btn--primary"
-                  style={{ padding: '0 40px', height: '48px', fontSize: '15px', borderRadius: '12px' }}
+                  style={{ padding: '0 32px' }}
                 >
-                  {saving ? 'Saving…' : 'Save Settings'}
+                  {saving ? 'Saving…' : 'Save Platform Settings'}
                 </button>
               </div>
             </form>

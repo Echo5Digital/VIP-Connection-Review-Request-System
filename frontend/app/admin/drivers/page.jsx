@@ -431,21 +431,21 @@ export default function DriversPage() {
       />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 className="page-title" style={{ margin: 0 }}>Drivers</h1>
+        <h1 className="page-title" style={{ margin: 0, fontSize: '24px', fontWeight: '600', color: 'var(--text-main)' }}>Drivers</h1>
         <div style={{ display: 'flex', gap: '12px' }}>
           {selectedIds.size > 0 && (
             <button
               onClick={() => handleBulkDelete()}
-              className="btn btn--secondary"
+              className="btn btn--secondary btn--sm"
               style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}
             >
               Delete Selected ({selectedIds.size})
             </button>
           )}
-          <button onClick={handleDownload} className="btn btn--secondary">
+          <button onClick={handleDownload} className="btn btn--secondary btn--sm">
             Download Excel
           </button>
-          <button onClick={openAddModal} className="btn btn--primary">
+          <button onClick={openAddModal} className="btn btn--primary btn--sm">
             Add Driver
           </button>
         </div>
@@ -458,10 +458,12 @@ export default function DriversPage() {
 
 
       {/* Upload section */}
-      <div className="card mb-6">
-        <div className="card__header">Upload Drivers File</div>
+      <div className="card" style={{ marginBottom: '24px' }}>
+        <div className="card__header" style={{ marginBottom: '12px' }}>
+          <h3 className="card__title">Upload Drivers File</h3>
+        </div>
         <div className="card__body">
-          <p className="text-muted text-sm mb-6">
+          <p className="text-muted text-sm" style={{ marginBottom: '16px' }}>
             Upload a .csv or .xlsx file. New records will be appended. Existing VIP Car # will be skipped.
           </p>
           <form onSubmit={handleFileUpload} style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -476,16 +478,16 @@ export default function DriversPage() {
               />
               <button
                 type="button"
-                className="btn btn--secondary"
+                className="btn btn--secondary btn--sm"
                 style={{ pointerEvents: 'none' }}
               >
                 Choose File
               </button>
             </div>
-            <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
               {file ? file.name : 'No file chosen'}
             </span>
-            <button type="submit" disabled={uploading || !file} className="btn btn--primary">
+            <button type="submit" disabled={uploading || !file} className="btn btn--primary btn--sm">
               {uploading ? 'Uploading...' : 'Upload Drivers'}
             </button>
           </form>
@@ -497,7 +499,7 @@ export default function DriversPage() {
         <div className="card__header">Drivers &amp; Vehicles</div>
 
         {/* Filters Section */}
-        <div style={{ padding: '16px', borderBottom: '1px solid var(--border-dim)', background: 'rgba(255,255,255,0.02)' }}>
+        <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--border-dim)', background: 'rgba(255,255,255,0.01)' }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -505,9 +507,9 @@ export default function DriversPage() {
             gap: '16px',
             flexWrap: 'wrap'
           }}>
-            <div style={{ display: 'flex', gap: '16px', flex: 1, minWidth: '300px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', flex: 1, minWidth: '300px', flexWrap: 'wrap', alignItems: 'center' }}>
               {/* SearchBar */}
-              <div style={{ flex: 1, maxWidth: '400px', position: 'relative' }}>
+              <div style={{ flex: 1, maxWidth: '360px', position: 'relative' }}>
                 <input
                   type="text"
                   className="form-control"
@@ -518,18 +520,12 @@ export default function DriversPage() {
                     setCurrentPage(1);
                   }}
                   style={{
-                    paddingLeft: '40px',
-                    height: '42px',
-                    borderRadius: '8px',
-                    fontSize: '14px',
+                    paddingLeft: '36px',
                     width: '100%',
-                    background: 'var(--bg-deep)',
-                    border: '1px solid var(--border-dim)',
-                    color: 'var(--text-main)'
                   }}
                 />
-                <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent)', opacity: 0.8 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent)', opacity: 0.8 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                   </svg>
@@ -546,15 +542,9 @@ export default function DriversPage() {
                     setCurrentPage(1);
                   }}
                   style={{
-                    height: '42px',
-                    borderRadius: '8px',
-                    background: 'var(--bg-deep)',
-                    border: '1px solid var(--border-dim)',
-                    paddingRight: '36px',
+                    paddingRight: '32px',
                     appearance: 'none',
-                    fontWeight: 500,
-                    fontSize: '14px',
-                    color: 'var(--text-main)'
+                    width: '100%'
                   }}
                 >
                   <option value="">All Vehicle Types</option>
@@ -566,8 +556,8 @@ export default function DriversPage() {
                   <option value="Luxury Sedan">Luxury Sedan</option>
                   <option value="Van">Van</option>
                 </select>
-                <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }}>
-                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }}>
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                     <path d="M6 9l6 6 6-6" />
                   </svg>
                 </span>
@@ -582,7 +572,7 @@ export default function DriversPage() {
                     setCurrentPage(1);
                   }}
                   className="btn btn--text"
-                  style={{ color: 'var(--accent)', fontWeight: 600, padding: '0 8px' }}
+                  style={{ color: 'var(--accent)', fontWeight: 600, padding: '0 8px', fontSize: '13px' }}
                 >
                   Reset Filters
                 </button>
@@ -597,7 +587,7 @@ export default function DriversPage() {
                 <button
                   onClick={() => setSelectedIds(new Set())}
                   className="btn btn--text"
-                  style={{ color: 'var(--text-muted)', padding: '0 8px' }}
+                  style={{ color: 'var(--text-muted)', padding: '0 8px', fontSize: '13px' }}
                 >
                   Clear Selection
                 </button>

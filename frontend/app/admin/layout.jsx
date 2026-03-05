@@ -160,7 +160,7 @@ export default function AdminLayout({ children }) {
     <div className="admin-shell">
       <aside className={`admin-shell__sidebar${isSidebarOpen ? ' admin-shell__sidebar--open' : ''}`}>
         <div className="admin-shell__brand">
-          VIP <span>CONNECTION</span>
+          VIP CONNECTION
         </div>
         <nav className="admin-shell__nav">
           {nav.map((item) => {
