@@ -99,8 +99,7 @@ router.get('/analytics', async (req, res) => {
             ratedTrips: v.count
         })).sort((a, b) => b.avgRating - a.avgRating);
 
-        const topDrivers = driverStats.filter(d => d.avgRating >= 4.5).slice(0, 5);
-        const attentionDrivers = driverStats.filter(d => d.avgRating < 4.0).slice(0, 5);
+        const top5Drivers = driverStats.slice(0, 5);
 
         // 4. Negative Feedback Action Panel
         // Assume private feedabck is "unresolved" if no status exists, or we just show recent private feedback
@@ -139,10 +138,7 @@ router.get('/analytics', async (req, res) => {
                 sentRateConversion,
                 clickConversion,
             },
-            drivers: {
-                topDrivers,
-                attentionDrivers
-            },
+            drivers: top5Drivers,
             vehicles: vehicleStats.slice(0, 5),
             negativeFeedback: {
                 total: allFeedback.length,

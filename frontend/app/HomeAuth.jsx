@@ -54,8 +54,8 @@ export function HomeAuth() {
           <Image
             src="/images/vip-logo.png"
             alt="VIP Connection"
-            width={72}
-            height={72}
+            width={110}
+            height={110}
             className="home-auth__logo-img"
             priority
           />
@@ -65,7 +65,6 @@ export function HomeAuth() {
         </div>
 
         <div className="home-auth__intro-block">
-          <h1 className="home-auth__welcome">Welcome Back!</h1>
           <p className="home-auth__desc">
             A Controlled Feedback Platform to Increase Public Reviews, Capture Private Concerns, and Monitor Driver &amp; Vehicle Performance
           </p>

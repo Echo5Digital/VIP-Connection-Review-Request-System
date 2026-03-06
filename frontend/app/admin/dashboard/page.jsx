@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   const fallbackAnalytics = {
     funnel: { requestsSent: 0, delivered: 0, ratingsSubmitted: 0, fiveStarDriverVehicle: 0, publicReviewClicks: 0, privateFeedback: 0 },
     conversion: { sentRateConversion: 0, clickConversion: 0 },
-    drivers: { topDrivers: [], attentionDrivers: [] },
+    drivers: [],
     vehicles: [],
     negativeFeedback: { total: 0, days_0_2: 0, days_3_7: 0, days_8_plus: 0 }
   };

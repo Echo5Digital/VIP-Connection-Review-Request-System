@@ -68,65 +68,38 @@ export function ConversionMetricsWidget({ data }) {
 }
 
 export function DriverPerformanceWidget({ data }) {
+    const drivers = Array.isArray(data) ? data : [];
     return (
         <div className="card">
             <div className="widget-header">
                 <h3 className="card__title">Driver Performance</h3>
                 <Link href="/admin/driver-productivity" className="btn btn--secondary btn--sm">Analyze →</Link>
             </div>
-            <div className="widget-grid widget-grid-2">
-                <div>
-                    <h4 className="widget-subhead">Top Drivers</h4>
-                    {data.topDrivers.length === 0 ? (
-                        <p className="widget-empty">No top drivers yet.</p>
-                    ) : (
-                        <div className="table-wrap">
-                            <table className="widget-table">
-                                <thead>
-                                    <tr>
-                                        <th>Driver</th>
-                                        <th style={{ textAlign: 'center' }}>Rating</th>
-                                        <th style={{ textAlign: 'center' }}>Trips</th>
+            <div className="widget-body">
+                {drivers.length === 0 ? (
+                    <p className="widget-empty">No driver ratings yet.</p>
+                ) : (
+                    <div className="table-wrap">
+                        <table className="widget-table">
+                            <thead>
+                                <tr>
+                                    <th>Driver</th>
+                                    <th style={{ textAlign: 'center' }}>Rating</th>
+                                    <th style={{ textAlign: 'center' }}>Trips</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {drivers.map((d, i) => (
+                                    <tr key={i}>
+                                        <td className="font-medium">{d.name}</td>
+                                        <td style={{ textAlign: 'center' }}><span className="badge badge--gold">★ {d.avgRating}</span></td>
+                                        <td style={{ textAlign: 'center' }}>{d.ratedTrips}</td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {data.topDrivers.map((d, i) => (
-                                        <tr key={i}>
-                                            <td className="font-medium">{d.name}</td>
-                                            <td style={{ textAlign: 'center' }}><span className="badge badge--green">★ {d.avgRating}</span></td>
-                                            <td style={{ textAlign: 'center' }}>{d.ratedTrips}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-                <div>
-                    <h4 className="widget-subhead">Drivers Needing Attention</h4>
-                    {data.attentionDrivers.length === 0 ? (
-                        <p className="widget-empty">No drivers need attention.</p>
-                    ) : (
-                        <div className="table-wrap">
-                            <table className="widget-table">
-                                <thead>
-                                    <tr>
-                                        <th>Driver</th>
-                                        <th style={{ textAlign: 'center' }}>Rating</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.attentionDrivers.map((d, i) => (
-                                        <tr key={i}>
-                                            <td className="font-medium">{d.name}</td>
-                                            <td style={{ textAlign: 'center' }}><span className="badge badge--red">★ {d.avgRating}</span></td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         </div>
     );
