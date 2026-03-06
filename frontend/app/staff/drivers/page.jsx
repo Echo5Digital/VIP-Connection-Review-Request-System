@@ -3,6 +3,7 @@
 import Script from 'next/script';
 import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
+import { useStaffContext } from '../StaffContext';
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
@@ -193,6 +194,8 @@ async function parseDriverFile(file) {
 }
 
 export default function DriversPage() {
+  const { user } = useStaffContext();
+  const isDispatcher = user?.role === 'dispatcher';
   const inputRef = useRef(null);
   const tableTopRef = useRef(null);
   const [file, setFile] = useState(null);
@@ -376,49 +379,53 @@ export default function DriversPage() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h1 className="page-title" style={{ margin: 0 }}>Drivers</h1>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {selectedIds.size > 0 && (
-            <button onClick={handleBulkDelete} className="btn btn--danger btn--sm">
-              Delete Selected ({selectedIds.size})
+        {!isDispatcher && (
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {selectedIds.size > 0 && (
+              <button onClick={handleBulkDelete} className="btn btn--danger btn--sm">
+                Delete Selected ({selectedIds.size})
+              </button>
+            )}
+            <button onClick={openAddModal} className="btn btn--primary btn--sm">
+              + Add Driver
             </button>
-          )}
-          <button onClick={openAddModal} className="btn btn--primary btn--sm">
-            + Add Driver
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {error && <div className="form-error mb-4">{error}</div>}
       {success && <div className="form-success mb-4">{success}</div>}
 
-      <div className="card mb-6">
-        <div className="card__header">Upload Drivers File</div>
-        <div className="card__body">
-          <p className="text-muted text-sm mb-6">
-            Upload a .csv or .xlsx file. New records will be appended. Existing VIP Car # will be skipped.
-          </p>
-          <form onSubmit={handleFileUpload} style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              <input
-                ref={inputRef}
-                type="file"
-                id="driver-file"
-                accept=".csv,.xlsx"
-                className="file-input-hidden"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-              />
-              <label htmlFor="driver-file" className="btn btn--secondary">Choose File</label>
-            </div>
-            <span className="text-muted" style={{ fontSize: '13px', margin: '0 12px' }}>
-              {file ? file.name : 'No file chosen'}
-            </span>
-            <button type="submit" disabled={uploading} className="btn btn--primary">
-              {uploading ? 'Uploading...' : 'Upload Drivers'}
-            </button>
-          </form>
+      {!isDispatcher && (
+        <div className="card mb-6">
+          <div className="card__header">Upload Drivers File</div>
+          <div className="card__body">
+            <p className="text-muted text-sm mb-6">
+              Upload a .csv or .xlsx file. New records will be appended. Existing VIP Car # will be skipped.
+            </p>
+            <form onSubmit={handleFileUpload} style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <input
+                  ref={inputRef}
+                  type="file"
+                  id="driver-file"
+                  accept=".csv,.xlsx"
+                  className="file-input-hidden"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                />
+                <label htmlFor="driver-file" className="btn btn--secondary">Choose File</label>
+              </div>
+              <span className="text-muted" style={{ fontSize: '13px', margin: '0 12px' }}>
+                {file ? file.name : 'No file chosen'}
+              </span>
+              <button type="submit" disabled={uploading} className="btn btn--primary">
+                {uploading ? 'Uploading...' : 'Upload Drivers'}
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="card">
         <div className="card__header">Drivers &amp; Vehicles</div>
@@ -489,36 +496,42 @@ export default function DriversPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th style={{ width: '56px', textAlign: 'center' }}>
-                      <input type="checkbox" checked={isAllSelected} onChange={toggleSelectAll} />
-                    </th>
+                    {!isDispatcher && (
+                      <th style={{ width: '56px', textAlign: 'center' }}>
+                        <input type="checkbox" checked={isAllSelected} onChange={toggleSelectAll} />
+                      </th>
+                    )}
                     <th>VIP Car #</th>
                     <th>Name</th>
                     <th>Year</th>
                     <th>Make</th>
                     <th>Model</th>
                     <th>Type</th>
-                    <th style={{ textAlign: 'right', paddingRight: '24px' }}>Actions</th>
+                    {!isDispatcher && <th style={{ textAlign: 'right', paddingRight: '24px' }}>Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {filteredDrivers.map((driver) => (
                     <tr key={driver._id} className={selectedIds.has(driver._id) ? 'row-selected' : ''}>
-                      <td style={{ textAlign: 'center' }}>
-                        <input type="checkbox" checked={selectedIds.has(driver._id)} onChange={() => toggleSelectRow(driver._id)} />
-                      </td>
+                      {!isDispatcher && (
+                        <td style={{ textAlign: 'center' }}>
+                          <input type="checkbox" checked={selectedIds.has(driver._id)} onChange={() => toggleSelectRow(driver._id)} />
+                        </td>
+                      )}
                       <td style={{ fontWeight: 600, color: 'var(--accent)' }}>{driver.vipCarNum}</td>
                       <td style={{ fontWeight: 600 }}>{driver.name}</td>
                       <td>{driver.carYear || '—'}</td>
                       <td>{driver.carMake || '—'}</td>
                       <td>{driver.carModel || '—'}</td>
                       <td><span className="badge badge--gold">{driver.vehicleType || '—'}</span></td>
-                      <td style={{ textAlign: 'right', paddingRight: '24px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                          <button onClick={() => openEditModal(driver)} className="btn btn--icon" title="Edit">✎</button>
-                          <button onClick={() => handleDelete(driver._id)} className="btn btn--icon text-danger" title="Delete">✕</button>
-                        </div>
-                      </td>
+                      {!isDispatcher && (
+                        <td style={{ textAlign: 'right', paddingRight: '24px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                            <button onClick={() => openEditModal(driver)} className="btn btn--icon" title="Edit">✎</button>
+                            <button onClick={() => handleDelete(driver._id)} className="btn btn--icon text-danger" title="Delete">✕</button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
 import { StaffProvider, useStaffContext } from './StaffContext';
 
@@ -74,17 +74,6 @@ const managerNav = [
 const dispatcherNav = [
   {
     href: '/staff/manifest',
-    label: 'Upload Manifest',
-    icon: (
-      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <polyline points="17 8 12 3 7 8" />
-        <line x1="12" y1="3" x2="12" y2="15" />
-      </svg>
-    ),
-  },
-  {
-    href: '/staff/manifest',
     label: 'Trips',
     icon: (
       <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -94,13 +83,14 @@ const dispatcherNav = [
     ),
   },
   {
-    href: '/staff/manifest',
-    label: 'Send Feedback Requests',
+    href: '/staff/drivers',
+    label: 'Drivers',
     icon: (
       <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16" />
-        <polyline points="22 2 11 13" />
-        <polyline points="15 2 22 2 22 9" />
+        <path d="M3 13l2-5a2 2 0 0 1 1.9-1.3h10.2A2 2 0 0 1 19 8l2 5" />
+        <rect x="2" y="13" width="20" height="6" rx="2" />
+        <circle cx="7" cy="19" r="1.5" />
+        <circle cx="17" cy="19" r="1.5" />
       </svg>
     ),
   },
@@ -135,19 +125,6 @@ function StaffLayoutInner({ children }) {
   const isManager = user?.role === 'manager';
   const visibleNav = isManager ? managerNav : dispatcherNav;
 
-  const pageTitle = useMemo(() => {
-    if (pathname?.startsWith('/staff/dashboard')) return 'Dashboard';
-    if (pathname?.startsWith('/staff/manifest')) return 'Trips';
-    if (pathname?.startsWith('/staff/drivers')) return 'Driver Performance';
-    if (pathname?.startsWith('/staff/affiliates')) return 'Affiliate Performance';
-    if (pathname?.startsWith('/staff/feedback')) return 'Complaints';
-    if (pathname?.startsWith('/staff/templates')) return 'Templates';
-    if (pathname?.startsWith('/staff/restrictions')) return 'Restriction List';
-    if (pathname?.startsWith('/staff/users')) return 'Users';
-    if (pathname?.startsWith('/staff/profile')) return 'Settings';
-    return 'Dashboard';
-  }, [pathname]);
-
   async function handleLogout() {
     setIsLoggingOut(true);
     try {
@@ -161,8 +138,8 @@ function StaffLayoutInner({ children }) {
   return (
     <div className="admin-shell">
       <aside className={`admin-shell__sidebar${isSidebarOpen ? ' admin-shell__sidebar--open' : ''}`}>
-        <div className="admin-shell__brand">
-          <span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>VIP</span> <span style={{ color: 'var(--text-main)' }}>CONNECTION</span>
+        <div className="admin-shell__brand" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <img src="/images/vip-logo.png" alt="VIP Logo" style={{ height: 56, width: 'auto', maxWidth: '100%' }} />
         </div>
         <nav className="admin-shell__nav">
           {loading ? null : visibleNav.map((item, idx) => {
@@ -191,7 +168,9 @@ function StaffLayoutInner({ children }) {
             </svg>
           </button>
 
-          <h1 className="admin-shell__title">{pageTitle}</h1>
+          <h1 className="admin-shell__title">
+            <span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>VIP</span> CONNECTION
+          </h1>
 
           <div className="admin-shell__spacer" />
 

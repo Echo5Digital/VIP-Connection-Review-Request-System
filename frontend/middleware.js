@@ -71,7 +71,7 @@ export function middleware(request) {
   }
 
   // Dispatcher cannot access analytics/management pages
-  const DISPATCHER_BLOCKED = ['/staff/dashboard', '/staff/drivers', '/staff/feedback', '/staff/users', '/staff/profile'];
+  const DISPATCHER_BLOCKED = ['/staff/dashboard', '/staff/feedback', '/staff/users', '/staff/profile'];
   if (role === 'dispatcher' && DISPATCHER_BLOCKED.some((p) => pathname.startsWith(p))) {
     return NextResponse.redirect(new URL('/staff/manifest', request.url));
   }

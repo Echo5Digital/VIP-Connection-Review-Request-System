@@ -6,11 +6,8 @@ import * as XLSX from 'xlsx';
 
 const router = Router();
 
-// All driver routes require admin or manager role
-router.use(requireAuth, requireRoles('admin', 'manager'));
-
-// GET all drivers (with pagination, search and filters)
-router.get('/', async (req, res, next) => {
+// GET all drivers (with pagination, search and filters) — dispatchers can read
+router.get('/', requireAuth, requireRoles('admin', 'manager', 'dispatcher'), async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
@@ -55,6 +52,9 @@ router.get('/', async (req, res, next) => {
         next(err);
     }
 });
+
+// All write routes require admin or manager role
+router.use(requireAuth, requireRoles('admin', 'manager'));
 
 // POST manual add
 router.post(
