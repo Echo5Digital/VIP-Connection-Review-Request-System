@@ -4,7 +4,7 @@ import PrivateFeedback from '../models/PrivateFeedback.js';
 import Rating from '../models/Rating.js';
 
 const router = Router();
-router.use(requireAuth, requireRoles('admin', 'manager', 'dispatcher'));
+router.use(requireAuth, requireRoles('admin', 'manager'));
 
 router.get('/', async (req, res, next) => {
   try {

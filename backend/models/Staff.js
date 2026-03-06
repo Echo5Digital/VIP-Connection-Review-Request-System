@@ -7,7 +7,7 @@ const staffSchema = new mongoose.Schema({
     name: { type: String, default: '' },
     role: { type: String, enum: ['manager', 'dispatcher'], default: 'manager' },
     active: { type: Boolean, default: true },
-}, { timestamps: true, collection: 'clients' });
+}, { timestamps: true, collection: 'staff' });
 
 staffSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();

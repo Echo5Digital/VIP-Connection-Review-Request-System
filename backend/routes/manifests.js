@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx';
 import Restriction from '../models/Restriction.js';
 
 const router = Router();
-router.use(requireAuth, requireRoles('admin', 'manager', 'dispatcher'));
+router.use(requireAuth, requireRoles('admin', 'dispatcher'));
 
 async function checkRestricted(data) {
   const { customerCode, name, email, phone } = data;
@@ -25,8 +25,6 @@ async function checkRestricted(data) {
 
   return await Restriction.findOne(query);
 }
-router.use(requireAuth, requireRoles('admin', 'manager', 'dispatcher'));
-
 function getManifestAccessFilter() {
   return {};
 }
@@ -50,19 +48,18 @@ function ensureAdmin(req, res) {
 
 function ensureEntryOperator(req, res) {
   const isAdmin = req.user?.role === 'admin';
-  const isActiveStaff = ['manager', 'dispatcher'].includes(req.user?.role) && req.user?.active !== false;
-  if (!isAdmin && !isActiveStaff) {
-    res.status(403).json({ message: 'Only admin or active staff can edit/delete manifest entries' });
+  const isActiveDispatcher = req.user?.role === 'dispatcher' && req.user?.active !== false;
+  if (!isAdmin && !isActiveDispatcher) {
+    res.status(403).json({ message: 'Only admin or active dispatcher can edit/delete manifest entries' });
     return false;
   }
   return true;
 }
 
 function ensureUploadAllowed(req, res) {
-  const isAdmin = req.user?.role === 'admin';
-  const isActiveStaff = ['manager', 'dispatcher'].includes(req.user?.role) && req.user?.active !== false;
-  if (!isAdmin && !isActiveStaff) {
-    res.status(403).json({ message: 'Only admin or active staff can upload manifests' });
+  const isActiveDispatcher = req.user?.role === 'dispatcher' && req.user?.active !== false;
+  if (!isActiveDispatcher) {
+    res.status(403).json({ message: 'Only active dispatchers can upload manifests' });
     return false;
   }
   return true;
@@ -330,7 +327,7 @@ router.get('/entries/export', async (req, res, next) => {
 // POST /entries - Create a single contact entry manually
 router.post('/entries', async (req, res, next) => {
   try {
-    if (!ensureAdmin(req, res)) return;
+    if (!ensureEntryOperator(req, res)) return;
     const { manifestId, name, phone, email, pickupDate, pickupTime, pickupAddress, dropoffAddress, status, extra } = req.body;
     if (!manifestId) return res.status(400).json({ message: 'manifestId is required' });
 
@@ -407,7 +404,7 @@ router.delete('/entries/:id', async (req, res, next) => {
   }
 });
 
-// POST /entries/bulk-delete - Delete multiple contact entries (admin or active client)
+// POST /entries/bulk-delete - Delete multiple contact entries (admin or active dispatcher)
 router.post('/entries/bulk-delete', async (req, res, next) => {
   try {
     if (!ensureEntryOperator(req, res)) return;

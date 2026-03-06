@@ -6,7 +6,7 @@ import Staff from '../models/Staff.js';
 
 const router = Router();
 
-router.use(requireAuth, requireRoles('admin', 'manager'));
+router.use(requireAuth, requireRoles('admin'));
 
 // GET all users
 router.get('/', async (req, res, next) => {

@@ -10,8 +10,10 @@ export default function ProfilePage() {
     const { user, loading: ctxLoading } = useStaffContext();
 
     useEffect(() => {
-        if (!ctxLoading && user?.role !== 'manager') {
-            router.replace('/staff/dashboard');
+        if (!ctxLoading) {
+            // Settings page is admin-only; redirect all staff to role-appropriate home
+            const target = user?.role === 'manager' ? '/staff/dashboard' : '/staff/manifest';
+            router.replace(target);
         }
     }, [user, ctxLoading]);
 
@@ -41,7 +43,7 @@ export default function ProfilePage() {
         }
     }
 
-    if (ctxLoading || user?.role !== 'manager') return null;
+    if (ctxLoading) return null;
 
     return (
         <div>

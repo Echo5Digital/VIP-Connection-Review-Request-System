@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
 
 const nav = [
@@ -19,45 +19,14 @@ const nav = [
     ),
   },
   {
-    href: '/admin/manifest',
-    label: 'Trips',
+    href: '/admin/users',
+    label: 'Users',
     icon: (
       <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-        <rect x="8" y="2" width="8" height="4" rx="1" />
-      </svg>
-    ),
-  },
-  {
-    href: '/admin/drivers',
-    label: 'Drivers',
-    icon: (
-      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <path d="M3 13l2-5a2 2 0 0 1 1.9-1.3h10.2A2 2 0 0 1 19 8l2 5" />
-        <rect x="2" y="13" width="20" height="6" rx="2" />
-        <circle cx="7" cy="19" r="1.5" />
-        <circle cx="17" cy="19" r="1.5" />
-      </svg>
-    ),
-  },
-  {
-    href: '/admin/affiliates',
-    label: 'Affiliates',
-    icon: (
-      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
-  },
-  {
-    href: '/admin/feedback',
-    label: 'Feedback',
-    icon: (
-      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       </svg>
     ),
   },
@@ -82,19 +51,48 @@ const nav = [
     ),
   },
   {
-    href: '/admin/users',
-    label: 'Users',
-
+    href: '/admin/affiliates',
+    label: 'Affiliates',
     icon: (
       <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
-        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
   },
-
+  {
+    href: '/admin/manifest',
+    label: 'Trips',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+        <rect x="8" y="2" width="8" height="4" rx="1" />
+      </svg>
+    ),
+  },
+  {
+    href: '/admin/feedback',
+    label: 'Complaints',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+    ),
+  },
+  {
+    href: '/admin/drivers',
+    label: 'Drivers',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path d="M3 13l2-5a2 2 0 0 1 1.9-1.3h10.2A2 2 0 0 1 19 8l2 5" />
+        <rect x="2" y="13" width="20" height="6" rx="2" />
+        <circle cx="7" cy="19" r="1.5" />
+        <circle cx="17" cy="19" r="1.5" />
+      </svg>
+    ),
+  },
   {
     href: '/admin/profile',
     label: 'Settings',
@@ -132,20 +130,6 @@ export default function AdminLayout({ children }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isProfileMenuOpen]);
 
-  const pageTitle = useMemo(() => {
-    if (pathname?.startsWith('/admin/dashboard')) return 'Dashboard';
-    if (pathname?.startsWith('/admin/manifest')) return 'Trips';
-    if (pathname?.startsWith('/admin/drivers')) return 'Drivers';
-    if (pathname?.startsWith('/admin/affiliates')) return 'Affiliates';
-    if (pathname?.startsWith('/admin/feedback')) return 'Feedback';
-    if (pathname?.startsWith('/admin/templates')) return 'Templates';
-    if (pathname?.startsWith('/admin/restrictions')) return 'Restriction List';
-    if (pathname?.startsWith('/admin/profile')) return 'Settings';
-    if (pathname?.startsWith('/admin/clients')) return 'Users';
-    if (pathname?.startsWith('/admin/users')) return 'Users';
-    return 'Dashboard';
-  }, [pathname]);
-
   async function handleLogout() {
     setIsLoggingOut(true);
     try {
@@ -159,15 +143,16 @@ export default function AdminLayout({ children }) {
   return (
     <div className="admin-shell">
       <aside className={`admin-shell__sidebar${isSidebarOpen ? ' admin-shell__sidebar--open' : ''}`}>
-        <div className="admin-shell__brand">
-          VIP CONNECTION
+        <div className="admin-shell__brand" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <img src="/images/vip-logo.png" alt="VIP Logo" style={{ height: 56, width: 'auto', maxWidth: '100%' }} />
         </div>
         <nav className="admin-shell__nav">
-          {nav.map((item) => {
-            const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+          {nav.map((item, idx) => {
+            const matchPath = item.matchHref || item.href;
+            const isActive = pathname === matchPath || pathname?.startsWith(`${matchPath}/`);
             return (
               <Link
-                key={item.href}
+                key={`${item.href}-${idx}`}
                 href={item.href}
                 className={`admin-shell__nav-link${isActive ? ' admin-shell__nav-link--active' : ''}`}
               >
@@ -189,7 +174,7 @@ export default function AdminLayout({ children }) {
             </svg>
           </button>
 
-          <h1 className="admin-shell__title">{pageTitle}</h1>
+          <h1 className="admin-shell__title">VIP CONNECTION</h1>
 
           <div className="admin-shell__spacer" />
 

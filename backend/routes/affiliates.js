@@ -31,9 +31,10 @@ router.get('/', async (req, res, next) => {
     }
 });
 
-// POST new affiliate
+// POST new affiliate — admin only (Affiliate Setup)
 router.post(
     '/',
+    requireRoles('admin'),
     body('code').notEmpty(),
     body('name').notEmpty(),
     async (req, res, next) => {
@@ -52,8 +53,8 @@ router.post(
     }
 );
 
-// PUT update affiliate
-router.put('/:id', async (req, res, next) => {
+// PUT update affiliate — admin only (Affiliate Setup)
+router.put('/:id', requireRoles('admin'), async (req, res, next) => {
     try {
         const affiliate = await Affiliate.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!affiliate) return res.status(404).json({ message: 'Affiliate not found' });
@@ -63,8 +64,8 @@ router.put('/:id', async (req, res, next) => {
     }
 });
 
-// DELETE affiliate
-router.delete('/:id', async (req, res, next) => {
+// DELETE affiliate — admin only (Affiliate Setup)
+router.delete('/:id', requireRoles('admin'), async (req, res, next) => {
     try {
         await Affiliate.findByIdAndDelete(req.params.id);
         res.json({ message: 'Affiliate removed' });

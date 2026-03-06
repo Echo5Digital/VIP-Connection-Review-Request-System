@@ -116,7 +116,7 @@ function FormField({ label, children }) {
 
 export default function ManifestEntriesView({ role = 'admin' }) {
   const isAdmin = role === 'admin';
-  const [isActiveClient, setIsActiveClient] = useState(false);
+  const [isActiveDispatcher, setIsActiveDispatcher] = useState(false);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -147,23 +147,24 @@ export default function ManifestEntriesView({ role = 'admin' }) {
 
   useEffect(() => {
     if (isAdmin) {
-      setIsActiveClient(false);
+      setIsActiveDispatcher(false);
       return;
     }
     api.get('/api/auth/me')
-      .then((data) => setIsActiveClient(data?.user?.active === true))
-      .catch(() => setIsActiveClient(false));
+      .then((data) => setIsActiveDispatcher(data?.user?.active === true && data?.user?.role === 'dispatcher'))
+      .catch(() => setIsActiveDispatcher(false));
   }, [isAdmin]);
 
   useEffect(() => {
-    if (!(isAdmin || isActiveClient)) return;
+    if (!(isAdmin || isActiveDispatcher)) return;
     api.get('/api/manifests')
       .then(data => setManifests(Array.isArray(data) ? data : []))
       .catch(() => { });
-  }, [isAdmin, isActiveClient]);
+  }, [isAdmin, isActiveDispatcher]);
 
-  const canManageEntries = isAdmin || isActiveClient;
-  const canUpload = isAdmin || isActiveClient;
+  const canManageEntries = isAdmin || isActiveDispatcher;
+  // Only active dispatchers can upload manifests (admin cannot upload per RBAC)
+  const canUpload = isActiveDispatcher;
 
   async function fetchEntries() {
     try {

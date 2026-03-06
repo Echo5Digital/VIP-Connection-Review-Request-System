@@ -32,33 +32,36 @@ export function middleware(request) {
   const token = request.cookies.get('token')?.value;
   const role = getRoleFromToken(token);
 
-  if (pathname === '/clients' || pathname === '/clients/') {
-    const target = role === 'admin' ? '/admin/clients' : STAFF_ROLES.includes(role) ? '/staff/dashboard' : '/';
-    return NextResponse.redirect(new URL(target, request.url));
-  }
-
   if (pathname === '/') {
     if (role === 'admin') {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url));
     }
-    if (STAFF_ROLES.includes(role)) {
+    if (role === 'manager') {
       return NextResponse.redirect(new URL('/staff/dashboard', request.url));
+    }
+    if (role === 'dispatcher') {
+      return NextResponse.redirect(new URL('/staff/manifest', request.url));
     }
     return NextResponse.next();
   }
 
   if (pathname === '/admin' || pathname === '/admin/') {
-    const target = role === 'admin' ? '/admin/dashboard' : STAFF_ROLES.includes(role) ? '/staff/dashboard' : '/';
-    return NextResponse.redirect(new URL(target, request.url));
+    if (role === 'admin') return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+    if (role === 'manager') return NextResponse.redirect(new URL('/staff/dashboard', request.url));
+    if (role === 'dispatcher') return NextResponse.redirect(new URL('/staff/manifest', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   if (pathname.startsWith('/admin/') && role !== 'admin') {
-    const target = STAFF_ROLES.includes(role) ? '/staff/dashboard' : '/';
-    return NextResponse.redirect(new URL(target, request.url));
+    if (role === 'manager') return NextResponse.redirect(new URL('/staff/dashboard', request.url));
+    if (role === 'dispatcher') return NextResponse.redirect(new URL('/staff/manifest', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   if (pathname === '/staff' || pathname === '/staff/') {
-    const target = STAFF_ROLES.includes(role) ? '/staff/dashboard' : role === 'admin' ? '/admin/dashboard' : '/';
+    if (role === 'manager') return NextResponse.redirect(new URL('/staff/dashboard', request.url));
+    if (role === 'dispatcher') return NextResponse.redirect(new URL('/staff/manifest', request.url));
+    const target = role === 'admin' ? '/admin/dashboard' : '/';
     return NextResponse.redirect(new URL(target, request.url));
   }
 
@@ -67,7 +70,19 @@ export function middleware(request) {
     return NextResponse.redirect(new URL(target, request.url));
   }
 
+  // Dispatcher cannot access analytics/management pages
+  const DISPATCHER_BLOCKED = ['/staff/dashboard', '/staff/drivers', '/staff/feedback', '/staff/users', '/staff/profile'];
+  if (role === 'dispatcher' && DISPATCHER_BLOCKED.some((p) => pathname.startsWith(p))) {
+    return NextResponse.redirect(new URL('/staff/manifest', request.url));
+  }
+
+  // Manager cannot access operations pages
+  const MANAGER_BLOCKED = ['/staff/manifest', '/staff/users', '/staff/profile'];
+  if (role === 'manager' && MANAGER_BLOCKED.some((p) => pathname.startsWith(p))) {
+    return NextResponse.redirect(new URL('/staff/dashboard', request.url));
+  }
+
   return NextResponse.next();
 }
 
-export const config = { matcher: ['/', '/clients', '/admin/:path*', '/staff/:path*'] };
+export const config = { matcher: ['/', '/admin', '/admin/:path*', '/staff', '/staff/:path*'] };

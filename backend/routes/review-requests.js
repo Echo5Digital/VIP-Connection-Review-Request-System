@@ -17,7 +17,7 @@ const router = Router();
 router.post(
   '/send',
   requireAuth,
-  requireRoles('admin', 'manager', 'dispatcher'),
+  requireRoles('admin', 'dispatcher'),
   body('contactId').notEmpty().withMessage('contactId is required'),
   body('channel').isIn(['email', 'sms']).withMessage('channel must be email or sms'),
   async (req, res, next) => {

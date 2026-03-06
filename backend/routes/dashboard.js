@@ -8,7 +8,7 @@ import PrivateFeedback from '../models/PrivateFeedback.js';
 const router = express.Router();
 
 router.use(requireAuth);
-router.use(requireRoles('admin'));
+router.use(requireRoles('admin', 'manager'));
 
 router.get('/analytics', async (req, res) => {
     try {

@@ -3,8 +3,10 @@
 import Link from 'next/link';
 import { useParams, notFound } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { formatPickupDateTime, formatPickupDateTimeFromParts } from '@/lib/pickupDateTime';
+import { useStaffContext } from '../../StaffContext';
 
 function fmt(val) {
   return val ?? '—';
@@ -21,6 +23,8 @@ const REQUIRED_COLUMNS = [
 ];
 
 export default function ManifestDetailPage() {
+  const router = useRouter();
+  const { user: staffUser, loading: ctxLoading } = useStaffContext();
   const params = useParams();
   const id = params.id;
   const [data, setData] = useState(null);
@@ -30,10 +34,16 @@ export default function ManifestDetailPage() {
   const limit = 50;
 
   useEffect(() => {
-    if (id) {
+    if (!ctxLoading && staffUser?.role === 'manager') {
+      router.replace('/staff/dashboard');
+    }
+  }, [staffUser, ctxLoading]);
+
+  useEffect(() => {
+    if (id && !ctxLoading && staffUser?.role !== 'manager') {
       fetchManifest();
     }
-  }, [id]);
+  }, [id, ctxLoading, staffUser]);
 
   async function fetchManifest() {
     try {
@@ -48,6 +58,7 @@ export default function ManifestDetailPage() {
     }
   }
 
+  if (ctxLoading || staffUser?.role === 'manager') return null;
   if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Loading manifest details...</div>;
   if (error || !data) return notFound();
 
