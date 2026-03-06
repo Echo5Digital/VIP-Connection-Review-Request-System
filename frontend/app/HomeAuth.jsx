@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { api } from '@/lib/api';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -48,18 +49,32 @@ export function HomeAuth() {
 
   return (
     <div className="home-auth">
-      <section className="home-auth__intro">
-        <div className="home-auth__logo">
-          <em>VIP</em> CONNECTION
-        </div>
-        <h1>Welcome Back!</h1>
-        <p className="home-auth__intro-desc">
-          A Controlled Feedback Platform to Increase Public Reviews, Capture Private Concerns, and Monitor Driver & Vehicle Performance
-        </p>
-      </section>
-
       <section className="home-auth__panel">
-        <h2>Login</h2>
+        <div className="home-auth__brand">
+          <Image
+            src="/images/vip-logo.png"
+            alt="VIP Connection"
+            width={72}
+            height={72}
+            className="home-auth__logo-img"
+            priority
+          />
+          <div className="home-auth__brand-name">
+            <em>VIP</em> CONNECTION
+          </div>
+        </div>
+
+        <div className="home-auth__intro-block">
+          <h1 className="home-auth__welcome">Welcome Back!</h1>
+          <p className="home-auth__desc">
+            A Controlled Feedback Platform to Increase Public Reviews, Capture Private Concerns, and Monitor Driver &amp; Vehicle Performance
+          </p>
+        </div>
+
+        <div className="home-auth__divider" />
+
+        <h2 className="home-auth__form-title">Login to your account</h2>
+
         <form className="home-auth__form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Email</label>
@@ -79,7 +94,7 @@ export function HomeAuth() {
             <input
               type="password"
               className="form-input"
-              placeholder="********"
+              placeholder="Enter your password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
@@ -93,7 +108,6 @@ export function HomeAuth() {
             {loading ? 'Please wait...' : 'Login'}
           </button>
         </form>
-
       </section>
     </div>
   );

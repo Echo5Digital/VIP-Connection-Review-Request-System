@@ -52,6 +52,13 @@ function hasValue(value) {
 
 function getMissingRequiredFields(entry) {
   const extra = entry?.extra || {};
+
+  // Determine trip type — Affiliate trips don't require dispatch driver/vehicle fields
+  const isAffiliate = extra.TripType === 'Affiliate' || extra.SegmentStatusCode === 'AFF-D';
+
+  // Determine if this is an Assigned (pre-dispatch) trip — accept Assigned* fields as substitutes
+  const isAssigned = extra.Status === 'Assigned' || entry?.status === 'Assigned';
+
   const valueByField = {
     ResNumber: extra.ResNumber || entry?.resNumber,
     PickupDateTime: extra.PickupDateTime || ((entry?.pickupDate || entry?.pickupTime) ? `${entry?.pickupDate || ''}${entry?.pickupTime || ''}` : ''),
@@ -60,14 +67,28 @@ function getMissingRequiredFields(entry) {
     PassengerEmailAddress: extra.PassengerEmailAddress || extra['Passenger Email Address'],
     PassengerFirstName: extra.PassengerFirstName,
     PassengerLastName: extra.PassengerLastName,
-    DispatchDriverCode: extra.DispatchDriverCode,
-    DispatchDriverName: extra.DispatchDriverName,
-    DispatchVehicleCode: extra.DispatchVehicleCode,
-    DispatchDriverPhoneNumber: extra.DispatchDriverPhoneNumber,
-    DispatchVehicleTypeCode: extra.DispatchVehicleTypeCode,
+    // Dispatch/driver fields: skipped for Affiliate trips; accept Assigned* fields for Assigned status
+    DispatchDriverCode: isAffiliate
+      ? '__SKIP__'
+      : (extra.DispatchDriverCode || (isAssigned ? extra.AssignedDriverCode : '')),
+    DispatchDriverName: isAffiliate
+      ? '__SKIP__'
+      : (extra.DispatchDriverName || (isAssigned ? extra.AssignedDriverName : '')),
+    DispatchVehicleCode: isAffiliate
+      ? '__SKIP__'
+      : extra.DispatchVehicleCode,
+    DispatchDriverPhoneNumber: isAffiliate
+      ? '__SKIP__'
+      : (extra.DispatchDriverPhoneNumber || (isAssigned ? extra.AssignedDriverPhoneNumber : '')),
+    // Vehicle type: accept RequestedVehicleType variants for Affiliate trips
+    DispatchVehicleTypeCode: extra.DispatchVehicleTypeCode || extra.RequestedVehicleType || extra.RequestedVehicleTypeCode,
   };
 
-  return REQUIRED_REVIEW_FIELDS.filter((field) => !hasValue(valueByField[field]));
+  return REQUIRED_REVIEW_FIELDS.filter((field) => {
+    const v = valueByField[field];
+    if (v === '__SKIP__') return false; // Not required for this trip type
+    return !hasValue(v);
+  });
 }
 
 function getEmptyForm(defaultManifestId = '') {
@@ -162,9 +183,8 @@ export default function ManifestEntriesView({ role = 'admin' }) {
       .catch(() => { });
   }, [isAdmin, isActiveDispatcher]);
 
-  const canManageEntries = isAdmin || isActiveDispatcher;
-  // Only active dispatchers can upload manifests (admin cannot upload per RBAC)
-  const canUpload = isActiveDispatcher;
+  const canManageEntries = isAdmin || isActiveDispatcher || role === 'staff';
+  const canUpload = true;
 
   async function fetchEntries() {
     try {
@@ -521,30 +541,97 @@ export default function ManifestEntriesView({ role = 'admin' }) {
             </div>
 
             <div className="manifest-entry-grid">
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="First Name"><input type="text" value={form.extra?.PassengerFirstName || ''} onChange={e => setExtraField('PassengerFirstName', e.target.value)} style={FIELD_STYLE} placeholder="e.g. John" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Last Name"><input type="text" value={form.extra?.PassengerLastName || ''} onChange={e => setExtraField('PassengerLastName', e.target.value)} style={FIELD_STYLE} placeholder="e.g. Doe" /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Cell Phone"><input type="text" value={form.extra?.PassengerCellPhoneNumber || ''} onChange={e => setExtraField('PassengerCellPhoneNumber', e.target.value)} style={FIELD_STYLE} placeholder="+1..." /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Email Address"><input type="email" value={form.extra?.PassengerEmailAddress || ''} onChange={e => setExtraField('PassengerEmailAddress', e.target.value)} style={FIELD_STYLE} placeholder="email@example.com" /></FormField></div>
+              {/* ── Passenger ── */}
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Res Number"><input type="text" value={form.extra?.ResNumber || ''} onChange={e => setExtraField('ResNumber', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Customer Code"><input type="text" value={form.extra?.CustomerCode || ''} onChange={e => setExtraField('CustomerCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Customer Name"><input type="text" value={form.extra?.CustomerName || ''} onChange={e => setExtraField('CustomerName', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}>
+                <FormField label="First Name">
+                  <input
+                    type="text"
+                    value={form.extra?.PassengerFirstName || ''}
+                    onChange={e => {
+                      const v = e.target.value;
+                      setForm(prev => ({
+                        ...prev,
+                        name: `${v} ${prev.extra?.PassengerLastName || ''}`.trim(),
+                        extra: { ...prev.extra, PassengerFirstName: v },
+                      }));
+                    }}
+                    style={FIELD_STYLE}
+                    placeholder="e.g. John"
+                  />
+                </FormField>
+              </div>
+              <div style={FORM_FIELD_WRAP_STYLE}>
+                <FormField label="Last Name">
+                  <input
+                    type="text"
+                    value={form.extra?.PassengerLastName || ''}
+                    onChange={e => {
+                      const v = e.target.value;
+                      setForm(prev => ({
+                        ...prev,
+                        name: `${prev.extra?.PassengerFirstName || ''} ${v}`.trim(),
+                        extra: { ...prev.extra, PassengerLastName: v },
+                      }));
+                    }}
+                    style={FIELD_STYLE}
+                    placeholder="e.g. Doe"
+                  />
+                </FormField>
+              </div>
+              <div style={FORM_FIELD_WRAP_STYLE}>
+                <FormField label="Cell Phone">
+                  <input
+                    type="text"
+                    value={form.extra?.PassengerCellPhoneNumber || ''}
+                    onChange={e => {
+                      const v = e.target.value;
+                      setForm(prev => ({ ...prev, phone: v, extra: { ...prev.extra, PassengerCellPhoneNumber: v } }));
+                    }}
+                    style={FIELD_STYLE}
+                    placeholder="+1..."
+                  />
+                </FormField>
+              </div>
+              <div style={FORM_FIELD_WRAP_STYLE}>
+                <FormField label="Email Address">
+                  <input
+                    type="email"
+                    value={form.extra?.PassengerEmailAddress || ''}
+                    onChange={e => {
+                      const v = e.target.value;
+                      setForm(prev => ({ ...prev, email: v, extra: { ...prev.extra, PassengerEmailAddress: v } }));
+                    }}
+                    style={FIELD_STYLE}
+                    placeholder="email@example.com"
+                  />
+                </FormField>
+              </div>
 
+              {/* ── Trip Details ── */}
               <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-dim)', paddingTop: '20px', marginTop: '4px', marginBottom: '20px' }}>
                 <div className="widget-subhead">Trip Details</div>
               </div>
 
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Res Number"><input type="text" value={form.extra?.ResNumber || ''} onChange={e => setExtraField('ResNumber', e.target.value)} style={FIELD_STYLE} /></FormField></div>
               <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Date"><input type="date" value={form.pickupDate || ''} onChange={e => setField('pickupDate', e.target.value)} style={FIELD_STYLE} /></FormField></div>
               <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Time"><input type="text" value={form.pickupTime || ''} onChange={e => setField('pickupTime', e.target.value)} style={FIELD_STYLE} placeholder="HH:MM AM/PM" /></FormField></div>
               <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Pickup Address"><input type="text" value={form.pickupAddress || ''} onChange={e => setField('pickupAddress', e.target.value)} style={FIELD_STYLE} /></FormField></div>
               <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Dropoff Address"><input type="text" value={form.dropoffAddress || ''} onChange={e => setField('dropoffAddress', e.target.value)} style={FIELD_STYLE} /></FormField></div>
-              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Vehicle Type"><input type="text" value={form.extra?.DispatchVehicleTypeCode || ''} onChange={e => setExtraField('DispatchVehicleTypeCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
 
+              {/* ── Dispatch & Status ── */}
               <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-dim)', paddingTop: '20px', marginTop: '4px', marginBottom: '20px' }}>
                 <div className="widget-subhead">Dispatch & Status</div>
               </div>
 
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Driver Code"><input type="text" value={form.extra?.DispatchDriverCode || ''} onChange={e => setExtraField('DispatchDriverCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
               <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Driver Name"><input type="text" value={form.extra?.DispatchDriverName || ''} onChange={e => setExtraField('DispatchDriverName', e.target.value)} style={FIELD_STYLE} /></FormField></div>
               <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Vehicle Code"><input type="text" value={form.extra?.DispatchVehicleCode || ''} onChange={e => setExtraField('DispatchVehicleCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Driver Phone"><input type="text" value={form.extra?.DispatchDriverPhoneNumber || ''} onChange={e => setExtraField('DispatchDriverPhoneNumber', e.target.value)} style={FIELD_STYLE} /></FormField></div>
+              <div style={FORM_FIELD_WRAP_STYLE}><FormField label="Vehicle Type"><input type="text" value={form.extra?.DispatchVehicleTypeCode || ''} onChange={e => setExtraField('DispatchVehicleTypeCode', e.target.value)} style={FIELD_STYLE} /></FormField></div>
               <div style={FORM_FIELD_WRAP_STYLE}>
-                <FormField label="Status">
+                <FormField label="Segment Status">
                   <select
                     value={form.extra?.SegmentStatusCode || ''}
                     onChange={e => setExtraField('SegmentStatusCode', e.target.value)}
@@ -557,6 +644,47 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                   </select>
                 </FormField>
               </div>
+
+              {(() => {
+                // Keys already rendered as hardcoded fields above
+                const handledKeys = new Set([
+                  'ResNumber', 'CustomerCode', 'CustomerName',
+                  'PassengerFirstName', 'PassengerLastName', 'PassengerCellPhoneNumber', 'PassengerEmailAddress', 'PassengerName',
+                  'DispatchDriverCode', 'DispatchDriverName', 'DispatchVehicleCode', 'DispatchDriverPhoneNumber', 'DispatchVehicleTypeCode',
+                  'SegmentStatusCode',
+                ]);
+                // Keys handled by top-level form fields (pickupDate/Time, pickupAddress, dropoffAddress)
+                // or internal schema fields — skip entirely from dynamic section
+                const skipKeys = new Set([
+                  'PickupDateTime', 'Pickup Date Time', 'Pickup Date/Time',
+                  'PickupAddress', 'DropoffAddress',
+                  'status', 'Status',
+                ]);
+                const dynamicCols = Array.from(new Set([
+                  ...allExtraColumns,
+                  ...Object.keys(form.extra || {}),
+                ])).filter(k => !handledKeys.has(k) && !skipKeys.has(k));
+                if (dynamicCols.length === 0) return null;
+                return (
+                  <>
+                    <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-dim)', paddingTop: '20px', marginTop: '4px', marginBottom: '20px' }}>
+                      <div className="widget-subhead">Additional Details</div>
+                    </div>
+                    {dynamicCols.map(key => (
+                      <div key={key} style={FORM_FIELD_WRAP_STYLE}>
+                        <FormField label={key}>
+                          <input
+                            type="text"
+                            value={form.extra?.[key] || ''}
+                            onChange={e => setExtraField(key, e.target.value)}
+                            style={FIELD_STYLE}
+                          />
+                        </FormField>
+                      </div>
+                    ))}
+                  </>
+                );
+              })()}
 
               {modalError && (
                 <div style={{ gridColumn: '1 / -1', color: 'var(--danger)', fontSize: '13px', marginBottom: '16px', padding: '12px', background: 'rgba(153, 27, 27, 0.1)', borderRadius: 'var(--radius-md)', border: '1px solid var(--danger)' }}>
@@ -699,33 +827,44 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                         />
                       </td>
                       <td className="actions-cell">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleSendReview(entry, 'email')}
-                            disabled={disableEmail}
-                            title={missingFieldsTitle || (noEmailOnFile ? 'No email' : 'Send Email')}
-                            className={`btn btn--sm ${status.sent === 'email' ? 'btn--secondary' : 'btn--primary'}`}
-                            style={{ minWidth: '70px' }}
-                          >
-                            {status.sending === 'email' ? '...' : (status.sent === 'email' ? 'Sent' : 'Email')}
-                          </button>
-                          <button
-                            onClick={() => handleSendReview(entry, 'sms')}
-                            disabled={disableSms}
-                            title={missingFieldsTitle || (noPhoneOnFile ? 'No phone' : 'Send SMS')}
-                            className={`btn btn--sm ${status.sent === 'sms' ? 'btn--secondary' : 'btn--primary'}`}
-                            style={{ minWidth: '70px' }}
-                          >
-                            {status.sending === 'sms' ? '...' : (status.sent === 'sms' ? 'Sent' : 'SMS')}
-                          </button>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', minWidth: '150px' }}>
+                          {entry.isRestricted ? (
+                            <div
+                              title="Excluded – Restriction List"
+                              style={{ gridColumn: '1 / -1', fontSize: '11px', color: 'var(--danger)', opacity: 0.7, textAlign: 'center', padding: '4px 0' }}
+                            >
+                              Restricted
+                            </div>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleSendReview(entry, 'email')}
+                                disabled={disableEmail}
+                                title={missingFieldsTitle || (noEmailOnFile ? 'No email' : 'Send Email')}
+                                className={`btn btn--sm ${status.sent === 'email' ? 'btn--secondary' : 'btn--primary'}`}
+                                style={{ width: '100%' }}
+                              >
+                                {status.sending === 'email' ? '...' : (status.sent === 'email' ? 'Sent' : 'Email')}
+                              </button>
+                              <button
+                                onClick={() => handleSendReview(entry, 'sms')}
+                                disabled={disableSms}
+                                title={missingFieldsTitle || (noPhoneOnFile ? 'No phone' : 'Send SMS')}
+                                className={`btn btn--sm ${status.sent === 'sms' ? 'btn--secondary' : 'btn--primary'}`}
+                                style={{ width: '100%' }}
+                              >
+                                {status.sending === 'sms' ? '...' : (status.sent === 'sms' ? 'Sent' : 'SMS')}
+                              </button>
+                            </>
+                          )}
                           {canManageEntries && (
-                            <div className="flex gap-1 ml-2 border-l border-dim pl-2">
+                            <>
                               <button
                                 onClick={() => openEditModal(entry)}
                                 disabled={isSending}
                                 className="btn btn--secondary btn--sm"
                                 title="Edit"
-                                style={{ padding: '6px 10px', minWidth: 'auto' }}
+                                style={{ width: '100%' }}
                               >
                                 Edit
                               </button>
@@ -734,11 +873,11 @@ export default function ManifestEntriesView({ role = 'admin' }) {
                                 disabled={isSending || isDeleting}
                                 className="btn btn--secondary btn--sm"
                                 title="Delete"
-                                style={{ padding: '6px 10px', minWidth: 'auto', borderColor: 'rgba(220, 38, 38, 0.3)', color: 'var(--danger)' }}
+                                style={{ width: '100%', borderColor: 'rgba(220, 38, 38, 0.3)', color: 'var(--danger)' }}
                               >
                                 Delete
                               </button>
-                            </div>
+                            </>
                           )}
                         </div>
                         {status.error && <div className="text-danger text-xs mt-1">{status.error}</div>}

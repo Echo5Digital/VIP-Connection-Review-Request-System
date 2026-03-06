@@ -63,7 +63,7 @@ export default function TemplatesPage() {
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div className="templates-page-header">
                 <div>
                     <h1 className="page-title" style={{ margin: 0 }}>Review Templates</h1>
                     <p className="text-secondary text-sm" style={{ marginTop: '4px' }}>
@@ -81,7 +81,7 @@ export default function TemplatesPage() {
                 </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 320px) 1fr', gap: '32px' }}>
+            <div className="templates-page-grid">
                 <aside>
                     <div className="card" style={{ border: '1px solid var(--border-dim)', background: 'rgba(255,255,255,0.01)', height: 'fit-content' }}>
                         <div className="card__body" style={{ padding: '20px' }}>

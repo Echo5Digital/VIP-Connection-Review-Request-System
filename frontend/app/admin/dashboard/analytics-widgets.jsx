@@ -72,7 +72,7 @@ export function DriverPerformanceWidget({ data }) {
         <div className="card">
             <div className="widget-header">
                 <h3 className="card__title">Driver Performance</h3>
-                <Link href="/admin/drivers" className="btn btn--secondary btn--sm">Manage Drivers →</Link>
+                <Link href="/admin/driver-productivity" className="btn btn--secondary btn--sm">Analyze →</Link>
             </div>
             <div className="widget-grid widget-grid-2">
                 <div>

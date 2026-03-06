@@ -94,6 +94,17 @@ const nav = [
     ),
   },
   {
+    href: '/admin/driver-productivity',
+    label: 'Driver Productivity',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/profile',
     label: 'Settings',
     icon: (
@@ -174,13 +185,13 @@ export default function AdminLayout({ children }) {
             </svg>
           </button>
 
-          <h1 className="admin-shell__title">VIP CONNECTION</h1>
+          <h1 className="admin-shell__title"><span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>VIP</span> CONNECTION</h1>
 
           <div className="admin-shell__spacer" />
 
           <button
             type="button"
-            className="btn btn--secondary btn--sm"
+            className="btn btn--logout btn--sm"
             onClick={handleLogout}
             disabled={isLoggingOut}
           >

@@ -162,7 +162,7 @@ function StaffLayoutInner({ children }) {
     <div className="admin-shell">
       <aside className={`admin-shell__sidebar${isSidebarOpen ? ' admin-shell__sidebar--open' : ''}`}>
         <div className="admin-shell__brand">
-          VIP <span>CONNECTION</span>
+          <span style={{ color: 'var(--accent)', fontStyle: 'italic' }}>VIP</span> <span style={{ color: 'var(--text-main)' }}>CONNECTION</span>
         </div>
         <nav className="admin-shell__nav">
           {loading ? null : visibleNav.map((item, idx) => {
@@ -197,7 +197,7 @@ function StaffLayoutInner({ children }) {
 
           <button
             type="button"
-            className="btn btn--secondary btn--sm"
+            className="btn btn--logout btn--sm"
             onClick={handleLogout}
             disabled={isLoggingOut}
           >

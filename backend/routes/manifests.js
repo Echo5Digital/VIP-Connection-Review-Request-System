@@ -8,22 +8,76 @@ import Contact from '../models/Contact.js';
 import ReviewRequest from '../models/ReviewRequest.js';
 import * as XLSX from 'xlsx';
 import Restriction from '../models/Restriction.js';
+import Driver from '../models/Driver.js';
 
 const router = Router();
 router.use(requireAuth, requireRoles('admin', 'dispatcher'));
 
-async function checkRestricted(data) {
+// Built-in restriction rules — always enforced regardless of DB state
+const BUILT_IN_RESTRICTION_CODES = [
+  { type: 'exact',  code: 'V825', reason: 'Built-in Restriction Rule' },
+  { type: 'prefix', code: 'VAFF', reason: 'Built-in Restriction Rule' },
+  { type: 'prefix', code: 'VLV',  reason: 'Built-in Restriction Rule' },
+];
+
+// Escape special regex characters in a string
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+// Load all restrictions once per request (used during upload batch processing)
+async function loadAllRestrictions() {
+  return Restriction.find({});
+}
+
+// In-memory restriction check — checks built-in codes first, then DB restrictions
+// Supports exact match and prefix match (e.g. 'VAFF*')
+function isRestrictedEntry(data, restrictions) {
   const { customerCode, name, email, phone } = data;
-  const query = { $or: [] };
 
-  if (customerCode) query.$or.push({ customerCode });
-  if (name) query.$or.push({ passengerName: new RegExp(`^${name}$`, 'i') });
-  if (email) query.$or.push({ email: email.toLowerCase() });
-  if (phone) query.$or.push({ phone });
+  // Built-in code checks (always enforced)
+  if (customerCode) {
+    for (const rule of BUILT_IN_RESTRICTION_CODES) {
+      if (rule.type === 'exact' && customerCode === rule.code) {
+        return { customerCode: rule.code, reason: rule.reason, _builtin: true };
+      }
+      if (rule.type === 'prefix' && customerCode.startsWith(rule.code)) {
+        return { customerCode: rule.code + '*', reason: rule.reason, _builtin: true };
+      }
+    }
+  }
 
-  if (query.$or.length === 0) return null;
+  // DB-based restriction checks
+  for (const r of restrictions) {
+    if (r.customerCode) {
+      if (r.customerCode.endsWith('*')) {
+        const prefix = r.customerCode.slice(0, -1);
+        if (customerCode && customerCode.startsWith(prefix)) return r;
+      } else if (customerCode && r.customerCode === customerCode) return r;
+    }
+    if (r.passengerName && name && r.passengerName.toLowerCase() === name.toLowerCase()) return r;
+    if (r.email && email && r.email.toLowerCase() === email.toLowerCase()) return r;
+    if (r.phone && phone && r.phone === phone) return r;
+  }
+  return null;
+}
 
-  return await Restriction.findOne(query);
+// Auto-create a Restriction record for an excluded passenger if one doesn't already exist
+async function autoCreateRestriction(customerCode, passengerName, email, phone) {
+  const orClauses = [];
+  if (customerCode) orClauses.push({ customerCode });
+  if (email) orClauses.push({ email: email.toLowerCase() });
+  if (passengerName) orClauses.push({ passengerName: new RegExp(`^${escapeRegex(passengerName)}$`, 'i') });
+  if (orClauses.length === 0) return;
+  const alreadyExists = await Restriction.findOne({ $or: orClauses });
+  if (!alreadyExists) {
+    await Restriction.create({
+      customerCode: customerCode || '',
+      passengerName: passengerName || '',
+      email: email ? email.toLowerCase() : '',
+      phone: phone || '',
+      reason: 'Auto-added from Manifest Restriction Rule',
+      source: 'Manifest Auto-Detection',
+    });
+  }
 }
 function getManifestAccessFilter() {
   return {};
@@ -57,9 +111,10 @@ function ensureEntryOperator(req, res) {
 }
 
 function ensureUploadAllowed(req, res) {
+  const isAdmin = req.user?.role === 'admin';
   const isActiveDispatcher = req.user?.role === 'dispatcher' && req.user?.active !== false;
-  if (!isActiveDispatcher) {
-    res.status(403).json({ message: 'Only active dispatchers can upload manifests' });
+  if (!isAdmin && !isActiveDispatcher) {
+    res.status(403).json({ message: 'Only admin or active dispatchers can upload manifests' });
     return false;
   }
   return true;
@@ -335,7 +390,11 @@ router.post('/entries', async (req, res, next) => {
     if (!manifest) return res.status(404).json({ message: 'Manifest not found' });
 
     const customerCode = extra?.CustomerCode || extra?.['Customer Code'] || '';
-    const restricted = await checkRestricted({ customerCode, name, email, phone });
+    const allRestrictions = await loadAllRestrictions();
+    const restricted = isRestrictedEntry({ customerCode, name, email, phone }, allRestrictions);
+
+    const isAffiliate = !!(extra?.AffiliateCode || extra?.AffiliateName || extra?.['Affiliate Code'] || extra?.['Affiliate Name']);
+    const extraWithType = { ...(extra || {}), TripType: isAffiliate ? 'Affiliate' : 'VIP' };
 
     const contact = await Contact.create({
       manifestId,
@@ -348,7 +407,7 @@ router.post('/entries', async (req, res, next) => {
       dropoffAddress: dropoffAddress || '',
       status: status || 'Pending',
       isRestricted: !!restricted,
-      extra: extra || {},
+      extra: extraWithType,
     });
     const populated = await contact.populate('manifestId', 'name');
     res.status(201).json({ contact: populated });
@@ -462,7 +521,14 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
       uploadedByModel,
     });
 
-    const contacts = await Promise.all(rows.map(async (row) => {
+    // Load restrictions once for the entire upload batch
+    const allRestrictions = await loadAllRestrictions();
+
+    const excluded = [];
+    const needsReview = [];
+    const contacts = [];
+
+    for (const row of rows) {
       const firstName = row.PassengerFirstName || row['Passenger First Name'] || '';
       const lastName = row.PassengerLastName || row['Passenger Last Name'] || '';
       const passengerName = (firstName || lastName)
@@ -478,6 +544,35 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
         || row.email || row.Email || row.EMAIL || '';
 
       const customerCode = row.CustomerCode || row['Customer Code'] || '';
+
+      // Step 1: Check restriction list (exact + prefix match)
+      const restrictedBy = isRestrictedEntry({ customerCode, name: passengerName, email, phone }, allRestrictions);
+      if (restrictedBy) {
+        excluded.push({
+          name: passengerName,
+          customerCode,
+          email,
+          reason: restrictedBy.reason || 'Restriction List',
+          matchedCode: restrictedBy.customerCode || '',
+        });
+        // Store as a Contact record so it appears in the restriction log, but mark as restricted/excluded
+        contacts.push({
+          manifestId: manifest._id,
+          name: passengerName,
+          phone,
+          email,
+          pickupDate: null,
+          pickupTime: '',
+          pickupAddress: row.PickupAddress || row['Pickup Address'] || row.From || row.FROM || '',
+          dropoffAddress: row.DropoffAddress || row['Dropoff Address'] || row.To || row.TO || '',
+          status: 'Excluded – Restriction List',
+          isRestricted: true,
+          extra: { ...row, TripType: 'Restricted', RestrictedReason: restrictedBy.reason || 'Restriction List', MatchedRestrictionCode: restrictedBy.customerCode || '' },
+        });
+        // Auto-add passenger to Restriction list if not already present
+        await autoCreateRestriction(customerCode, passengerName, email, phone);
+        continue; // Skip further processing for this row
+      }
 
       let pickupDate = null;
       let pickupTime = '';
@@ -517,9 +612,38 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
         }
       }
 
-      const restricted = await checkRestricted({ customerCode, name: passengerName, email, phone });
+      // Step 2: Detect trip type
+      const isAffiliate = !!(
+        row.AffiliateCode || row['Affiliate Code'] ||
+        row.AffiliateName || row['Affiliate Name']
+      );
+      const tripType = isAffiliate ? 'Affiliate' : 'VIP';
 
-      return {
+      let rowStatus = 'Pending';
+
+      // Step 3: Driver auto-creation for VIP trips
+      if (!isAffiliate) {
+        const driverCode = row.DispatchDriverCode || row['Dispatch Driver Code'] || row.AssignedDriverCode || row['Assigned Driver Code'] || '';
+        const driverName = row.DispatchDriverName || row['Dispatch Driver Name'] || row.AssignedDriverName || row['Assigned Driver Name'] || '';
+
+        if (driverCode && driverName) {
+          const exists = await Driver.exists({ vipCarNum: driverCode });
+          if (!exists) {
+            await Driver.create({
+              vipCarNum: driverCode,
+              name: driverName,
+              vehicleType: row.DispatchVehicleTypeCode || row['Dispatch Vehicle Type Code'] || row.RequestedVehicleTypeCode || '',
+              isActive: true,
+            }).catch(() => {}); // swallow duplicate key errors from concurrent uploads
+          }
+        } else if (!driverCode) {
+          // No driver code — mark as needs review but still import
+          rowStatus = 'Needs Review';
+          needsReview.push({ name: passengerName, customerCode, reason: 'Missing driver code' });
+        }
+      }
+
+      contacts.push({
         manifestId: manifest._id,
         name: passengerName,
         phone,
@@ -528,14 +652,18 @@ router.post('/upload', upload.single('file'), async (req, res, next) => {
         pickupTime,
         pickupAddress: row.PickupAddress || row['Pickup Address'] || row.From || row.FROM || '',
         dropoffAddress: row.DropoffAddress || row['Dropoff Address'] || row.To || row.TO || '',
-        isRestricted: !!restricted,
-        extra: { ...row },
-      };
-    }));
+        status: rowStatus,
+        isRestricted: false,
+        extra: { ...row, TripType: tripType },
+      });
+    }
 
-    await Contact.insertMany(contacts);
+    if (contacts.length > 0) {
+      await Contact.insertMany(contacts);
+    }
     await fs.unlink(req.file.path).catch(() => { });
-    res.status(201).json(manifest);
+    const importedCount = contacts.length - excluded.length;
+    res.status(201).json({ manifest, total: rows.length, imported: importedCount, excluded, needsReview });
   } catch (err) {
     next(err);
   }

@@ -9,6 +9,11 @@ export default function RestrictionsPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // Blocked entries log
+    const [blockedEntries, setBlockedEntries] = useState([]);
+    const [blockedTotal, setBlockedTotal] = useState(0);
+    const [blockedLoading, setBlockedLoading] = useState(true);
+
     // CRUD State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEntry, setEditingEntry] = useState(null);
@@ -20,8 +25,13 @@ export default function RestrictionsPage() {
         reason: '',
     });
 
+    // Backfill state
+    const [backfillLoading, setBackfillLoading] = useState(false);
+    const [backfillResult, setBackfillResult] = useState(null);
+
     useEffect(() => {
         fetchRestrictions();
+        fetchBlockedEntries();
     }, []);
 
     async function fetchRestrictions() {
@@ -33,6 +43,19 @@ export default function RestrictionsPage() {
             setError(err.message);
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function fetchBlockedEntries() {
+        try {
+            setBlockedLoading(true);
+            const data = await api.get('/api/restrictions/blocked?limit=100');
+            setBlockedEntries(data?.entries || []);
+            setBlockedTotal(data?.total || 0);
+        } catch {
+            // non-critical, ignore
+        } finally {
+            setBlockedLoading(false);
         }
     }
 
@@ -80,6 +103,23 @@ export default function RestrictionsPage() {
         }
     }
 
+    async function handleBackfill() {
+        if (!confirm('Scan all existing trips for restriction matches and flag them? This may take a moment.')) return;
+        setBackfillLoading(true);
+        setBackfillResult(null);
+        setError('');
+        try {
+            const result = await api.post('/api/restrictions/backfill', {});
+            setBackfillResult(result);
+            fetchRestrictions();
+            fetchBlockedEntries();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setBackfillLoading(false);
+        }
+    }
+
     async function handleDelete(id) {
         if (!confirm('Are you sure you want to remove this restriction?')) return;
         try {
@@ -100,13 +140,29 @@ export default function RestrictionsPage() {
                         Customers or passengers in this list will not receive review requests.
                     </p>
                 </div>
-                <button onClick={openAddModal} className="btn btn--primary btn--sm">
-                    Add Restriction
-                </button>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button
+                        onClick={handleBackfill}
+                        disabled={backfillLoading}
+                        className="btn btn--outline btn--sm"
+                        title="Scan existing trips and flag any that match restriction rules"
+                    >
+                        {backfillLoading ? 'Scanning...' : 'Backfill Existing Trips'}
+                    </button>
+                    <button onClick={openAddModal} className="btn btn--primary btn--sm">
+                        Add Restriction
+                    </button>
+                </div>
             </div>
 
             {error && <div className="form-error mb-4">{error}</div>}
             {success && <div className="form-success mb-4">{success}</div>}
+            {backfillResult && (
+                <div className="form-success mb-4">
+                    Backfill complete — {backfillResult.updated} trip{backfillResult.updated !== 1 ? 's' : ''} flagged
+                    {backfillResult.restrictionsCreated > 0 && `, ${backfillResult.restrictionsCreated} new restriction record${backfillResult.restrictionsCreated !== 1 ? 's' : ''} created`}.
+                </div>
+            )}
 
             <div className="card">
                 <div className="card__header">Restricted Profiles</div>
@@ -125,6 +181,7 @@ export default function RestrictionsPage() {
                                     <th>Email</th>
                                     <th>Phone</th>
                                     <th>Reason</th>
+                                    <th>Source</th>
                                     <th style={{ textAlign: 'right' }}>Actions</th>
                                 </tr>
                             </thead>
@@ -136,11 +193,73 @@ export default function RestrictionsPage() {
                                         <td>{item.email || '—'}</td>
                                         <td>{item.phone || '—'}</td>
                                         <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{item.reason || '—'}</td>
+                                        <td>
+                                            <span style={{
+                                                fontSize: '12px', padding: '2px 8px', borderRadius: '4px',
+                                                background: item.source === 'Manifest Auto-Detection' ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.05)',
+                                                color: item.source === 'Manifest Auto-Detection' ? 'var(--blue-400, #60a5fa)' : 'var(--text-muted)',
+                                            }}>
+                                                {item.source === 'Manifest Auto-Detection' ? 'Auto-Detected' : 'Manual'}
+                                            </span>
+                                        </td>
                                         <td style={{ textAlign: 'right' }}>
                                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                 <button onClick={() => openEditModal(item)} className="btn btn--secondary btn--sm" title="Edit" style={{ padding: '6px 10px', minWidth: 'auto' }}>Edit</button>
                                                 <button onClick={() => handleDelete(item._id)} className="btn btn--secondary btn--sm" title="Delete" style={{ padding: '6px 10px', minWidth: 'auto', borderColor: 'rgba(220, 38, 38, 0.3)', color: 'var(--danger)' }}>Delete</button>
                                             </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* Blocked Entries Log */}
+            <div className="card" style={{ marginTop: '24px' }}>
+                <div className="card__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Blocked Manifest Entries</span>
+                    {blockedTotal > 0 && (
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 400 }}>
+                            {blockedTotal} total blocked
+                        </span>
+                    )}
+                </div>
+
+                {blockedLoading ? (
+                    <p className="card__empty">Loading blocked entries...</p>
+                ) : blockedEntries.length === 0 ? (
+                    <p className="card__empty">No blocked entries recorded yet. Entries excluded during manifest upload will appear here.</p>
+                ) : (
+                    <div className="table-wrap">
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Customer Code</th>
+                                    <th>Passenger Name</th>
+                                    <th>Email</th>
+                                    <th>Reason</th>
+                                    <th>Manifest Source</th>
+                                    <th>Blocked On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {blockedEntries.map((entry) => (
+                                    <tr key={entry._id}>
+                                        <td style={{ fontWeight: 600, fontFamily: 'monospace', color: 'var(--danger)', fontSize: '13px' }}>
+                                            {entry.extra?.CustomerCode || entry.extra?.['Customer Code'] || '—'}
+                                        </td>
+                                        <td style={{ fontWeight: 500, color: 'var(--text-main)' }}>{entry.name || '—'}</td>
+                                        <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{entry.email || '—'}</td>
+                                        <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+                                            {entry.extra?.RestrictedReason || entry.status || '—'}
+                                        </td>
+                                        <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                                            {entry.manifestId?.name || '—'}
+                                        </td>
+                                        <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                                            {entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : '—'}
                                         </td>
                                     </tr>
                                 ))}
@@ -171,8 +290,11 @@ export default function RestrictionsPage() {
                                         className="form-control"
                                         value={formData.customerCode}
                                         onChange={(e) => setFormData({ ...formData, customerCode: e.target.value })}
-                                        placeholder="e.g. V825"
+                                        placeholder="e.g. V825 or VAFF* (prefix)"
                                     />
+                                    <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>
+                                        Use <code style={{ color: 'var(--accent)' }}>*</code> suffix for prefix matching — e.g. <code style={{ color: 'var(--accent)' }}>VLV*</code> blocks all codes starting with VLV
+                                    </p>
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Passenger Name</label>

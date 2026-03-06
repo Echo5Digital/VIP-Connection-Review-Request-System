@@ -158,4 +158,123 @@ router.get('/analytics', async (req, res) => {
     }
 });
 
+router.get('/productivity', async (req, res) => {
+    try {
+        // Rating → ReviewRequest → Contact aggregation
+        const statsByContact = await Rating.aggregate([
+            {
+                $lookup: {
+                    from: 'reviewrequests',
+                    localField: 'reviewRequestId',
+                    foreignField: '_id',
+                    as: 'request'
+                }
+            },
+            { $unwind: '$request' },
+            {
+                $lookup: {
+                    from: 'contacts',
+                    localField: 'request.contactId',
+                    foreignField: '_id',
+                    as: 'contact'
+                }
+            },
+            { $unwind: '$contact' }
+        ]);
+
+        const driverStatsMap = {};
+        const vehicleStatsMap = {};
+
+        statsByContact.forEach(item => {
+            const driverName = item.contact?.extra?.DispatchDriverName
+                || item.contact?.extra?.['Dispatch Driver Name']
+                || item.contact?.extra?.driver
+                || item.contact?.extra?.Driver
+                || 'Unknown';
+
+            const vehicleType = item.contact?.extra?.DispatchVehicleTypeCode
+                || item.contact?.extra?.['Dispatch Vehicle Type Code']
+                || item.contact?.extra?.vehicle
+                || item.contact?.extra?.Vehicle
+                || 'Unknown';
+
+            if (item.driverRating) {
+                if (!driverStatsMap[driverName]) {
+                    driverStatsMap[driverName] = { name: driverName, totalRating: 0, count: 0 };
+                }
+                driverStatsMap[driverName].totalRating += item.driverRating;
+                driverStatsMap[driverName].count += 1;
+            }
+
+            if (item.vehicleRating) {
+                if (!vehicleStatsMap[vehicleType]) {
+                    vehicleStatsMap[vehicleType] = { type: vehicleType, totalRating: 0, count: 0, driverNames: new Set() };
+                }
+                vehicleStatsMap[vehicleType].totalRating += item.vehicleRating;
+                vehicleStatsMap[vehicleType].count += 1;
+                vehicleStatsMap[vehicleType].driverNames.add(driverName);
+            }
+        });
+
+        // Count private feedback (complaints) per driver
+        const feedbackByContact = await PrivateFeedback.aggregate([
+            {
+                $lookup: {
+                    from: 'reviewrequests',
+                    localField: 'reviewRequestId',
+                    foreignField: '_id',
+                    as: 'request'
+                }
+            },
+            { $unwind: '$request' },
+            {
+                $lookup: {
+                    from: 'contacts',
+                    localField: 'request.contactId',
+                    foreignField: '_id',
+                    as: 'contact'
+                }
+            },
+            { $unwind: '$contact' }
+        ]);
+
+        const complaintsMap = {};
+        feedbackByContact.forEach(fb => {
+            const driverName = fb.contact?.extra?.DispatchDriverName
+                || fb.contact?.extra?.['Dispatch Driver Name']
+                || fb.contact?.extra?.driver
+                || fb.contact?.extra?.Driver
+                || 'Unknown';
+            complaintsMap[driverName] = (complaintsMap[driverName] || 0) + 1;
+        });
+
+        const drivers = Object.values(driverStatsMap).map(d => {
+            const avgRating = Number((d.totalRating / d.count).toFixed(1));
+            let status = 'average';
+            if (avgRating >= 4.5) status = 'top';
+            else if (avgRating < 4.0) status = 'attention';
+            return {
+                name: d.name,
+                ratedTrips: d.count,
+                avgRating,
+                complaints: complaintsMap[d.name] || 0,
+                status
+            };
+        }).sort((a, b) => b.avgRating - a.avgRating);
+
+        const vehicles = Object.values(vehicleStatsMap).map(v => ({
+            type: v.type,
+            ratedTrips: v.count,
+            avgRating: Number((v.totalRating / v.count).toFixed(1)),
+            driversAssigned: v.driverNames.size
+        })).sort((a, b) => b.avgRating - a.avgRating);
+
+        res.json({ drivers, vehicles });
+
+    } catch (error) {
+        console.error('Driver productivity error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 export default router;
